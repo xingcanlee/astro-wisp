@@ -78,6 +78,7 @@ const ogLocale = lang.replace('-', '_');
     {config.site.author && <meta name="author" content={config.site.author} />}
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate" type="application/rss+xml" title={config.site.title} href={new URL('/rss.xml', site).href} />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="preload" href={interLatinUrl} as="font" type="font/woff2" crossorigin />

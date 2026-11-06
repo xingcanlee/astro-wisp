@@ -7,6 +7,7 @@ import remarkPele from './plugins/remark-pele';
 import remarkDiagram from './plugins/remark-diagram';
 import remarkReadingTime from './plugins/remark-reading-time';
 import remarkHasMath from './plugins/remark-has-math';
+import rehypeA11y from './plugins/rehype-a11y';
 import { copyDiagramSources, diagramDevMiddleware } from './lib/diagram-assets';
 import { wispShikiConfig } from './shiki';
 import type { WispConfig } from './config';
@@ -36,6 +37,7 @@ export default function wisp(config: WispConfig): AstroIntegration {
         ]);
         remarkPlugins.push(remarkReadingTime, remarkHasMath);
         if (config.features.math) rehypePlugins.push(rehypeKatex);
+        rehypePlugins.push(rehypeA11y);
 
         updateConfig({
           markdown: {

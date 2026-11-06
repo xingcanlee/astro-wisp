@@ -64,8 +64,10 @@ export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[
         const html: Html = {
           type: 'html',
           value:
-            `<figure class="wisp-figure wisp-pele" role="img" aria-label="${escAttr(label)}">` +
-            `<div class="wisp-pele-body">${r.svg}</div></figure>`,
+            // 可横向滚动的容器需要能被键盘聚焦（WCAG scrollable-region-focusable），
+            // 所以 role=img + aria-label 放在可聚焦的滚动容器上，而不是 figure 上
+            `<figure class="wisp-figure wisp-pele">` +
+            `<div class="wisp-pele-body" tabindex="0" role="img" aria-label="${escAttr(label)}">${r.svg}</div></figure>`,
         };
         parent.children[index] = html;
       } catch (err) {

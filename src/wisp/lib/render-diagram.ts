@@ -374,7 +374,8 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     const caption = ref.caption?.trim();
     const html =
       `<figure class="${cls}" data-style="${style}"${pageAttr}>` +
-      `<div class="wisp-diagram-body"${bodyStyle}>${svg}</div>` +
+      // 窄屏下可横向滚动：容器需可键盘聚焦（WCAG scrollable-region-focusable）
+      `<div class="wisp-diagram-body" tabindex="0" role="group" aria-label="${escAttr(ref.alt?.trim() || '图表')}"${bodyStyle}>${svg}</div>` +
       (caption ? `<figcaption>${escText(caption)}</figcaption>` : '') +
       (links.length ? `<div class="wisp-diagram-actions">${links.join('')}</div>` : '') +
       `</figure>`;

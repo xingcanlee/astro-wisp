@@ -3,35 +3,12 @@
  * 在首帧（第一个 requestAnimationFrame，渲染被样式表阻塞，因此此刻即首次绘制前的状态）读取
  * <html data-theme> 与背景色，确认 head 内联脚本在样式之前就写入了已解析的主题。
  *
- * 运行：先 `pnpm build`；设置 WISP_BASE_URL 可复用已启动的服务器，否则本文件自行启动 `astro preview`。
+ * 服务器由 playwright.config.ts 的 webServer 统一启动（或用 WISP_BASE_URL 指向已有服务器）。
  */
 import { test, expect, type Page } from '@playwright/test';
 
-const PORT = Number(process.env.WISP_E2E_PORT ?? 4398);
-const BASE = process.env.WISP_BASE_URL ?? `http://localhost:${PORT}`;
+const BASE = ''; // 相对 baseURL
 const PATHS = ['/', '/posts/kitchen-sink/'];
-
-let server: { stop(): Promise<void> } | undefined;
-
-async function reachable(url: string) {
-  try {
-    return (await fetch(url)).ok;
-  } catch {
-    return false;
-  }
-}
-
-test.beforeAll(async () => {
-  if (process.env.WISP_BASE_URL || (await reachable(BASE))) return;
-  // 用 Astro 的编程式 API 启动 preview，便于在 afterAll 中可靠关闭
-  const { preview } = await import('astro');
-  server = await preview({ root: process.cwd(), logLevel: 'error', server: { port: PORT } });
-  if (!(await reachable(BASE))) throw new Error(`preview server 未在 ${BASE} 启动（是否已 pnpm build？）`);
-});
-
-test.afterAll(async () => {
-  await server?.stop();
-});
 
 /** 在首帧记录主题与背景色；禁用缓存，保证每次都是冷加载。 */
 async function firstFrame(page: Page, path: string) {

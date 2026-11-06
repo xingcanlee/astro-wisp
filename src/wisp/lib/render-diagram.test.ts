@@ -88,7 +88,7 @@ describe('renderDiagram', () => {
     const r = renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, alt: '流程', caption: '图 1：<b>', seq: 1 }, env());
     expect(r.ok).toBe(true);
     expect(r.style).toBe('hand');
-    expect(r.html).toMatch(/^<figure class="wisp-figure wisp-diagram" data-style="hand"><div class="wisp-diagram-body" style="--wd-w:848px"><svg /);
+    expect(r.html).toMatch(/^<figure class="wisp-figure wisp-diagram" data-style="hand"><div class="wisp-diagram-body" tabindex="0" role="group" aria-label="流程" style="--wd-w:848px"><svg /);
     expect(r.html).toContain('<figcaption>图 1：&lt;b&gt;</figcaption>');
     expect(r.html).toContain('href="/diagrams/demo/flow.excalidraw" download="flow.excalidraw"');
     expect(r.html).toContain('aria-label="下载源文件 flow.excalidraw（Excalidraw）"');
