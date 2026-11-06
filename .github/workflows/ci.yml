@@ -26,19 +26,25 @@ jobs:
           node-version: 26
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # skills（wisp-diagram / wisp-writer）的脚本是 Python + uv；pnpm diagram 也转调它
+      # skills（wisp-diagram / wisp-writer）随主题包分发，脚本是 Python + uv；wisp diagram 也转调它
       - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
       - name: Skill tests (wisp-diagram)
-        run: uv run --project skills/wisp-diagram/scripts pytest skills/wisp-diagram/scripts/tests
+        run: uv run --project packages/astro-wisp/skills/wisp-diagram/scripts pytest packages/astro-wisp/skills/wisp-diagram/scripts/tests
       - name: Skill tests (wisp-writer)
-        run: uv run --with pytest pytest skills/wisp-writer/scripts/tests
+        run: uv run --with pytest pytest packages/astro-wisp/skills/wisp-writer/scripts/tests
       - name: Check (astro check + tsc + vitest + contrast + diagram check)
         run: pnpm check
       - name: Lint posts (wisp-writer)
-        run: uv run skills/wisp-writer/scripts/check_post.py --all
+        run: uv run packages/astro-wisp/skills/wisp-writer/scripts/check_post.py --all
       - run: pnpm build
+      # starter 通过工作区链接使用当前主题源码，保证 template/ 与主题同步可用
+      - name: Build starter (template/)
+        run: pnpm build:template
+      # 用户真实的安装方式：tarball 装进工作区外的 starter，build + astro check
+      - name: Smoke test packed package
+        run: ./scripts/smoke-pack.sh
       - run: pnpm exec playwright install --with-deps chromium
       # 视觉快照基线在本地生成，跨环境字体渲染存在像素差，CI 中跳过（本地用 pnpm test:e2e 运行全量）
       - name: E2E

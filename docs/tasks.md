@@ -1,5 +1,7 @@
 # 任务拆分与并行实施计划
 
+> **历史文档**：本文是首个版本（模板分发形态）的实施计划，任务卡中的文件路径指当时的布局（`src/wisp/…`、`src/explainers/…`、`scripts/…`）。主题抽成 npm 包后（ADR D13），这些文件位于 `packages/astro-wisp/` 下，对应关系见 `architecture.md` §2。§0 的协作规则仍然适用。
+
 ## 0. 协作规则（所有子 Agent 必须遵守）
 
 1. **开工前阅读**：`CLAUDE.md`、`docs/README.md`，以及任务卡中“必读”列出的文档章节。

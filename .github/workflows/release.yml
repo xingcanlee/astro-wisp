@@ -1,0 +1,59 @@
+name: Release
+
+# 推送 v<版本号> 的 tag（与 packages/astro-wisp/package.json 的 version 一致）时：先跑完整质量门禁，全部通过后发布到 npm。
+# 认证：npm CLI 优先使用 Trusted Publishing（OIDC，无 token）；包还不存在时（首发）OIDC 不可用，
+# 回退到仓库 secret NPM_TOKEN。首发成功并配置 Trusted Publisher 后删除该 secret。详见 docs/releasing.md。
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # npm Trusted Publishing（OIDC）必需
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+      # Trusted Publishing 需要 npm ≥ 11.5.1
+      - run: npm install -g npm@latest && npm --version
+      - run: pnpm install --frozen-lockfile
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+
+      - name: Tag 与包版本一致
+        if: github.ref_type == 'tag'
+        run: |
+          version="$(node -p "require('./packages/astro-wisp/package.json').version")"
+          test "v${version}" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} ≠ v${version}"; exit 1; }
+
+      - name: Check
+        run: pnpm check
+      - run: pnpm build
+      - run: pnpm build:template
+      - name: Smoke test（tarball 装进工作区外的 starter）
+        run: ./scripts/smoke-pack.sh
+
+      - name: Publish
+        working-directory: packages/astro-wisp
+        # --provenance：OIDC 发布时自动生成；首发走 token 时也显式生成来源证明
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

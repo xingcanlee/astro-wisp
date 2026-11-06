@@ -8,9 +8,10 @@
 | [architecture.md](./architecture.md) | 技术栈、目录结构、内容模型、Markdown 管线、路由、配置 |
 | [diagrams.md](./diagrams.md) | 图表体系：Pele / Excalidraw / draw.io、可移植 SVG 规范、源文件存放与下载、wisp-diagram skill |
 | [explainers.md](./explainers.md) | React 交互式讲解组件（算法、矩阵乘、LLM 原理） |
+| [releasing.md](./releasing.md) | 发布到 npm：Trusted Publishing 设置与发版步骤 |
 | [tasks.md](./tasks.md) | 任务拆分、依赖关系、模型分配、验收标准 |
 
-令牌的唯一事实来源：[`../design/palette.json`](../design/palette.json)。
+令牌的唯一事实来源：[`packages/astro-wisp/design/palette.json`](../packages/astro-wisp/design/palette.json)（站点可用 `wisp({ palette })` 覆盖）。
 
 ## 命名
 
@@ -18,16 +19,16 @@
 |---|---|
 | 品牌 | Wisp |
 | 仓库 / 模板 | `astro-wisp` |
-| npm（远期） | `astro-wisp`（发布前确认可用） |
-| 创建命令 | `npm create astro@latest -- --template xingcanlee/astro-wisp` |
+| npm 包 | `astro-wisp`（`packages/astro-wisp/`） |
+| 创建命令 | `pnpm create astro@latest -- --template xingcanlee/astro-wisp/template` |
 
 ## 决策记录（ADR 摘要）
 
 | # | 决策 | 理由 |
 |---|---|---|
 | D1 | Astro 7.x + Tailwind CSS 4.x + MDX | 内容型站点、islands 架构默认零 JS |
-| D2 | 先以模板形式分发，npm 集成包延后 | 包形态需要虚拟模块和覆盖机制，成本高；模板目录先按 `src/wisp/` 隔离，为日后抽包做准备 |
-| D3 | 所有颜色来自 `design/palette.json`，生成 CSS 变量 | 页面、Shiki、KaTeX、Pele、Excalidraw、draw.io、交互组件共用一套令牌，切换主题无需重绘 |
+| D2 | ~~先以模板形式分发，npm 集成包延后~~ → 由 D13 取代 | 模板分发让主题代码和站点代码混在一起，升级只能手动 diff |
+| D3 | 所有颜色来自调色板（默认 `packages/astro-wisp/design/palette.json`），生成 CSS 变量 | 页面、Shiki、KaTeX、Pele、Excalidraw、draw.io、交互组件共用一套令牌，切换主题无需重绘 |
 | D4 | 主题使用 `<html data-theme>` 加 head 内联脚本 | 首屏不闪烁；三态：light / dark / system |
 | D5 | Mermaid 在构建期用 Pele 渲染为内联 SVG | 零运行时；通过 CSS 变量适配主题。已知差异：布局与 Mermaid.js 不同 |
 | D6 | 中文字体：Noto Sans SC Variable（OFL）按 unicode-range 分片自托管 + Inter + JetBrains Mono | 跨平台一致、授权干净；用 `@fontsource-variable/*` 实现分片 |
@@ -37,9 +38,15 @@
 | D10 | 图表源文件与文章放在一起，构建时发布到可下载 URL | 读者可以下载原文件二次编辑 |
 | D11 | 不启用 ClientRouter（View Transitions） | 避免脚本重复执行和主题状态问题；MVP 不需要 |
 | D12 | 文档放在仓库内 `docs/`，Agent 实施前必须阅读 | 设计随代码一起版本化 |
+| D13 | 主题以 Astro 集成包 `astro-wisp` 分发（参照 Starlight）：`injectRoute` 注入页面，Vite 虚拟模块提供配置与组件覆盖，站点只保留配置和内容；仓库改为 pnpm 工作区（主题包 + 演示站 + starter） | 升级就是 `pnpm up astro-wisp`；站点的定制都在自己的文件里，不和主题代码冲突 |
+| D14 | 扩展点：`components`（覆盖组件 / 布局，可包装默认实现）、`customCss`、`palette`（深度合并，构建期生成令牌）、`routes`（关闭注入路由）、`postsSchema({ extend })` | 由轻到重覆盖常见定制需求，不需要 fork 主题 |
+| D15 | 主题样式进 cascade layer：页面骨架与组件在 `components`，正文内容样式与 typography 插件同在 `utilities`；站点 `customCss` 不分层 | 站点的 Tailwind 工具类和自定义样式能可靠覆盖主题；同时保持正文样式覆盖插件默认值的既有关系 |
+| D16 | 交互讲解只提供通用积木（`Step` 协议、`record()`、`Explainer` / `Player` / `Stage` / `Matrix`）；具体讲解（矩阵乘等）放在站点或文章目录 | 主题组件面向通用、可复用；React / Motion 为可选 peer 依赖，不写讲解的站点不用装 |
+| D18 | 字体使用 Astro 官方 Fonts API：Inter、JetBrains Mono 走 npm provider（`remote: false`，从主题依赖解析，构建不联网），Excalifont 走 local provider；思源黑体保留 `@fontsource-variable/noto-sans-sc` 的外部 CSS。全部 OFL-1.1，构建期自托管，不请求第三方字体服务 | 符合 Astro 官方做法（AstroPaper 同样用 Fonts API，Fuwari 用 Fontsource 包）；自托管避免 GDPR 风险（2022 年慕尼黑判决）、国内访问 Google Fonts 不稳定，且 Chrome 86 起缓存分区让公共 CDN 不再有共享缓存收益。思源黑体有 101 个 unicode-range 分片，`<Font>` 会把 @font-face 内联进每个页面（每页 +100KB / gzip +32KB、不可缓存），外部 CSS 只下载一次；Fontsource CDN 上也没有中文 variable 分片，fontsource provider 无法使用 |
+| D17 | 优先使用框架能力：Astro `paginate()`、container API、内容集合 loader；Tailwind typography；Motion；图表 manifest 只由 Python CLI 写入、TS 只读校验 | 减少自行实现与重复实现（删除了重复的 TS manifest 实现） |
 
 ## 环境前提
 
-- **Node ≥ 22.23.4**（astro@7 的 `engines` 要求）。本机当前为 22.23.0，**需要先升级**。
+- **Node ≥ 22.23.4**（astro@7 的 `engines` 要求）。
 - 包管理器：pnpm。
 - 图表构建（仅作者本地需要，CI 不需要）：Playwright Chromium（Excalidraw 导出），draw.io desktop CLI 或 Docker（draw.io 导出）。

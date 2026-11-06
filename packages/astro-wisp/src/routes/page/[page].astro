@@ -1,0 +1,59 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import Base from 'virtual:wisp/components/Base';
+import PostCard from 'virtual:wisp/components/PostCard';
+import Pagination from 'virtual:wisp/components/Pagination';
+import { getPosts, type PostEntry } from '../../utils/posts';
+import { getReadingTimes } from '../../utils/reading';
+import config from 'virtual:wisp/config';
+
+export const getStaticPaths = (async ({ paginate }) => {
+  // Astro 内置分页；第 1 页就是首页（/，带精选区），这里只生成第 2 页起
+  return paginate(await getPosts(), { pageSize: config.home.pageSize }).slice(1);
+}) satisfies GetStaticPaths;
+
+interface Props {
+  page: Page<PostEntry>;
+}
+const { page } = Astro.props;
+const posts = page.data;
+const current = page.currentPage;
+const times = await getReadingTimes(posts);
+---
+
+<Base title={`第 ${current} 页`}>
+  <div class="wisp-container list-page">
+    <h1 class="list-title">最新文章</h1>
+    <ul class="list">
+      {
+        posts.map((post, i) => (
+          <li>
+            <PostCard post={post} readingTime={times[i]} headingLevel={2} />
+          </li>
+        ))
+      }
+    </ul>
+    <Pagination current={current} total={page.lastPage} />
+  </div>
+</Base>
+
+<style>
+  /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
+  @layer components {
+  .list-page {
+    padding-top: 3.5rem;
+  }
+  .list-title {
+    margin: 0 0 2.5rem;
+    font-size: 2rem;
+  }
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 2.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  }
+</style>

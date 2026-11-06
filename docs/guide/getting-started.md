@@ -7,45 +7,65 @@
 - **Node.js ≥ 22.23.4**（Astro 7 的要求，低于此版本会安装失败）
 - **pnpm**（本项目使用 pnpm，锁文件为 `pnpm-lock.yaml`）
 
-## 方式一：复制 starter 创建新站点
+## 方式一：用 starter 创建新站点
 
-主题源码仓库和用户项目 starter 分开。复制 `template/` 会得到一个不带示例文章、测试 fixture 和主题开发文档的完整 Astro 项目：
+Wisp 以 Astro 集成包 `astro-wisp` 分发。starter 只包含站点配置和示例内容，主题本身从 npm 安装：
 
 ```bash
-git clone --depth 1 https://github.com/xingcanlee/astro-wisp.git astro-wisp-source
-cp -R astro-wisp-source/template my-blog
+pnpm create astro@latest my-blog -- --template xingcanlee/astro-wisp/template
 cd my-blog
-pnpm install
 pnpm dev
 ```
 
-Windows PowerShell：
+得到的项目结构：
 
-```powershell
-git clone --depth 1 https://github.com/xingcanlee/astro-wisp.git astro-wisp-source
-Copy-Item -Recurse astro-wisp-source/template my-blog
-Set-Location my-blog
-pnpm install
-pnpm dev
+```text
+my-blog/
+├─ astro.config.ts          # site + wisp({...})
+├─ src/content.config.ts    # 内容集合（astro-wisp/content 的 loader 与 schema）
+├─ src/content/posts/       # 文章
+├─ src/content/pages/       # about.md
+└─ src/styles/custom.css    # 可选的样式覆盖
 ```
 
-## 方式二：克隆仓库开发主题
+## 方式二：加到已有的 Astro 项目
+
+```bash
+pnpm astro add astro-wisp
+```
+
+`astro add` 会安装包并把 `wisp()` 加进 `astro.config.ts`。然后：
+
+1. 在 `astro.config.ts` 中设置 `site`（正式域名）。
+2. 按 [配置参考 · 内容集合](./configuration.md#内容集合) 在 `src/content.config.ts` 中声明 `posts` 和 `pages`。
+3. 删掉 `src/pages/` 里与主题路由重名的页面（如 `index.astro`），或用 `routes` 开关关闭对应的主题路由。
+
+## 方式三：克隆仓库开发主题
 
 ```bash
 git clone https://github.com/xingcanlee/astro-wisp.git
 cd astro-wisp
 pnpm install
-pnpm dev
+pnpm dev                # 演示站，直接使用 packages/astro-wisp 的源码
+pnpm build:template     # 构建 starter
 ```
 
-开发服务器默认运行在 <http://localhost:4321>。修改 `src/` 下的文件会自动刷新页面。
+开发服务器默认运行在 <http://localhost:4321>。修改 `packages/astro-wisp/` 或 `src/content/` 下的文件会自动刷新页面。
 
 ## 第一次修改
 
-1. **站点信息**：编辑 `src/wisp.config.ts` 中的 `site`，把 `url` 改成你的正式域名，`title`、`author` 改成你自己的。`url` 用于 Sitemap、RSS 和部署后的绝对链接，详见 [部署](./deployment.md)。
-2. **导航**：修改 `nav` 数组，它整体替换默认导航。
+1. **站点信息**：编辑 `astro.config.ts`：把 `site` 改成正式域名（用于 Sitemap、RSS 和部署后的绝对链接，详见 [部署](./deployment.md)），把 `wisp({ site })` 中的 `title`、`author` 改成你自己的。
+2. **导航**：修改 `wisp({ nav })`，它整体替换默认导航。
 3. **写一篇文章**：在 `src/content/posts/` 下新建目录，参见 [写作指南](./writing.md)。
 4. **关于页**：编辑 `src/content/pages/about.md`。
+
+## 升级主题
+
+```bash
+pnpm up astro-wisp
+```
+
+主题的页面、布局、组件和样式都在 `node_modules/astro-wisp` 中，站点仓库里只有配置、内容和你自己的覆盖文件，所以升级不会和你的修改冲突。跨大版本升级前请阅读 CHANGELOG：配置项、可覆盖组件的名称和 props 的不兼容改动只出现在大版本。
 
 完整配置项见 [配置参考](./configuration.md)。
 
@@ -62,7 +82,7 @@ pnpm preview    # 在本地预览 dist/
 pnpm check
 ```
 
-`pnpm check` 包括 `astro check`、TypeScript 检查、单元测试和对比度检查。图表是否与源文件一致，用 `pnpm diagram check` 单独校验。
+starter 的 `pnpm check` 包括 `astro check` 和图表 manifest 校验（`wisp diagram check`）。
 
 ## 可选：图表工具
 

@@ -79,7 +79,7 @@
 3. **Wisp 页面内联时**：`diagram.css` 用更高优先级的选择器把 `--wd-*` 绑定到站点令牌，于是图表跟随站点的手动主题，而不是系统主题：
 
 ```css
-/* src/wisp/styles/diagram.css（由 gen-tokens 生成映射部分） */
+/* astro-wisp 的 src/styles/diagram.css（由 gen-tokens 生成） */
 [data-theme] .wisp-d { --wd-fg: var(--wisp-fg); --wd-blue: var(--wisp-hue-blue); … }
 ```
 
@@ -99,7 +99,7 @@
 | `#ffffff` / 画布背景 | 删除背景矩形，或改为 `var(--wd-bg)` |
 | 其他颜色 | **lint 报错**，并给出 ΔE 最接近的令牌建议；加 `--fix` 时自动吸附到最近的令牌 |
 
-作者只能用调色板里的颜色作画，这样映射是确定的。为此提供两个素材库：`skills/wisp-diagram/assets/wisp.excalidrawlib` 和 `wisp-drawio-library.xml`（含预设颜色的形状、常用 ML 模块），以及 draw.io 的自定义调色板配置。
+作者只能用调色板里的颜色作画，这样映射是确定的。为此提供两个素材库：`skills/wisp-diagram/assets/wisp.excalidrawlib`（随主题包分发） 和 `wisp-drawio-library.xml`（含预设颜色的形状、常用 ML 模块），以及 draw.io 的自定义调色板配置。
 
 ### 3.4 字体
 
@@ -140,7 +140,7 @@ src/content/posts/attention-explained/
 
 - 文件名使用 kebab-case；`<name>.wisp.svg` 与源文件一一对应。
 - 跨文章共用的图放在 `src/content/shared/diagrams/`。
-- `scripts/diagram/manifest.json` 记录每个源文件的内容哈希。`wisp-diagram build` 只重建有变化的文件；`wisp-diagram check` 在 CI 中只校验哈希是否一致，**CI 不需要 Playwright 或 draw.io**。
+- `diagrams.manifest.json`（站点根目录） 记录每个源文件的内容哈希。`wisp-diagram build` 只重建有变化的文件；`wisp-diagram check` 在 CI 中只校验哈希是否一致，**CI 不需要 Playwright 或 draw.io**。
 
 ## 5. 在 Markdown / MDX 中使用
 
@@ -171,7 +171,7 @@ src/content/posts/attention-explained/
 ### 5.2 MDX 组件（需要更多控制时）
 
 ```mdx
-import Diagram from '@/wisp/components/Diagram.astro';
+import Diagram from 'astro-wisp/components/Diagram.astro';
 
 <Diagram src="./diagrams/transformer-block.drawio" page="encoder" alt="…" caption="…" wide download={false} />
 ```
@@ -180,7 +180,7 @@ import Diagram from '@/wisp/components/Diagram.astro';
 
 ### 5.3 源文件下载
 
-- `src/wisp/integration.ts`：
+- `astro-wisp` 集成（`src/integration.ts`）：
   - dev 环境：注册 Vite middleware，把 `/diagrams/<post-id>/<file>` 映射到 `src/content/posts/<post-id>/diagrams/<file>`。
   - build 环境：在 `astro:build:done` 钩子中，把所有被引用的源文件复制到 `dist/diagrams/<post-id>/`。
 - 响应头：`.excalidraw` 使用 `application/json`，`.drawio` 使用 `application/xml`，并带 `download` 属性。
@@ -189,12 +189,12 @@ import Diagram from '@/wisp/components/Diagram.astro';
 
 ## 6. `wisp-diagram` skill（让 Agent 产出 Wisp 风格的图）
 
-这个 skill 放在仓库的 `skills/wisp-diagram/`，**可以独立复制到任何项目**使用（`~/.claude/skills/` 或其他项目的 `.claude/skills/`）。它不依赖 Wisp 站点本身。
+这个 skill 放在主题包的 `skills/wisp-diagram/`（站点中位于 `node_modules/astro-wisp/skills/wisp-diagram/`），**可以独立复制到任何项目**使用（`~/.claude/skills/` 或其他项目的 `.claude/skills/`）。它不依赖 Wisp 站点本身。
 
 ```
 skills/wisp-diagram/
 ├─ SKILL.md                      # 触发条件、工作流、风格规则、语义色、禁止事项
-├─ palette.json                  # 从 design/palette.json 同步而来（gen-tokens 负责同步）
+├─ palette.json                  # 从主题的 design/palette.json 同步而来（gen-tokens 负责同步）
 ├─ reference/
 │  ├─ style-guide.md             # 布局规则：8px 网格、留白、箭头、对齐、字号
 │  ├─ excalidraw-skeleton.md     # 骨架格式说明与示例
@@ -211,7 +211,7 @@ skills/wisp-diagram/
    └─ pyproject.toml             # 仅供开发期跑测试
 ```
 
-站点的 `pnpm diagram <命令>`（`scripts/diagram/cli.ts`）是薄包装：转调 `uv run skills/wisp-diagram/scripts/wisp_diagram.py <命令> … --root <仓库> --manifest scripts/diagram/manifest.json`。manifest 的格式与哈希算法由 Python 实现（`wisp_diagram_lib/manifest.py`）与 `scripts/diagram/manifest.ts`、`src/wisp/lib/render-diagram.ts` 共同遵守，三者保持一致。
+站点的 `wisp diagram <命令>`（主题包 `bin/wisp.mjs` → `scripts/diagram/cli.ts`）是薄包装：转调包内 `uv run skills/wisp-diagram/scripts/wisp_diagram.py <命令> … --root <站点根> --manifest <站点根>/diagrams.manifest.json`。manifest 只由 Python 实现（`wisp_diagram_lib/manifest.py`）写入；页面渲染时 `src/lib/render-diagram.ts` 只读校验，哈希算法与之一致。
 
 ### 6.1 Agent 工作流（写在 SKILL.md 中）
 
@@ -262,6 +262,6 @@ skills/wisp-diagram/
 
 ## 8. 测试
 
-- `scripts/diagram` 的单元测试：颜色映射、lint 规则、drawio 解压、骨架转换（用 fixture 做快照）。
+- 图表相关单元测试（`scripts/diagram/*.test.ts`、skill 的 pytest）：颜色映射、lint 规则、drawio 解压、骨架转换（用 fixture 做快照）。
 - `tests/fixtures/diagrams/`：每种风格一张图，包含中文、全部 8 个 hue、箭头标签。
 - 视觉回归：Playwright 对示例文章分别截取 light 和 dark 两张图，与基线比对，允许阈值 0.1%。

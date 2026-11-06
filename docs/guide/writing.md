@@ -70,7 +70,7 @@ export const answer = 42;
 ```
 ````
 
-- 代码块默认带行号和复制按钮，可以在 `wisp.config.ts` 中关闭（`features.lineNumbers`、`features.codeCopy`）。
+- 代码块默认带行号和复制按钮，可以在 `wisp({ features })` 中关闭（`features.lineNumbers`、`features.codeCopy`）。
 - 语言名使用 Shiki 支持的标识，如 `python`、`typescript`、`bash`、`json`、`diff`。
 - `diff` 代码块中，以 `+` 和 `-` 开头的行会被标记为增删行。
 - 行内代码用反引号包裹。

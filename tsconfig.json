@@ -7,14 +7,11 @@
   "exclude": [
     "dist",
     "node_modules",
-    "skills/wisp-diagram/scripts/node_modules"
+    "**/node_modules",
+    "template",
+    "packages/astro-wisp/skills/wisp-diagram/scripts/.venv"
   ],
   "compilerOptions": {
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "resolveJsonModule": true

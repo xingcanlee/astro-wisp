@@ -1,10 +1,10 @@
 # 部署
 
-Wisp 构建为纯静态站点，输出目录为 `dist/`，可以部署到任何静态托管平台。本文介绍 Netlify、Cloudflare Pages 和 GitHub Pages 的设置，以及 `site.url` 和图表源文件的响应头。
+Wisp 构建为纯静态站点，输出目录为 `dist/`，可以部署到任何静态托管平台。本文介绍 Netlify、Cloudflare Pages 和 GitHub Pages 的设置，以及 `site` 和图表源文件的响应头。
 
 ## 发布前检查
 
-1. 把 `src/wisp.config.ts` 中的 `site.url` 改成正式域名（必须包含协议，如 `https://blog.example.com`）。它决定 Sitemap、RSS 和 draw.io 链接中的绝对地址。
+1. 把 `astro.config.ts` 中的 `site` 改成正式域名（必须包含协议，如 `https://blog.example.com`）。它决定 Sitemap、RSS 和 draw.io 链接中的绝对地址。
 2. 确认 `site.title`、`site.description`、`site.author` 已修改。
 3. 运行：
 
@@ -78,16 +78,16 @@ GitHub Pages 通过 Actions 部署。在 `.github/workflows/` 中使用官方的
 - Wisp 当前没有暴露 Astro 的 `base` 配置。部署在 `https://<用户>.github.io/<仓库>/` 这样的子路径下时，需要在 `astro.config.ts` 中设置 `base`，并确认资源和链接都能正确解析。**推荐使用根域名或自定义域名**，例如用户站点仓库 `<用户>.github.io`，或绑定自定义域名。
 - GitHub Pages 不支持自定义响应头，无法设置 `_headers`。图表源文件的下载依赖 HTML 的 `download` 属性，通常仍能正常保存，但文件的 `Content-Type` 由服务器决定。
 
-## site.url 的设置
+## site 的设置
 
-`site.url` 对以下功能有影响：
+Astro 的 `site` 对以下功能有影响：
 
 | 功能 | 影响 |
 |---|---|
-| Sitemap（`/sitemap-index.xml`） | 所有 URL 使用 `site.url` 作为前缀 |
+| Sitemap（`/sitemap-index.xml`） | 所有 URL 使用 `site` 作为前缀 |
 | RSS（`/rss.xml`） | 频道链接和条目链接的绝对地址 |
 | canonical 与 Open Graph | 页面的规范地址 |
-| 在 draw.io 中打开 | `.drawio` 的链接会生成为 `https://app.diagrams.net/#U<绝对地址>`，地址由 `site.url` 决定 |
+| 在 draw.io 中打开 | `.drawio` 的链接会生成为 `https://app.diagrams.net/#U<绝对地址>`，地址由 `site` 决定 |
 
 默认值 `https://example.com` 只用于开发和示例。忘记修改时，RSS 和 Sitemap 会指向错误的域名。
 
@@ -119,7 +119,7 @@ GitHub Pages 通过 Actions 部署。在 `.github/workflows/` 中使用官方的
 
 ## 检查清单
 
-- [ ] `site.url` 已改为正式域名
+- [ ] `astro.config.ts` 的 `site` 已改为正式域名
 - [ ] `pnpm build` 零警告
 - [ ] `pnpm check` 通过（或 CI 中的 `pnpm diagram check` 通过）
 - [ ] 首页、文章页、标签页、RSS 和 Sitemap 可以访问
