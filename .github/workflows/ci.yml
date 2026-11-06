@@ -27,7 +27,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # skills（wisp-diagram / wisp-writer）的脚本是 Python + uv；pnpm diagram 也转调它
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
       - name: Skill tests (wisp-diagram)
