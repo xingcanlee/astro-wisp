@@ -3,6 +3,7 @@ import Icon from 'virtual:wisp/components/Icon';
 import Base from 'virtual:wisp/components/Base';
 import PostCard from 'virtual:wisp/components/PostCard';
 import { getPosts } from '../utils/posts';
+import { sitePath } from '../utils/paths';
 
 const recent = (await getPosts()).slice(0, 3);
 ---
@@ -11,7 +12,7 @@ const recent = (await getPosts()).slice(0, 3);
   <div class="wisp-container nf">
     <h1>404</h1>
     <p class="nf-lead">这个页面不存在，可能已被移动或删除。</p>
-    <p><a class="wisp-link" href="/"><Icon name="arrow-left" /> 回到首页</a></p>
+    <p><a class="wisp-link" href={sitePath(import.meta.env.BASE_URL, '/')}><Icon name="arrow-left" /> 回到首页</a></p>
     {
       recent.length > 0 && (
         <section class="nf-recent" aria-labelledby="nf-recent-title">

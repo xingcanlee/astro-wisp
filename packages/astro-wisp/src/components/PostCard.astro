@@ -5,6 +5,7 @@
  */
 import type { PostEntry } from '../utils/posts';
 import PostMeta from 'virtual:wisp/components/PostMeta';
+import { sitePath } from '../utils/paths';
 
 export interface Props {
   post: PostEntry;
@@ -25,7 +26,7 @@ const { title, description, pubDate, tags, lang } = post.data;
 
 <article class="wisp-card" lang={lang}>
   <H class="wisp-card-title">
-    <a href={`/posts/${post.id}/`}>{title}</a>
+    <a href={sitePath(import.meta.env.BASE_URL, `/posts/${post.id}/`)}>{title}</a>
   </H>
   {showDescription && description && <p class="wisp-card-desc">{description}</p>}
   <PostMeta pubDate={pubDate} readingTime={readingTime} tags={showTags ? tags : []} lang={lang} />

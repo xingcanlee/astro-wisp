@@ -117,6 +117,7 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
           routes: config.routes,
           root,
           siteUrl: String(site),
+          base: astroConfig.base,
         };
 
         const virtualModules: Record<string, string> = {

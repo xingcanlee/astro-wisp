@@ -1,6 +1,7 @@
 ---
 import Page from 'virtual:wisp/components/Page';
 import { getCategories } from '../../utils/taxonomy';
+import { sitePath } from '../../utils/paths';
 
 const terms = await getCategories();
 ---
@@ -13,7 +14,7 @@ const terms = await getCategories();
       <ul class="terms">
         {terms.map((t) => (
           <li>
-            <a href={`/categories/${t.slug}/`}>{t.name}</a>
+            <a href={sitePath(import.meta.env.BASE_URL, `/categories/${t.slug}/`)}>{t.name}</a>
             <span class="n" aria-label={`${t.count} 篇`}>{t.count}</span>
           </li>
         ))}

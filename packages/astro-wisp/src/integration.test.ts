@@ -7,7 +7,7 @@ import wisp, { OVERRIDABLE_COMPONENTS, OVERRIDABLE_LAYOUTS } from './integration
 import { defineWispConfig } from './config';
 
 /** 用假的钩子参数跑 astro:config:setup，收集注入的路由与配置更新。 */
-function setup(input: Parameters<typeof wisp>[0] = {}) {
+function setup(input: Parameters<typeof wisp>[0] = {}, base = '/') {
   const root = mkdtempSync(join(tmpdir(), 'wisp-int-'));
   const codegen = join(root, '.astro', 'integrations', 'astro-wisp');
   const routes: string[] = [];
@@ -15,7 +15,7 @@ function setup(input: Parameters<typeof wisp>[0] = {}) {
   const warnings: string[] = [];
   const hook = wisp(input).hooks['astro:config:setup'] as (p: any) => void;
   hook({
-    config: { root: pathToFileURL(`${root}/`), integrations: [], site: new URL('https://example.com'), base: '/' },
+    config: { root: pathToFileURL(`${root}/`), integrations: [], site: new URL('https://example.com'), base },
     updateConfig: (u: unknown) => updates.push(u),
     injectRoute: (r: { pattern: string }) => routes.push(r.pattern),
     command: 'build',
@@ -55,12 +55,17 @@ describe('astro-wisp 集成', () => {
   it('运行时配置：不含构建期选项；客户端 locale 只暴露语言', () => {
     const { load, root } = setup({ site: { title: 'T', lang: 'en' }, customCss: ['./a.css', 'pkg/b.css'] });
     const cfg = JSON.parse(load('virtual:wisp/config').replace(/^export default |;$/g, ''));
-    expect(cfg).toMatchObject({ siteUrl: 'https://example.com/', site: { title: 'T', lang: 'en' } });
+    expect(cfg).toMatchObject({ base: '/', siteUrl: 'https://example.com/', site: { title: 'T', lang: 'en' } });
     expect(join(cfg.root)).toBe(join(root, '/'));
     expect(cfg).not.toHaveProperty('components');
     expect(cfg).not.toHaveProperty('customCss');
     expect(load('virtual:wisp/locale')).toBe('export const lang = "en";');
     expect(load('virtual:wisp/user-css')).toBe(`import ${JSON.stringify(join(root, 'a.css'))};\nimport "pkg/b.css";`);
+  });
+
+  it('运行时配置保留 Astro base，供主题链接使用', () => {
+    const cfg = JSON.parse(setup({}, '/infra-note/').load('virtual:wisp/config').replace(/^export default |;$/g, ''));
+    expect(cfg.base).toBe('/infra-note/');
   });
 
   it('palette 覆盖：生成到 codegen 目录并替换主题令牌；对比度不足时告警', () => {

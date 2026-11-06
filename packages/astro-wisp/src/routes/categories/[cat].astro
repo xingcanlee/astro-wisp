@@ -4,6 +4,7 @@ import Base from 'virtual:wisp/components/Base';
 import PostCard from 'virtual:wisp/components/PostCard';
 import { getCategories } from '../../utils/taxonomy';
 import { getReadingTimes } from '../../utils/reading';
+import { sitePath } from '../../utils/paths';
 
 export const getStaticPaths = (async () => {
   const terms = await getCategories();
@@ -18,7 +19,7 @@ const times = await getReadingTimes(term.posts);
   <div class="wisp-container tax">
     <header class="tax-header">
       <h1>{term.name}</h1>
-      <p>{term.count} 篇文章 · <a class="wisp-link" href="/categories/">全部分类</a></p>
+      <p>{term.count} 篇文章 · <a class="wisp-link" href={sitePath(import.meta.env.BASE_URL, '/categories/')}>全部分类</a></p>
     </header>
     <ul class="tax-list">
       {term.posts.map((post, i) => (

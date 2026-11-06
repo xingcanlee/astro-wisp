@@ -75,7 +75,7 @@ GitHub Pages 通过 Actions 部署。在 `.github/workflows/` 中使用官方的
 
 注意两点：
 
-- Wisp 当前没有暴露 Astro 的 `base` 配置。部署在 `https://<用户>.github.io/<仓库>/` 这样的子路径下时，需要在 `astro.config.ts` 中设置 `base`，并确认资源和链接都能正确解析。**推荐使用根域名或自定义域名**，例如用户站点仓库 `<用户>.github.io`，或绑定自定义域名。
+- 部署在 `https://<用户>.github.io/<仓库>/` 这样的子路径下时，在 `astro.config.ts` 中设置 `base` 即可，主题内部链接和 RSS 会自动带上该子路径。
 - GitHub Pages 不支持自定义响应头，无法设置 `_headers`。图表源文件的下载依赖 HTML 的 `download` 属性，通常仍能正常保存，但文件的 `Content-Type` 由服务器决定。
 
 ## site 的设置

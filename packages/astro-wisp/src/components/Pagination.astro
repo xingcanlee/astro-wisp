@@ -17,9 +17,10 @@ export interface Props {
 }
 
 import Icon from 'virtual:wisp/components/Icon';
+import { sitePath } from '../utils/paths';
 
 const { current, total, base = '/' } = Astro.props;
-const root = base.endsWith('/') ? base : `${base}/`;
+const root = `${sitePath(import.meta.env.BASE_URL, base).replace(/\/+$/, '')}/`;
 const urlOf = (n: number) => (n <= 1 ? root : `${root}page/${n}/`);
 const prevUrl = Astro.props.prevUrl ?? (current > 1 ? urlOf(current - 1) : undefined);
 const nextUrl = Astro.props.nextUrl ?? (current < total ? urlOf(current + 1) : undefined);

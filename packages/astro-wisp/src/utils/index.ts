@@ -7,3 +7,4 @@ export { getTags, getCategories, collectTags, collectCategories, slugify, type T
 export { getReadingTimes } from './reading';
 export { formatDate, toISODate, toISOString } from './date';
 export { postId } from './post-id';
+export { sitePath } from './paths';

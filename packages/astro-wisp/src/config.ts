@@ -85,6 +85,7 @@ export type WispRuntimeConfig = Omit<WispConfig, 'components' | 'customCss' | 'p
 export interface WispRuntime extends WispRuntimeConfig {
   root: string;
   siteUrl: string;
+  base: string;
 }
 export type WispConfigInput = DeepPartial<z.input<typeof wispConfigSchema>>;
 
