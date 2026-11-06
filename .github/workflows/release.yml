@@ -38,6 +38,7 @@ jobs:
         with:
           enable-cache: true
 
+      # 手动触发（workflow_dispatch）时发布 main 上 package.json 的版本，用于重试失败的发布
       - name: Tag 与包版本一致
         if: github.ref_type == 'tag'
         run: |
@@ -53,4 +54,5 @@ jobs:
 
       - name: Publish
         working-directory: packages/astro-wisp
-        run: npm publish --access public
+        # verbose：OIDC 换取失败的原因（Trusted Publisher 不匹配等）只在 verbose 级别输出
+        run: npm publish --access public --loglevel verbose
