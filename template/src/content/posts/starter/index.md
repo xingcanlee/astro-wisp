@@ -14,7 +14,7 @@ featured: true
 
 ## 下一步
 
-- 修改 `src/wisp.config.ts` 中的站点信息和导航。
+- 修改 `astro.config.ts` 中 `wisp({...})` 的站点信息和导航。
 - 编辑 `src/content/pages/about.md`。
 - 在 `src/content/posts/` 下创建文章目录。
 - 运行 `pnpm dev` 预览，运行 `pnpm build` 检查生产构建。

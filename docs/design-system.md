@@ -4,7 +4,7 @@
 
 ## 1. 令牌体系
 
-`design/palette.json` 是唯一来源，由 `scripts/gen-tokens.ts` 生成 `src/wisp/styles/tokens.css`（生成文件，禁止手改）。
+主题的默认调色板 `packages/astro-wisp/design/palette.json` 是唯一来源，由 `pnpm tokens` 生成主题包内的 `src/styles/tokens.css`（生成文件，禁止手改）。站点用 `wisp({ palette })` 覆盖时，集成在构建期用同一套函数生成令牌。
 
 ### 1.1 CSS 变量命名
 
@@ -65,13 +65,15 @@ Shiki 主题首选 `github-light` / `github-dark`。注释颜色必须在 `--wis
 
 | 角色 | 字体 | 来源 |
 |---|---|---|
-| 西文 / 数字 | Inter Variable | `@fontsource-variable/inter` |
+| 西文 / 数字 | Inter Variable | `@fontsource-variable/inter`，经 Astro Fonts API 注册（`--font-wisp-sans`） |
 | 中文 | Noto Sans SC Variable（思源黑体） | `@fontsource-variable/noto-sans-sc`，已按 unicode-range 切成约 100 个分片，浏览器只下载用到的分片 |
-| 代码 | JetBrains Mono Variable | `@fontsource-variable/jetbrains-mono` |
+| 代码 | JetBrains Mono Variable | `@fontsource-variable/jetbrains-mono`，经 Astro Fonts API 注册（`--font-wisp-mono`） |
+| 手绘图 | Excalifont | 随主题分发，经 Fonts API local provider 注册（`--font-wisp-hand`），只在含手绘图的文章加载 |
 
 - 字体栈先列 Inter 再列 Noto SC：西文字符由 Inter 渲染，汉字回落到 Noto SC。中文标点由 Noto SC 渲染，因为 Inter 不包含全角标点。
 - 一律 `font-display: swap`。只对首屏用到的 Inter 拉丁分片做 `preload`；**不 preload 中文分片**，数量太多，交给 unicode-range 按需下载。
 - 系统字体（PingFang、HarmonyOS Sans、MiSans、雅黑）作为加载前和加载失败时的回落，保证首屏观感接近。
+- 全部字体为 SIL Open Font License 1.1，构建期复制进站点产物（自托管），页面不请求任何第三方字体服务。
 - Inter 启用 `font-feature-settings: "cv11", "ss01"`（单层 a、开口数字），视觉上更柔和。可以视情况调整，但必须全站统一。
 
 ### 2.2 排版规则

@@ -30,7 +30,7 @@ src/content/posts/attention-explained/
 
 - 文件名使用 kebab-case，`<name>.wisp.svg` 与源文件一一对应。
 - 多篇文章共用的图放在 `src/content/shared/diagrams/`，引用时用相对路径指向该目录。
-- `scripts/diagram/manifest.json` 记录每个源文件的内容哈希，不要手动编辑。
+- `diagrams.manifest.json`（站点根目录） 记录每个源文件的内容哈希，不要手动编辑。
 
 ## 三、引用语法
 
@@ -50,7 +50,7 @@ src/content/posts/attention-explained/
 在 MDX 中还可以使用组件写法，需要更多控制时（例如突破正文宽度）使用：
 
 ```mdx
-import Diagram from '@/wisp/components/Diagram.astro';
+import Diagram from 'astro-wisp/components/Diagram.astro';
 
 <Diagram src="./diagrams/transformer-block.drawio" page="encoder" alt="Transformer Block 的残差结构" caption="图 2" wide />
 ```
@@ -69,7 +69,7 @@ pnpm diagram lint --fix            # 检查并自动修正调色板颜色
 pnpm diagram check                 # 校验哈希是否与 .wisp.svg 一致（CI 用）
 ```
 
-`pnpm diagram` 是 [`skills/wisp-diagram`](../../skills/wisp-diagram/SKILL.md) 中 Python 脚本的薄包装，实际执行 `uv run skills/wisp-diagram/scripts/wisp_diagram.py …`，因此需要先安装 [uv](https://docs.astral.sh/uv/)（`curl -LsSf https://astral.sh/uv/install.sh | sh`），不需要额外的 npm 或 pip 依赖。`build`、`export`、`new` 还需要 Chromium：
+`pnpm diagram`（即主题包提供的 `wisp diagram` 命令）是 [`wisp-diagram` skill](../../packages/astro-wisp/skills/wisp-diagram/SKILL.md) 中 Python 脚本的薄包装，实际执行 `uv run node_modules/astro-wisp/skills/wisp-diagram/scripts/wisp_diagram.py … --root <站点根> --manifest <站点根>/diagrams.manifest.json`，因此需要先安装 [uv](https://docs.astral.sh/uv/)（`curl -LsSf https://astral.sh/uv/install.sh | sh`），不需要额外的 npm 或 pip 依赖。`build`、`export`、`new` 还需要 Chromium：
 
 ```bash
 uv run --with playwright==1.64.1 playwright install chromium
@@ -83,7 +83,7 @@ uv run --with playwright==1.64.1 playwright install chromium
 - `--fix`：构建时自动吸附非调色板颜色到最近的令牌。
 - `--drawio cli|docker|browser`：指定 draw.io 的导出方式，见下文。
 
-`lint` 检查的内容包括：颜色必须来自 `design/palette.json`、字号与网格、字体、源文件是否超过 2MB（嵌入大图会让文件膨胀）。它不会修改文件，除非加 `--fix`。
+`lint` 检查的内容包括：颜色必须来自调色板、字号与网格、字体、源文件是否超过 2MB（嵌入大图会让文件膨胀）。它不会修改文件，除非加 `--fix`。
 
 `check` 只比较哈希，不需要浏览器或 draw.io（只需要 uv），因此可以放进 CI。如果失败，在本地运行 `pnpm diagram build` 并提交生成的 `.wisp.svg` 与 `manifest.json`。
 
@@ -161,10 +161,10 @@ pnpm diagram export path/to/flow.excalidraw --png --theme dark --transparent -o 
 
 ## 十、Agent 绘图
 
-仓库的 [`skills/wisp-diagram`](../../skills/wisp-diagram/SKILL.md) 是给 AI Agent 使用的绘图 skill，包含调色板、风格规则、骨架格式、素材库和上述命令的实现。它也可以单独复制到其他项目，只需要 uv：
+仓库的 [`skills/wisp-diagram`](../../packages/astro-wisp/skills/wisp-diagram/SKILL.md) 是给 AI Agent 使用的绘图 skill，包含调色板、风格规则、骨架格式、素材库和上述命令的实现。它也可以单独复制到其他项目，只需要 uv：
 
 ```bash
-uv run skills/wisp-diagram/scripts/wisp_diagram.py --help
+uv run node_modules/astro-wisp/skills/wisp-diagram/scripts/wisp_diagram.py --help   # 或 pnpm exec wisp skills 查看路径
 ```
 
 ## 相关链接

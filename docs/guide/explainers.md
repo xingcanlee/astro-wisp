@@ -1,24 +1,102 @@
 # 交互讲解组件
 
-交互讲解组件用于逐步演示算法和数学过程，例如矩阵乘法每一步的乘加。它们是 React 组件，以 Astro island 的形式嵌入 MDX，只在用到的文章中加载。
+交互讲解用于逐步演示算法和数学过程，例如矩阵乘法每一步的乘加、排序每一次交换。主题提供**通用积木**（`astro-wisp/explainers`）：步骤协议、播放器、SVG 原语。具体讲解（矩阵乘、排序、注意力……）由站点组合这些积木来写，通常和文章放在同一个目录里。
 
-## 一、在文章中使用
+它们是 React 组件，以 Astro island 的形式嵌入 MDX，只在用到的文章中加载（包括样式）。
 
-在 `.mdx` 文件中导入组件，并传入参数。`client:visible` 表示进入视口后才加载和水合：
+## 一、准备
 
-```mdx
-import MatMul from '@/explainers/react/MatMul';
-
-<MatMul client:visible a={[[1,2],[3,4]]} b={[[5,6],[7,8]]} />
+```bash
+pnpm astro add react   # Astro 官方 React 集成
+pnpm add motion        # 格子高亮的过渡动画
 ```
-
-| 组件 | 参数 | 说明 |
-|---|---|---|
-| `MatMul` | `a: number[][]`、`b: number[][]`、`title?: string` | 矩阵乘法逐元素演示，高亮 A 的一行和 B 的一列 |
 
 只有 `.mdx` 文件可以使用组件，`.md` 文件请改名为 `.mdx`。
 
-### 操作方式
+## 二、积木
+
+| 导出 | 层 | 用途 |
+|---|---|---|
+| `Step<S>`、`Timeline<S>` | core | 一帧 = `{ state, caption, focus? }`。渲染器只依赖 state |
+| `record(initial, (state, emit) => …)` | core | 把**命令式**算法录成时间线：直接修改 state，在需要停顿处 `emit(caption, focus)`，每次保存深拷贝 |
+| `cellId(m, r, c)`、`itemId(m, i)`、`focusOf(focus, m)` | core | 高亮 id 约定（`'a:1,0'`、`'arr:3'`）与按前缀取出 |
+| `formatNumber`、`formatMatrix` | core | 数字格式化（真正的减号、去掉多余的 0） |
+| `Tone`、`toneStroke`、`toneFill` | core | 色调：调色板中的语义色（`q`、`k`、`v`、`visited`、`done`……）或 hue（`blue`、`amber`……） |
+| `Explainer` | react | 外壳：`<figure>` + 标题 + `Player` |
+| `Player`、`usePlayer` | react | 播放 / 暂停 / 单步 / 进度 / 速度 / 键盘 / `aria-live`；界面文字随站点语言（中文 / 英文），可用 `labels` 覆盖 |
+| `Stage` | react | SVG 舞台：viewBox 自适应宽度、窄屏横向滚动、四周留白 |
+| `Matrix`、`Cell`、`Label` | react | 二维格子（矩阵、DP 表、注意力权重；1 行即数组）、单个格子、文字 |
+
+core 是纯 TypeScript（`astro-wisp/explainers/core`），不依赖 React / DOM，可以在 vitest 中直接测试。
+
+## 三、写一个讲解
+
+以冒泡排序为例，放在文章目录 `src/content/posts/bubble-sort/` 中。
+
+### 1. 算法：输入 → 全部步骤
+
+```ts
+// bubble-sort.ts
+import { itemId, record } from 'astro-wisp/explainers/core';
+
+export interface SortState { arr: number[]; sorted: number }
+
+export const bubbleSort = (input: number[]) =>
+  record<SortState>({ arr: input, sorted: 0 }, (s, emit) => {
+    emit('初始数组');
+    for (let i = 0; i < s.arr.length - 1; i++) {
+      for (let j = 0; j < s.arr.length - 1 - i; j++) {
+        if (s.arr[j] > s.arr[j + 1]) {
+          [s.arr[j], s.arr[j + 1]] = [s.arr[j + 1], s.arr[j]];
+          emit(`交换 ${s.arr[j + 1]} 和 ${s.arr[j]}`, [itemId('arr', j), itemId('arr', j + 1)]);
+        }
+      }
+      s.sorted = i + 1;
+    }
+    emit('排序完成');
+  });
+```
+
+- 每一步都要有 `caption`：完整的句子，包含具体数字。
+- 写成纯函数也可以（直接返回 `Step[]`，见演示站的 `matmul.ts`）；`record()` 适合原地修改的算法。
+- 为算法写 vitest 单测，放在同目录（`bubble-sort.test.ts`）。
+
+### 2. 画面：一帧 → SVG
+
+```tsx
+// BubbleSort.tsx
+import { useMemo } from 'react';
+import { CELL, Explainer, Matrix, Stage, focusOf } from 'astro-wisp/explainers';
+import { bubbleSort } from './bubble-sort';
+
+export default function BubbleSort({ input }: { input: number[] }) {
+  const steps = useMemo(() => bubbleSort(input), [input]);
+  return (
+    <Explainer steps={steps} title="冒泡排序">
+      {({ state, focus }) => (
+        <Stage width={state.arr.length * CELL} height={CELL} label={`数组：${state.arr.join(', ')}`}>
+          <Matrix
+            x={0} y={0} values={[state.arr]} tone="visited"
+            highlight={new Set([...focusOf(focus, 'arr')].map((i) => `0,${i}`))}
+          />
+        </Stage>
+      )}
+    </Explainer>
+  );
+}
+```
+
+### 3. 在文章中使用
+
+```mdx
+import BubbleSort from './BubbleSort';
+
+<BubbleSort client:visible input={[5, 1, 4, 2, 8]} />
+```
+
+完整的例子见演示站的矩阵乘法：`src/content/posts/matrix-multiplication/` 下的 `matmul.ts`（算法 + 单测）、`MatMul.tsx`（画面）、`matmul.css`（文章私有样式）。
+
+## 四、操作方式
 
 | 操作 | 鼠标 | 键盘（播放器获得焦点时） |
 |---|---|---|
@@ -28,106 +106,19 @@ import MatMul from '@/explainers/react/MatMul';
 | 拖动进度 | 进度条 | — |
 | 速度 | 0.5× / 1× / 2× | — |
 
-- 每一步都有一句中文说明，位于 `aria-live="polite"` 区域，屏幕阅读器会读出。
-- 开启系统的“减少动态效果”（`prefers-reduced-motion`）后，不会自动播放，也不做插值动画。
+- 每一步的说明位于 `aria-live="polite"` 区域，屏幕阅读器会读出。
+- 开启系统的“减少动态效果”（`prefers-reduced-motion`）后，不会自动播放，也不做过渡动画。
 - 没有 JavaScript 时，页面显示第一步的静态内容。
 
-## 二、现有组件的结构
-
-```text
-src/explainers/
-├─ core/                        # 纯 TypeScript，不能导入 react 或访问 DOM
-│  ├─ timeline.ts               # Step<S> = { state, caption, focus? }
-│  ├─ format.ts                 # 数字格式化
-│  └─ algorithms/matmul.ts      # matmul(a, b) → Timeline<MatMulState>
-├─ react/
-│  ├─ Player.tsx                # 通用播放器：控制条、键盘、aria-live
-│  ├─ usePlayer.ts              # 播放状态与定时器
-│  ├─ primitives/               # Matrix、Cell、Label 等 SVG 原语
-│  └─ MatMul.tsx                # 组件：算法 + Player + 渲染
-└─ explainers.css
-```
-
-## 三、新增一个讲解组件
-
-新增组件分三步：算法放在 `core/`，渲染放在 `react/`，样式用令牌变量。
-
-### 1. 写算法（core）
-
-算法是纯函数，输入参数，返回预先生成的全部步骤：
-
-```ts
-// src/explainers/core/algorithms/my-algo.ts
-import type { Timeline } from '../timeline';
-
-export interface MyState { /* 某一步的数据快照 */ }
-
-export function myAlgo(input: number[]): Timeline<MyState> {
-  // 每一步：state（这一步的完整状态）、caption（中文说明）、focus（可选，需要高亮的元素 id）
-  return [{ state: { /* ... */ }, caption: '第一步：……' }];
-}
-```
-
-规则：
-
-- 每一步都要有 `caption`，写完整的中文句子，包含具体数字，例如 `C[1][0] = 3×5 + 4×7 = 43`。
-- 算法只依赖数据，不依赖 React 或 DOM。
-- 为算法写 vitest 单元测试，放在同目录，例如 `matmul.test.ts`。运行 `pnpm exec vitest run src/explainers`。
-
-### 2. 写渲染器（react）
-
-渲染器接收单个步骤并输出 SVG，自身没有业务状态。外层用 `Player` 包裹：
-
-```tsx
-// src/explainers/react/MyAlgo.tsx
-import { myAlgo, type MyState } from '../core/algorithms/my-algo';
-import Player from './Player';
-
-export default function MyAlgo({ input }: { input: number[] }) {
-  const steps = myAlgo(input);
-  return (
-    <Player steps={steps} label="我的算法演示">
-      {(step) => (
-        <svg viewBox="0 0 640 240" width="100%" role="img" aria-label={step.caption}>
-          {/* 根据 step.state 与 step.focus 绘制 */}
-        </svg>
-      )}
-    </Player>
-  );
-}
-```
-
-规则：
-
-- `Player` 的 `steps` 与 `label` 必需；`children` 是 `(step, index) => ReactNode`。
-- SVG 使用 `viewBox`，宽度 `100%`，放进 `.wisp-wide` 容器，以便在移动端缩放。
-- 每个单元格在移动端至少 28px。
-- 相邻状态之间的动画可以用 Motion 实现。高频变化的属性用 motion value 直接修改 DOM，避免每帧重渲染 React。
-- 默认 SVG 元素数量应控制在 2000 以内。超出时改用 `<canvas>`。
-
-### 3. 颜色和样式
-
-- 颜色只能使用令牌变量：`var(--wisp-sem-q)`、`var(--wisp-hue-*)`、`var(--wisp-*)` 等。例如矩阵 A 用 `--wisp-sem-q`（Q 的语义色）。
-- **禁止写十六进制颜色**，也不要用 Tailwind 原始色阶或 `dark:` 颜色变体。深浅色切换由令牌自动完成。
-- 组件样式写在 `src/explainers/explainers.css` 中，同样只引用变量。
-- 语义色的含义见 [图表指南](./diagrams.md) 和 `design/palette.json`。
-
-### 4. 在文章中使用
-
-```mdx
-import MyAlgo from '@/explainers/react/MyAlgo';
-
-<MyAlgo client:visible input={[3, 1, 2]} />
-```
-
-## 四、约定小结
+## 五、约定
 
 | 层 | 允许 | 禁止 |
 |---|---|---|
-| `core/` | 纯 TS、类型、算术 | React、DOM、颜色、Motion |
-| `react/` | React、Motion、SVG、令牌变量 | 业务算法（应放 core）、十六进制颜色 |
+| 算法（core） | 纯 TS、类型、算术 | React、DOM、颜色、Motion |
+| 画面（React） | 积木、Motion、SVG、令牌（`Tone` / `var(--wisp-*)`） | 业务算法、十六进制颜色、Tailwind 原始色阶、`dark:` 颜色变体 |
 | 文章 | `client:visible` 导入组件 | 在 `.md` 中使用组件 |
 
-## 五、路线图
-
-目前只内置 `MatMul`。计划中的组件包括 `Attention`（注意力计算和因果掩码）、`Sort`（排序算法对比）和 `KVCache`（推理时缓存增长）。它们尚未实现。
+- SVG 一律通过 `Stage` 输出（viewBox、宽度 100%）；移动端每个格子至少 28px。
+- 讲解私有的样式写在组件旁的 `.css` 中，并包在 `@layer utilities { … }` 里（正文内容样式与 `.prose` 同层，见[配置参考](./configuration.md#customcss)）。
+- 默认 SVG 元素数量控制在 2000 以内，超出时改用 `<canvas>`。
+- 需要新的通用原语（如箭头、数组指针）时，优先加到主题的 `astro-wisp/explainers`，而不是在每个讲解里各写一份。

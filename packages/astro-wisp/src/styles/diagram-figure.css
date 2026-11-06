@@ -1,0 +1,110 @@
+/*
+ * 图表（Excalidraw / draw.io）的 figure 样式与下载链接。
+ * 由 Post 布局在 hasDiagram（remark-diagram 写入 frontmatter）为真时按需加载。
+ *
+ * remark-diagram / Diagram.astro 输出：
+ *   <figure class="wisp-figure wisp-diagram" data-style="hand|clean">
+ *     <div class="wisp-diagram-body" style="--wd-w:848px"><svg class="wisp-d" viewBox=…>…</svg></div>
+ *     <figcaption>…</figcaption>
+ *     <div class="wisp-diagram-actions"><a class="wisp-diagram-dl" download>源文件</a><a class="wisp-diagram-open">在 draw.io 中打开</a></div>
+ *   </figure>
+ * 颜色只用 --wisp-* 令牌；SVG 内部颜色由 diagram.css 把 --wd-* 绑定到令牌。
+ */
+@layer theme, base, components, utilities;
+
+
+@layer utilities {
+/* Excalifont 由 Astro Fonts API 注册（src/fonts.ts），Post 布局在有手绘图时输出 <Font>。 */
+
+/* ---------- figure ---------- */
+.wisp-diagram {
+  margin-block: 1.5em;
+  max-width: 100%;
+  max-inline-size: 100%;
+  min-width: 0;
+}
+.wisp-diagram.wisp-wide {
+  max-width: none;
+  max-inline-size: none;
+}
+
+/*
+ * 图表本体：SVG 去掉了 width/height，按容器宽度缩放，但不超过自然宽度（--wd-w）。
+ * 所有图表都允许缩小到容器宽度，避免 min-width 触发横向滚动或页面溢出。
+ */
+.wisp-diagram-body {
+  max-width: 100%;
+  max-inline-size: 100%;
+  min-width: 0;
+  overflow-x: clip;
+  overflow-y: clip;
+  padding-block: 0.125em;
+}
+.wisp-diagram-body > svg {
+  display: block;
+  width: 100%;
+  max-width: var(--wd-w, 100%);
+  max-inline-size: 100%;
+  min-width: 0;
+  height: auto;
+  margin-inline: auto;
+  overflow: visible;
+}
+
+/* 下载 / 在 draw.io 中打开 */
+.wisp-diagram-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25em 1.25em;
+  margin-top: 0.25em;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+.wisp-diagram > figcaption + .wisp-diagram-actions {
+  margin-top: 0.125em;
+}
+.prose .wisp-diagram-actions a,
+.wisp-diagram-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  color: var(--wisp-muted);
+  text-decoration-line: none;
+}
+.prose .wisp-diagram-actions a:hover,
+.wisp-diagram-actions a:hover {
+  color: var(--wisp-accent);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+/* 图标（Lucide 内联 SVG）：与文字居中对齐，颜色跟随 currentColor */
+.wisp-diagram-actions a .wisp-icon {
+  width: 0.95em;
+  height: 0.95em;
+  vertical-align: 0;
+}
+
+/* ---------- dev 占位：产物缺失或哈希不一致 ---------- */
+.wisp-diagram-missing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  margin-block: 2em;
+  padding: 1em 1.25em;
+  border: 2px dashed var(--wisp-sem-error);
+  border-radius: 6px;
+  background-color: var(--wisp-sem-error-fill);
+  color: var(--wisp-fg);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.wisp-diagram-missing strong {
+  color: var(--wisp-sem-error);
+  font-weight: 600;
+}
+.wisp-diagram-missing code {
+  font-family: var(--wisp-font-mono);
+}
+}
