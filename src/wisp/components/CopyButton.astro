@@ -1,0 +1,35 @@
+---
+import wisp from '../../wisp.config';
+---
+{wisp.features.codeCopy && (
+  <script is:inline>
+    document.querySelectorAll('pre.wisp-pre').forEach((pre) => {
+      const box = pre.parentElement;
+      const b = document.createElement('button');
+      const s = document.createElement('span');
+      b.type = 'button';
+      b.className = 'wisp-copy';
+      b.textContent = '复制';
+      b.setAttribute('aria-label', '复制代码');
+      s.className = 'wisp-sr';
+      s.setAttribute('role', 'status');
+      s.setAttribute('aria-live', 'polite');
+      b.onclick = async () => {
+        const c = pre.querySelector('code').cloneNode(true);
+        c.querySelectorAll('[style*="user-select"]').forEach((e) => e.remove());
+        try {
+          await navigator.clipboard.writeText(c.textContent);
+        } catch {
+          return;
+        }
+        b.textContent = '✓';
+        s.textContent = '已复制';
+        setTimeout(() => {
+          b.textContent = '复制';
+          s.textContent = '';
+        }, 2000);
+      };
+      box.append(b, s);
+    });
+  </script>
+)}

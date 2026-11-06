@@ -1,0 +1,32 @@
+{
+  "name": "wisp-diagram-scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "wisp-diagram skill 的脚本：骨架转换、导出可移植 SVG、PNG 预览、lint、normalize。可脱离 Wisp 站点单独使用。",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "build": "tsx build.ts",
+    "lint": "tsx lint.ts",
+    "normalize": "tsx normalize.ts",
+    "skeleton": "tsx skeleton-to-excalidraw.ts",
+    "png": "tsx export-png.ts",
+    "probe": "tsx build.ts --probe"
+  },
+  "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.1",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/noto-sans-sc": "^5.3.1",
+    "culori": "^4.0.2",
+    "esbuild": "^0.28.2",
+    "fast-xml-parser": "^5.12.0",
+    "playwright": "^1.64.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "subset-font": "^2.9.0",
+    "svgo": "^4.1.0",
+    "tsx": "^4.23.15"
+  }
+}

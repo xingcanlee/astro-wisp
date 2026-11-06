@@ -89,6 +89,7 @@ remark:  remark-math → remark-pele → remark-diagram → remark-reading-time 
 rehype:  rehype-katex → (Shiki 内置高亮 + Wisp transformers) → rehype-heading-anchors
 ```
 
+- **Astro 7 默认的 Markdown 处理器是 Sätteri**，它不运行 remark/rehype 插件。Wisp 在 integration 中显式设置 `markdown.processor = unified({...})`（来自 `@astrojs/markdown-remark`）。插件只能通过这个处理器注册，不能写在旧的 `markdown.remarkPlugins` 里。
 - `remark-pele` 必须在 Shiki 之前处理 `mermaid` 代码块。remark 阶段天然早于高亮，满足这一要求。
 - 插件由 `src/wisp/integration.ts` 统一注册。MDX 继承同一套 markdown 配置。
 - **remark-pele**：`render(code)` → `<figure class="wisp-figure wisp-pele" role="img" aria-label="…"><div class="pele">SVG</div></figure>`。出错时，dev 环境退化为代码块并打印警告；`wisp.config.mermaid.strict=true` 时构建失败。aria-label 依次取 `accTitle`、`accDescr`、图类型名。

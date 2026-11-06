@@ -1,0 +1,152 @@
+---
+/**
+ * 文章目录。两种形态：
+ * - `aside`：宽屏（≥ 1200px）右侧 sticky 栏，由 Post 布局放在 <aside> 中；
+ * - `inline`：窄屏文首的 <details> 折叠目录（≥ 1200px 时由 Post 布局隐藏）。
+ * 当前章节高亮由 IntersectionObserver 实现，同时作用于页面上所有目录实例。
+ */
+import type { MarkdownHeading } from 'astro';
+
+export interface Props {
+  /** 已过滤好的标题（通常 depth 2–3） */
+  headings: MarkdownHeading[];
+  /** 形态，默认 `aside` */
+  variant?: 'aside' | 'inline';
+  /** 标题文字，默认“目录” */
+  title?: string;
+}
+
+const { headings, variant = 'aside', title = '目录' } = Astro.props;
+const minDepth = Math.min(...headings.map((h) => h.depth));
+const list = headings.map((h) => ({ ...h, level: h.depth - minDepth }));
+---
+
+{
+  headings.length > 0 &&
+    (variant === 'inline' ? (
+      <details class="wisp-toc wisp-toc-inline">
+        <summary>{title}</summary>
+        <ol>
+          {list.map((h) => (
+            <li data-level={h.level}>
+              <a href={`#${h.slug}`} data-toc-link={h.slug}>
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </details>
+    ) : (
+      <nav class="wisp-toc wisp-toc-aside" aria-labelledby="wisp-toc-title">
+        <p id="wisp-toc-title" class="wisp-toc-title">
+          {title}
+        </p>
+        <ol>
+          {list.map((h) => (
+            <li data-level={h.level}>
+              <a href={`#${h.slug}`} data-toc-link={h.slug}>
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    ))
+}
+
+<style>
+  .wisp-toc {
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+  .wisp-toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .wisp-toc li {
+    margin: 0;
+  }
+  .wisp-toc li[data-level='1'] {
+    padding-inline-start: 0.9rem;
+  }
+  .wisp-toc li[data-level='2'] {
+    padding-inline-start: 1.8rem;
+  }
+  .wisp-toc a {
+    display: block;
+    padding-block: 0.3rem;
+    color: var(--wisp-muted);
+    transition: color 150ms;
+  }
+  .wisp-toc a:hover {
+    color: var(--wisp-fg);
+  }
+  .wisp-toc a[aria-current='true'] {
+    color: var(--wisp-accent);
+  }
+
+  .wisp-toc-title {
+    margin: 0 0 0.5rem;
+    color: var(--wisp-fg);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+  }
+  .wisp-toc-aside ol {
+    border-inline-start: 1px solid var(--wisp-border);
+  }
+  .wisp-toc-aside a {
+    margin-inline-start: -1px;
+    padding-inline-start: 0.9rem;
+    border-inline-start: 1px solid transparent;
+    transition:
+      color 150ms,
+      border-color 150ms;
+  }
+  .wisp-toc-aside a[aria-current='true'] {
+    border-inline-start-color: var(--wisp-accent);
+  }
+
+  .wisp-toc-inline {
+    margin: 0 0 2.5rem;
+    padding-block: 0.75rem;
+    border-block: 1px solid var(--wisp-border);
+  }
+  .wisp-toc-inline summary {
+    cursor: pointer;
+    color: var(--wisp-muted);
+    font-weight: 600;
+    list-style-position: inside;
+    transition: color 150ms;
+  }
+  .wisp-toc-inline summary:hover,
+  .wisp-toc-inline[open] summary {
+    color: var(--wisp-fg);
+  }
+  .wisp-toc-inline ol {
+    margin-top: 0.5rem;
+  }
+</style>
+
+<script>
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')];
+  const ids = [...new Set(links.map((a) => a.dataset.tocLink!))];
+  const heads = ids.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+  if (heads.length && 'IntersectionObserver' in window) {
+    const visible = new Set<string>();
+    const set = (id: string) =>
+      links.forEach((a) => (a.dataset.tocLink === id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) e.isIntersecting ? visible.add(e.target.id) : visible.delete(e.target.id);
+        // 视口上部可见的第一个标题；都不可见时取最后一个已滚过的标题
+        let cur = heads.find((h) => visible.has(h.id));
+        if (!cur) cur = heads.filter((h) => h.getBoundingClientRect().top < 0).pop();
+        if (cur) set(cur.id);
+      },
+      { rootMargin: '0px 0px -66% 0px' },
+    );
+    heads.forEach((h) => io.observe(h));
+  }
+</script>

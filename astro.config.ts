@@ -4,9 +4,10 @@ import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import wisp from './src/wisp/integration';
+import wispConfig from './src/wisp.config';
 
 export default defineConfig({
-  site: 'https://example.com',
-  integrations: [wisp(), mdx(), react(), sitemap()],
+  site: wispConfig.site.url,
+  integrations: [wisp(wispConfig), mdx(), react(), sitemap()],
   vite: { plugins: [tailwindcss()] },
 });
