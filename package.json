@@ -51,6 +51,8 @@
     "@axe-core/playwright": "^4.14.0",
     "@excalidraw/excalidraw": "^0.18.1",
     "@excalidraw/mermaid-to-excalidraw": "^3.6.0",
+    "@iconify-json/lucide": "^1.2.151",
+    "@iconify/utils": "^3.1.7",
     "@playwright/test": "^1.64.1",
     "@types/culori": "^4.0.1",
     "@types/hast": "^3.0.5",

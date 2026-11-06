@@ -144,3 +144,10 @@
     text-decoration-thickness: 2px;
   }
 }
+
+/* Lucide 图标：与文字基线对齐 */
+.wisp-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: -0.125em;
+}
