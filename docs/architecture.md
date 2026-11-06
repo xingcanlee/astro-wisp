@@ -13,7 +13,6 @@
 | pele | ^1.13（锁定次版本，布局输出可能随版本变化） | Mermaid → SVG |
 | motion | ^14 | 交互组件动画 |
 | @fontsource-variable/{inter,noto-sans-sc,jetbrains-mono} | ^5 | 字体文件来源：Inter / JetBrains Mono 经 Astro Fonts API（npm provider）注册，思源黑体直接引入 CSS（见 ADR D18） |
-| github-slugger | ^2 | slug |
 | 开发依赖：svgo、subset-font、playwright、vitest、tsx | | 图表流水线、测试 |
 
 > 实施者注意：Astro 7 的 API 以官方文档为准（content layer、`astro.config` 中的 markdown 配置、`render()`）。本文档中的代码是意图示例，不是可以直接复制的 API 契约；遇到不一致时按官方文档实现，并在 PR 说明中注明。
@@ -105,7 +104,7 @@ rehype:  rehype-katex → (Shiki 内置高亮 + Wisp transformers) → rehype-he
 - **remark-pele**：`render(code)` → `<figure class="wisp-figure wisp-pele" role="img" aria-label="…"><div class="pele">SVG</div></figure>`。出错时，dev 环境退化为代码块并打印警告；`mermaid.strict: true` 时构建失败。aria-label 依次取 `accTitle`、`accDescr`、图类型名。
 - **remark-reading-time**：统计 CJK 字符数 ÷ 350 + 西文词数 ÷ 200，代码块按 0.3 的权重计入，向上取整，最少 1 分钟。结果写入 `remarkPluginFrontmatter.readingTime`。
 - **remark-has-math**：检测到 math 节点时写入 `hasMath: true`，Post 布局据此按需引入 `katex.css`。
-- **TOC**：使用 `render()` 返回的 headings，取 depth 2–3；标题锚点 id 由 github-slugger 生成，支持中文。
+- **TOC**：使用 `render()` 返回的 headings，取 depth 2–3；标题锚点 id 由 Astro 的 Markdown 管线生成（内部使用 github-slugger），支持中文。
 
 ## 5. 路由
 

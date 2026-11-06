@@ -103,15 +103,9 @@ importers:
       culori:
         specifier: ^4.0.2
         version: 4.0.2
-      github-slugger:
-        specifier: ^2.0.0
-        version: 2.0.0
       katex:
         specifier: ^0.19.1
         version: 0.19.1
-      mdast-util-to-string:
-        specifier: ^4.0.0
-        version: 4.0.0
       motion:
         specifier: ^14.0.0
         version: 14.9.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
