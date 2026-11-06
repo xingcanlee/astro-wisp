@@ -2,6 +2,13 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.2.1
+
+无运行时代码变化。
+
+- 发布改为只使用 npm Trusted Publishing（GitHub Actions OIDC），自本版本起不再使用任何 npm token；每个版本附带 SLSA provenance。
+- 首发时 npm 生成的占位版本 `0.0.0-stage` 不是可用版本，请安装 `astro-wisp@latest`。
+
 ## 0.2.0
 
 首个 npm 版本：主题从“复制模板”改为 Astro 集成包。

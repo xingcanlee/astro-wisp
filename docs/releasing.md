@@ -2,9 +2,15 @@
 
 发布只在 GitHub Actions 中进行（`.github/workflows/release.yml`）：推送 `v<版本号>` tag → 质量门禁（`pnpm check`、构建演示站与 starter、tarball 冒烟测试）→ 全部通过后 `npm publish --provenance`。任何一步失败都不会发布。
 
-认证：npm CLI 优先使用 **Trusted Publishing**（GitHub Actions OIDC，不需要 token）。但 npm 只能给**已存在**的包配置 Trusted Publisher，所以首发要用一次临时 token（仓库 secret `NPM_TOKEN`），首发后切换到 OIDC 并删除 token。
+认证只用 **Trusted Publishing**（GitHub Actions OIDC）：仓库和环境中不保存任何 npm token，npm 自动为每个版本生成 provenance。
 
-## 首发（一次性）
+当前配置（npmjs.com → astro-wisp → Settings → Trusted Publisher）：GitHub Actions，`xingcanlee` / `astro-wisp` / `release.yml` / 环境 `npm`。`npm` 环境设有人工审批，每次发布需要在 Actions 中批准。
+
+## 首发记录（已完成，仅供参考）
+
+npm 只能给**已存在**的包配置 Trusted Publisher，所以 0.2.0 是用一次性的临时 token（`npm` 环境 secret `NPM_TOKEN`，勾选 Bypass 2FA）由 CI 发布的；发布后已切换到 OIDC，工作流不再读取任何 token。
+注意：新包首发时 npm 会先公开一个占位版本 `0.0.0-stage`，几分钟后正式版本才出现。
+以下是当时的步骤，迁移到新的包名或 fork 时可以参考：
 
 1. **npm 账号**：注册 <https://www.npmjs.com/signup> 并开启 2FA。
 2. **临时 token**：npmjs.com 头像 → **Access Tokens** → **Generate New Token** → **Granular Access Token**：
@@ -14,7 +20,7 @@
 3. **GitHub 环境与 secret**：仓库 **Settings** → **Environments** → **New environment**，名称 `npm`：
    - 可选：**Required reviewers** 填自己（每次发布需要人工批准）；**Deployment branches and tags** 限制为 tag `v*`
    - 在该环境中 **Add environment secret**：名称 `NPM_TOKEN`，值为上一步的 token
-4. **合并并打 tag**：把本分支合并到 main，确认 CI 通过后：
+4. **合并并打 tag**：把发布分支合并到 main，确认 CI 通过后：
 
    ```bash
    git checkout main && git pull
@@ -24,7 +30,7 @@
 
    在 Actions 中查看 **Release** 工作流（如设置了 reviewer，需要点 **Approve**）。成功后包出现在 <https://www.npmjs.com/package/astro-wisp>。
 
-## 切换到 Trusted Publishing（首发成功后立即做）
+## 切换到 Trusted Publishing（首发成功后立即做，已完成）
 
 1. npmjs.com → astro-wisp → **Settings** → **Trusted Publisher** → **GitHub Actions**：
 
@@ -48,7 +54,7 @@ git commit -am "release: astro-wisp v0.3.0"   # 走 PR，CI 通过后合并到 m
 git tag v0.3.0 && git push origin v0.3.0
 ```
 
-工作流会检查 tag 与包版本一致。不需要任何 token。
+工作流会检查 tag 与包版本一致。不需要任何 token。如果 Trusted Publisher 配置与工作流不匹配（仓库、文件名、环境名），npm 会返回 404。
 
 ## 不发布 npm 时
 

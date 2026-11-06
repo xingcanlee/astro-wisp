@@ -1,8 +1,8 @@
 name: Release
 
 # 推送 v<版本号> 的 tag（与 packages/astro-wisp/package.json 的 version 一致）时：先跑完整质量门禁，全部通过后发布到 npm。
-# 认证：npm CLI 优先使用 Trusted Publishing（OIDC，无 token）；包还不存在时（首发）OIDC 不可用，
-# 回退到仓库 secret NPM_TOKEN。首发成功并配置 Trusted Publisher 后删除该 secret。详见 docs/releasing.md。
+# 认证：只用 npm Trusted Publishing（OIDC），仓库与环境中不保存任何 npm token；npm 自动生成 provenance。
+# 设置见 docs/releasing.md。
 on:
   push:
     tags: ['v*']
@@ -53,7 +53,4 @@ jobs:
 
       - name: Publish
         working-directory: packages/astro-wisp
-        # --provenance：OIDC 发布时自动生成；首发走 token 时也显式生成来源证明
-        run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
