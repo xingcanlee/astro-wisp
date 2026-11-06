@@ -13,6 +13,7 @@
  * （它经由 skill 的 env.ts 带进一个 Vite 无法分析的动态 import，构建会出警告）。
  * 因此这里有一份只读的 manifest 校验，与 manifest.ts 的 contentHash / entryStatus 语义一致（有单测对照）。
  */
+import { iconSvg } from './icons';
 import { createHash } from 'node:crypto';
 import { existsSync, globSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from 'node:path';
@@ -357,13 +358,13 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     if (showDl && href) {
       links.push(
         `<a class="wisp-diagram-dl" href="${escAttr(href)}" download="${escAttr(file)}" type="${escAttr(contentTypeFor(file).split(';')[0]!)}"` +
-        ` aria-label="${escAttr(`下载源文件 ${file}（${KIND_NAME[style]}）`)}">源文件</a>`,
+        ` aria-label="${escAttr(`下载源文件 ${file}（${KIND_NAME[style]}）`)}">${iconSvg('file-down')}源文件</a>`,
       );
       const absHref = style === 'clean' ? absoluteUrl(env.siteUrl, href) : undefined;
       if (absHref) {
         links.push(
           `<a class="wisp-diagram-open" href="${escAttr(`https://app.diagrams.net/#U${encodeURIComponent(absHref)}`)}"` +
-          ` target="_blank" rel="noopener noreferrer">在 draw.io 中打开</a>`,
+          ` target="_blank" rel="noopener noreferrer">${iconSvg('external-link')}在 draw.io 中打开</a>`,
         );
       }
     }

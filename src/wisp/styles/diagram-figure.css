@@ -86,7 +86,6 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-block: 0.25em;
-  scrollbar-width: thin;
 }
 .wisp-diagram-body > svg {
   display: block;
@@ -126,21 +125,11 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 0.25em;
 }
-/* 小图标：下载箭头 / 外链，用 mask 绘制，颜色跟随 currentColor */
-.wisp-diagram-actions a::before {
-  content: "";
-  flex: none;
+/* 图标（Lucide 内联 SVG）：与文字居中对齐，颜色跟随 currentColor */
+.wisp-diagram-actions a .wisp-icon {
   width: 0.95em;
   height: 0.95em;
-  background-color: currentColor;
-  -webkit-mask: var(--wisp-dl-icon) center / contain no-repeat;
-  mask: var(--wisp-dl-icon) center / contain no-repeat;
-}
-.wisp-diagram-dl {
-  --wisp-dl-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10'/%3E%3C/svg%3E");
-}
-.wisp-diagram-open {
-  --wisp-dl-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 7.5 8.5M11.5 9.5v3a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E");
+  vertical-align: 0;
 }
 
 /* ---------- dev 占位：产物缺失或哈希不一致 ---------- */

@@ -2,7 +2,6 @@ import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { FIX, makeRepo } from './render-diagram.fixture';
-import { outputPathFor as buildOutputPathFor } from '../../../skills/wisp-diagram/scripts/build.ts';
 import {
   downloadKeyFor, isDiagramUrl, outputPathFor, parseDiagramUrl, postId, prepareSvg, renderDiagram,
   sourceForDownloadKey,
@@ -27,8 +26,10 @@ describe('url helpers', () => {
     expect(parseDiagramUrl('./a%20b.drawio#page=%E6%95%B0%E6%8D%AE%E6%B5%81')).toEqual({ path: './a b.drawio', page: '数据流' });
     expect(parseDiagramUrl('./a.excalidraw').page).toBeUndefined();
   });
-  it('outputPathFor matches build.ts', () => {
-    for (const i of [0, 1, 5]) expect(outputPathFor('/x/d/a.drawio', i)).toBe(buildOutputPathFor('/x/d/a.drawio', i));
+  it('outputPathFor 与 Python 版 build 的命名一致', () => {
+    expect(outputPathFor('/x/d/a.drawio', 0)).toBe('/x/d/a.wisp.svg');
+    expect(outputPathFor('/x/d/a.drawio', 1)).toBe('/x/d/a.page-2.wisp.svg');
+    expect(outputPathFor('/x/d/a.drawio', 5)).toBe('/x/d/a.page-6.wisp.svg');
   });
   it('postId matches content.config semantics', () => {
     expect(postId('attention-explained/index.mdx')).toBe('attention-explained');
@@ -92,6 +93,7 @@ describe('renderDiagram', () => {
     expect(r.html).toContain('<figcaption>图 1：&lt;b&gt;</figcaption>');
     expect(r.html).toContain('href="/diagrams/demo/flow.excalidraw" download="flow.excalidraw"');
     expect(r.html).toContain('aria-label="下载源文件 flow.excalidraw（Excalidraw）"');
+    expect(r.html).toMatch(/class="wisp-diagram-dl"[^>]*><svg [^>]*class="wisp-icon"[^>]*aria-hidden="true"[\s\S]*?<\/svg>源文件<\/a>/);
     expect(r.html).not.toContain('app.diagrams.net'); // Excalidraw 没有在线打开
     expect(r.html).toContain('>流程</title>');
   });
@@ -108,6 +110,7 @@ describe('renderDiagram', () => {
   });
   it('adds open-in-draw.io link only with a real site url', () => {
     const r = renderDiagram({ src: './diagrams/model.drawio', from: repo.post, seq: 1 }, env());
+    expect(r.html).toMatch(/class="wisp-diagram-open"[^>]*><svg [^>]*class="wisp-icon"[\s\S]*?<\/svg>在 draw\.io 中打开<\/a>/);
     expect(r.html).toContain(`https://app.diagrams.net/#U${encodeURIComponent('https://blog.dev/diagrams/demo/model.drawio')}`);
     const r2 = renderDiagram({ src: './diagrams/model.drawio', from: repo.post, seq: 1 }, env({ siteUrl: 'https://example.com' }));
     expect(r2.html).not.toContain('app.diagrams.net');

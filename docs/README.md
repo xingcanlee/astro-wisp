@@ -19,7 +19,7 @@
 | 品牌 | Wisp |
 | 仓库 / 模板 | `astro-wisp` |
 | npm（远期） | `astro-wisp`（发布前确认可用） |
-| 创建命令 | `npm create astro@latest -- --template <user>/astro-wisp` |
+| 创建命令 | `npm create astro@latest -- --template xingcanlee/astro-wisp` |
 
 ## 决策记录（ADR 摘要）
 

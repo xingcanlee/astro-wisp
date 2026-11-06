@@ -4,13 +4,15 @@
  * 当前偏好由 head 内联脚本写入 `<html data-theme-pref>`，图标据此用 CSS 显示，首屏无跳变。
  * 本组件无 props。
  */
+import Icon from './Icon.astro';
+
 export interface Props {}
 ---
 
 <button type="button" class="wisp-theme-toggle" data-wisp-theme-toggle aria-label="切换主题">
-  <svg class="i-light" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
-  <svg class="i-dark" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"></path></svg>
-  <svg class="i-system" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8M12 16v4"></path></svg>
+  <Icon name="sun" size={18} class="i-light" />
+  <Icon name="moon" size={18} class="i-dark" />
+  <Icon name="monitor" size={18} class="i-system" />
 </button>
 
 <style>
@@ -30,12 +32,12 @@ export interface Props {}
   .wisp-theme-toggle:hover {
     color: var(--wisp-fg);
   }
-  .wisp-theme-toggle svg {
+  .wisp-theme-toggle :global(svg) {
     display: none;
   }
-  :global(html:not([data-theme-pref='light']):not([data-theme-pref='dark'])) .i-system,
-  :global(html[data-theme-pref='light']) .i-light,
-  :global(html[data-theme-pref='dark']) .i-dark {
+  :global(html:not([data-theme-pref='light']):not([data-theme-pref='dark'])) .wisp-theme-toggle :global(.i-system),
+  :global(html[data-theme-pref='light']) .wisp-theme-toggle :global(.i-light),
+  :global(html[data-theme-pref='dark']) .wisp-theme-toggle :global(.i-dark) {
     display: block;
   }
 </style>

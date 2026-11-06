@@ -8,7 +8,7 @@ draw.io 用于**精确排版的结构图**（模型结构、分层架构）。�
 - 字号只用 12 / 14 / 18；字体 `fontFamily=Inter`（中文自动回落到 Noto Sans SC）。
 - 线宽 `strokeWidth=1.5`，强调 `2.5`；圆角 `rounded=1;arcSize=8`。
 - 禁止 `shadow=1`、`gradientColor`、`sketch=1`；不用 `glass`。
-- 未压缩：File → Properties → 取消勾选 Compressed。若拿到压缩文件，运行 `npx tsx normalize.ts file.drawio` 解压。
+- 未压缩：File → Properties → 取消勾选 Compressed。若拿到压缩文件，运行 `uv run skills/wisp-diagram/scripts/wisp_diagram.py normalize file.drawio` 解压（路径按 skill 实际位置调整）。
 - 标签里的换行用 `&lt;br&gt;`，`&` 写成 `&amp;amp;`（`html=1` 时 value 是 HTML，再经 XML 转义）。
 
 ## 节点（vertex）
@@ -65,7 +65,7 @@ rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#e2e2dd
 | 标签 | `text;html=1;align=left;verticalAlign=middle;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;` |
 | 注释 | `text;html=1;align=left;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#5c6067;` |
 
-`<title>` 取自页面名（页面名是默认的 `Page-1` 时取文件名），`<desc>` 由图中所有文字标签拼成；可用 `build.ts --title ... --desc ...` 覆盖（仅单文件构建时可用）。所以**给页面起一个有意义的名字**。
+`<title>` 取自页面名（页面名是默认的 `Page-1` 时取文件名），`<desc>` 由图中所有文字标签拼成；可用 `wisp_diagram.py build <文件> --title ... --desc ...` 覆盖（仅单文件构建时可用）。所以**给页面起一个有意义的名字**。
 
 ## 最小可用模板
 

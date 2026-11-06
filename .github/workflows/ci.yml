@@ -4,32 +4,45 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      # pnpm 版本取自 package.json 的 packageManager 字段
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10  # package.json 无 packageManager 字段
       - uses: actions/setup-node@v4
         with:
           node-version: 26
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # astro check + tsc + vitest + 对比度
-      - run: pnpm check
-      - run: pnpm diagram check
+      # skills（wisp-diagram / wisp-writer）的脚本是 Python + uv；pnpm diagram 也转调它
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Skill tests (wisp-diagram)
+        run: uv run --project skills/wisp-diagram/scripts pytest skills/wisp-diagram/scripts/tests
+      - name: Skill tests (wisp-writer)
+        run: uv run --with pytest pytest skills/wisp-writer/scripts/tests
+      - name: Check (astro check + tsc + vitest + contrast + diagram check)
+        run: pnpm check
+      - name: Lint posts (wisp-writer)
+        run: uv run skills/wisp-writer/scripts/check_post.py --all
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
-      # webServer 会再次 build 并启动 preview；CI=1 时不复用已有服务器
-      - run: pnpm exec playwright test
+      # 视觉快照基线在本地生成，跨环境字体渲染存在像素差，CI 中跳过（本地用 pnpm test:e2e 运行全量）
+      - name: E2E
+        run: pnpm exec playwright test --grep-invert "视觉"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

@@ -3,6 +3,7 @@
  * 页脚：版权、RSS、社交链接。muted，0.875rem。
  */
 import config from '../../wisp.config';
+import Icon from './Icon.astro';
 
 export interface Props {
   /** 版权年份，默认当前构建年份 */
@@ -18,6 +19,15 @@ const defaultLabel: Record<string, string> = {
   email: '邮箱',
   rss: 'RSS',
   link: '链接',
+};
+const iconOf: Record<string, string> = {
+  github: 'github',
+  rss: 'rss',
+  x: 'twitter',
+  email: 'mail',
+  mastodon: 'at-sign',
+  bluesky: 'at-sign',
+  link: 'link',
 };
 const owner = config.site.author || config.site.title;
 ---
@@ -37,8 +47,10 @@ const owner = config.site.author || config.site.title;
                   href={s.kind === 'email' && !s.href.startsWith('mailto:') ? `mailto:${s.href}` : s.href}
                   rel={external ? 'me noopener' : undefined}
                   type={s.kind === 'rss' ? 'application/rss+xml' : undefined}
+                  aria-label={s.label ?? defaultLabel[s.kind]}
+                  title={s.label ?? defaultLabel[s.kind]}
                 >
-                  {s.label ?? defaultLabel[s.kind]}
+                  <Icon name={iconOf[s.kind] ?? 'link'} size={18} />
                 </a>
               </li>
             );
@@ -72,12 +84,17 @@ const owner = config.site.author || config.site.title;
   .wisp-footer ul {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.25rem;
-    margin: 0;
+    gap: 0.25rem;
+    margin: 0 -0.5rem 0 0;
     padding: 0;
     list-style: none;
   }
   .wisp-footer a {
+    display: inline-grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 6px;
     color: var(--wisp-muted);
     transition: color 150ms;
   }

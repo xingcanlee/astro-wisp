@@ -7,26 +7,42 @@ description: 为博客、技术文档绘制 Wisp 风格的概念图、架构图�
 
 目标：产出**风格一致、可主题化、可移植**的图表。源文件（`.excalidraw` / `.drawio`）+ 生成的 `*.wisp.svg`：同一个 SVG 在 Wisp 站点内联时跟随站点主题，在 GitHub README / 其他博客以 `<img>` 使用时跟随系统明暗。
 
-本 skill 目录自包含，可整体复制到任何项目（`~/.claude/skills/` 或 `<项目>/.claude/skills/`）。所有命令都在 `scripts/` 目录下运行。
+本 skill 目录自包含，可整体复制到任何项目（`~/.claude/skills/` 或 `<项目>/.claude/skills/`）。脚本是 Python，用 [uv](https://docs.astral.sh/uv/) 运行：入口 `scripts/wisp_diagram.py` 头部用 PEP 723 声明了依赖（playwright、fonttools），`uv run` 会自动建好隔离环境，**不需要 npm / pip install**。
 
 ```
 SKILL.md
 palette.json          调色板（唯一的颜色来源）
 reference/            style-guide.md  excalidraw-skeleton.md  drawio-cheatsheet.md  ml-patterns.md
 assets/               wisp.excalidrawlib  wisp-drawio-library.xml  drawio-config.json  drawio-colors.txt
-scripts/              skeleton-to-excalidraw.ts  lint.ts  normalize.ts  build.ts  export-png.ts
+scripts/              wisp_diagram.py（统一入口）  wisp_diagram_lib/（实现）  tests/（pytest）
 ```
 
 ## 一次性准备
 
+下文命令都在**项目根目录**运行，`$W` 代表 skill 的入口脚本（按 skill 实际位置调整路径）：
+
 ```bash
-cd skills/wisp-diagram/scripts
-npm install                      # 安装依赖（也可以复用宿主项目已安装的同名依赖）
-npx playwright install chromium  # 导出用的无头浏览器
-npx tsx build.ts --probe         # 查看 draw.io 导出方式（cli / docker / browser）是否可用
+W="uv run skills/wisp-diagram/scripts/wisp_diagram.py"   # 例如 .claude/skills/wisp-diagram/... 或 ~/.claude/skills/wisp-diagram/...
+uv run --with playwright==1.64.1 playwright install chromium   # 导出用的无头浏览器（已装过可跳过）
+$W probe                                                       # 查看 Chromium、Excalidraw、draw.io 导出方式（cli / docker / browser）是否可用
 ```
 
-draw.io 导出按 cli → docker → browser 顺序自动回退；browser 方式首次会下载 draw.io viewer 脚本并缓存（离线环境可设 `WISP_DRAWIO_VIEWER=<本地文件>`）。
+**首次运行会下载并缓存**（之后离线可用）：
+
+| 内容 | 来源 | 大小 |
+|---|---|---|
+| Python 依赖 playwright 1.64.1、fonttools | PyPI（uv 管理，放在 uv 自己的缓存） | ≈ 55 MB |
+| Chromium（只在没装过时） | `playwright install chromium`，放在 `~/.cache/ms-playwright/` | 数百 MB |
+| @excalidraw/excalidraw 0.18.1 及其依赖（≈110 个 ES 模块） | jsDelivr，按锁定版本 | ≈ 1.6 MB |
+| svgo 4.1.0 浏览器构建（SVG 精简，在 Chromium 中运行） | jsDelivr | 0.8 MB |
+| 字体：Excalifont、Inter 5.3.0、Noto Sans SC 5.3.1（按 unicode-range 分片，用到哪片下哪片） | jsDelivr | 全部 ≈ 4.5 MB |
+| draw.io viewer（只在 browser 导出方式下） | viewer.diagrams.net | ≈ 4.7 MB |
+
+除 Python 依赖与 Chromium 外，缓存都在 `~/.cache/wisp-diagram/`（可用 `WISP_DIAGRAM_CACHE` 改位置）。`$W cache status` 查看，`$W cache clear` 清空。
+
+**离线使用**：先在联网环境运行一次 `$W cache warm`（下载上表全部前端资源，≈ 11 MB），之后设置 `WISP_DIAGRAM_OFFLINE=1` 即可完全离线；缓存缺文件时会报错并提示预热，不会静默联网。也可以用 `WISP_EXCALIDRAW_BUNDLE=<本地 JS>` 指定自己的 Excalidraw 构建（定义了 `window.__wisp` 的 IIFE，或导出 `exportToSvg` 等函数的 ES 模块），用 `WISP_DRAWIO_VIEWER=<本地文件>` 指定 draw.io viewer。
+
+draw.io 导出按 cli → docker → browser 顺序自动回退。`new`、`build`、`export` 都需要 Chromium（Excalidraw 导出、svgo 精简都在无头浏览器里运行）；`lint`、`normalize`、`check` 不需要。
 
 ## 1. 先选工具
 
@@ -49,18 +65,18 @@ draw.io 导出按 cli → docker → browser 顺序自动回退；browser 方式
 
 - Excalidraw：**写骨架 JSON**（位置、尺寸、label、语义色名、箭头起止 id），再转换。**禁止手写完整的 Excalidraw 元素**（seed、boundElements、version 等字段极易出错）。
   ```bash
-  npx tsx skeleton-to-excalidraw.ts diagrams/attention.skeleton.json -o diagrams/attention.excalidraw
+  $W new diagrams/attention.skeleton.json -o diagrams/attention.excalidraw
   ```
   骨架文件转换后可以删除或留作生成脚本；之后以 `.excalidraw` 为准。
-- draw.io：直接写未压缩 mxGraph XML，样式字符串只用 `reference/drawio-cheatsheet.md` 的预设。拿到压缩过的 `.drawio` 时先 `npx tsx normalize.ts file.drawio` 解压。
+- draw.io：直接写未压缩 mxGraph XML，样式字符串只用 `reference/drawio-cheatsheet.md` 的预设。拿到压缩过的 `.drawio` 时先 `$W normalize diagrams/file.drawio` 解压。
 - 手动在编辑器里画：导入 `assets/wisp.excalidrawlib`（Excalidraw 右侧 Library → Open）或 `assets/wisp-drawio-library.xml`（draw.io：File → Open Library from → Device），按 `assets/drawio-colors.txt` 配置调色板。
 
 **③ lint（先修复）再 build**
 
 ```bash
-npx tsx lint.ts diagrams/attention.excalidraw --fix      # 非调色板颜色吸附到最近令牌；无法自动修的会列出
-npx tsx lint.ts diagrams/attention.excalidraw --strict   # 无任何 error/warn 才算通过
-npx tsx build.ts diagrams/attention.excalidraw           # 生成 diagrams/attention.wisp.svg
+$W lint diagrams/attention.excalidraw --fix      # 非调色板颜色吸附到最近令牌；无法自动修的会列出
+$W lint diagrams/attention.excalidraw --strict   # 无任何 error/warn 才算通过
+$W build diagrams/attention.excalidraw           # 生成 diagrams/attention.wisp.svg
 ```
 
 build 常用参数：`--embed-fonts`（内嵌字体子集，发布到外部平台时用）、`--fix`、`--title T --desc D`（覆盖无障碍文本，仅单文件）、`--drawio cli|docker|browser`、`--out-dir DIR`、`--strict`。多页 draw.io 的第 2 页起输出为 `name.page-2.wisp.svg`。
@@ -68,8 +84,8 @@ build 常用参数：`--embed-fonts`（内嵌字体子集，发布到外部平�
 **④ 自检：导出 light 与 dark 预览，用 Read 工具查看**
 
 ```bash
-npx tsx export-png.ts diagrams/attention.wisp.svg --theme light -o /tmp/attention.light.png
-npx tsx export-png.ts diagrams/attention.wisp.svg --theme dark  -o /tmp/attention.dark.png
+$W export diagrams/attention.wisp.svg --theme light -o /tmp/attention.light.png
+$W export diagrams/attention.wisp.svg --theme dark  -o /tmp/attention.dark.png
 ```
 
 检查：文字重叠、箭头穿过节点、标签压住箭头头部、暗色下看不清、中文被截断。发现问题改源文件，回到 ③ 重新 build。预览 PNG 放临时目录，不要提交。
@@ -144,7 +160,7 @@ npx tsx export-png.ts diagrams/attention.wisp.svg --theme dark  -o /tmp/attentio
 
 ### 在 Wisp 站点中（可选）
 
-站点内置同样功能的 CLI：`pnpm diagram build|check|lint [--fix]`、`pnpm diagram new <skeleton.json> --build`、`pnpm diagram export <文件> --png --theme dark`。
+站点的 `pnpm diagram build|check|lint [--fix]`、`pnpm diagram new <skeleton.json> --build`、`pnpm diagram export <文件> --png --theme dark` 是本 skill 的薄包装（转调 `uv run skills/wisp-diagram/scripts/wisp_diagram.py`，并带上 `--root <仓库> --manifest scripts/diagram/manifest.json` 做增量构建）。
 源文件与文章放在一起（`diagrams/` 目录），`.wisp.svg` 也要提交。在 MDX/Markdown 中用标准图片语法引用**源文件**（站点会内联同名 `.wisp.svg`，并附源文件下载链接）：
 
 ```md
@@ -152,7 +168,9 @@ npx tsx export-png.ts diagrams/attention.wisp.svg --theme dark  -o /tmp/attentio
 ![Transformer Block 的残差结构](./diagrams/transformer-block.drawio#page=encoder)
 ```
 
-alt 写入 SVG 的 `<title>`，引号中的说明成为图注；`#page=<页面名>` 选择 draw.io 的页面。`pnpm diagram check` 只校验内容哈希，CI 里不需要浏览器。
+alt 写入 SVG 的 `<title>`，引号中的说明成为图注；`#page=<页面名>` 选择 draw.io 的页面。`pnpm diagram check` 只校验内容哈希，CI 里不需要浏览器（但需要 uv）。
+
+其他项目也可以用同样的“项目模式”：`$W build --root . --manifest diagrams.manifest.json` 只重建有变化的源文件（扫描 `<root>/src/content/**/diagrams/`），`$W check --root . --manifest diagrams.manifest.json` 在 CI 中校验哈希。
 
 ### 在其他地方（GitHub README、其他博客、IDE 预览）
 
@@ -162,31 +180,33 @@ alt 写入 SVG 的 `<title>`，引号中的说明成为图注；`#page=<页面�
 ![自注意力计算流程](diagrams/attention.wisp.svg)
 ```
 
-- 发布到外部平台前用 `build.ts --embed-fonts` 内嵌字体子集（每张图通常几十 KB），避免字体回落。
-- 公众号、知乎等不支持 SVG 的平台：`export-png.ts <文件> --theme light --scale 2 -o out.png`（`--transparent` 可得到透明背景；默认内嵌字体）。
+- 发布到外部平台前用 `$W build <文件> --embed-fonts` 内嵌字体子集（每张图通常几十 KB），避免字体回落。
+- 公众号、知乎等不支持 SVG 的平台：`$W export <文件> --theme light --scale 2 -o out.png`（`--transparent` 可得到透明背景；默认内嵌字体）。
 - 源文件一并保存在仓库中，便于以后修改；`.excalidraw` 可在 excalidraw.com 打开，`.drawio` 可在 app.diagrams.net 打开。
 
 ## 7. 常见错误
 
 | 错误 | 怎么避免 |
 |---|---|
-| 手写完整 Excalidraw 元素 | 只写骨架，用 `skeleton-to-excalidraw.ts` 转换 |
+| 手写完整 Excalidraw 元素 | 只写骨架，用 `$W new` 转换 |
 | 在编辑器里用了调色板外的颜色（吸管、默认色） | 用素材库；lint `--fix` 吸附；仍报错就改源文件 |
 | 手选暗色值作画 | 只用浅色值，暗色靠 SVG 自动切换 |
 | 骨架箭头穿过第三个节点 | 箭头是中心连线上的直线；调整布局，或改用 draw.io 折线 |
 | 短连线加标签，标签压住箭头头部 | 节点间距 ≥ 96 再加标签，否则去掉标签 |
 | 坐标不在 8px 网格上 | 所有数值取 8 的倍数 |
-| `.drawio` 提交了压缩格式 | `normalize.ts` 解压；File → Properties 取消 Compressed |
+| `.drawio` 提交了压缩格式 | `$W normalize` 解压；File → Properties 取消 Compressed |
 | draw.io 标签里的 `&` 没转义 | `html=1` 时写成 `&amp;amp;`，换行写 `&lt;br&gt;` |
 | 中文标签过长被截断 | 每行 ≤ 8–10 个汉字，用 `\n` / `<br>` 换行，加宽节点 |
-| 改了源文件忘记重新 build | 修改后重跑 `build.ts`（站点里 `pnpm diagram check` 会发现哈希不一致） |
+| 改了源文件忘记重新 build | 修改后重跑 `$W build`（站点里 `pnpm diagram check` 会发现哈希不一致） |
 | 没看暗色预览就交付 | 步骤 ④ 的 dark 预览必须看 |
 | 空洞的 alt（“图 1”“diagram”） | alt 写图要说明的结论 |
 | 用图表工具画数据图 | 折线/柱状等数据图不属于本 skill |
 
 ## 8. 排错
 
-- `找不到依赖 ...`：在 `scripts/` 运行 `npm install`。
-- `playwright` 启动失败：`npx playwright install chromium`。
-- draw.io 导出失败：`npx tsx build.ts --probe` 看哪种方式可用；可用 `--drawio browser|cli|docker` 强制指定。
+- `uv: command not found`：安装 uv（`curl -LsSf https://astral.sh/uv/install.sh | sh`）。需要 Python ≥ 3.11，uv 会按需自动下载。
+- `无法启动 Chromium`：`uv run --with playwright==1.64.1 playwright install chromium`（版本要与脚本锁定的 playwright 一致）。
+- `下载失败` / `离线模式下缓存缺少 N 个文件`：联网运行一次 `$W cache warm`；缓存位置见 `$W cache status`。
+- draw.io 导出失败：`$W probe` 看哪种方式可用；可用 `--drawio browser|cli|docker` 强制指定。
+- 想看浏览器里的报错：设置 `WISP_DIAGRAM_DEBUG=1`。
 - lint 报 `unrecognised color`：颜色不是十六进制（如 `rgb()` 之外的特殊值），手工改成调色板里的浅色值。

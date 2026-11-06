@@ -61,8 +61,27 @@ export function wispContrastTransformer(): ShikiTransformer {
   };
 }
 
+export type CodeFoldOptions = { enabled: boolean; maxLines: number; previewLines: number };
+
+/**
+ * 解析代码块 meta 中的折叠指令：`fold`、`nofold`、`fold=8`。
+ * 返回 undefined 表示未指定（按行数阈值自动决定）。
+ */
+export function parseFoldMeta(raw: string | undefined): { fold: false } | { fold: true; lines?: number } | undefined {
+  let r: ReturnType<typeof parseFoldMeta>;
+  for (const t of (raw ?? '').split(/\s+/)) {
+    if (t === 'nofold') r = { fold: false };
+    else if (t === 'fold') r = { fold: true };
+    else {
+      const m = /^fold=(\d+)$/.exec(t);
+      if (m && +m[1]! > 0) r = { fold: true, lines: +m[1]! };
+    }
+  }
+  return r;
+}
+
 /** 给 pre 加语言信息，并包一层 div.wisp-code（语言标签 + 复制按钮的定位容器） */
-export function wispFrameTransformer(lineNumbers: boolean): ShikiTransformer {
+export function wispFrameTransformer(lineNumbers: boolean, fold?: CodeFoldOptions): ShikiTransformer {
   return {
     name: 'wisp:frame',
     pre(node) {
@@ -71,16 +90,30 @@ export function wispFrameTransformer(lineNumbers: boolean): ShikiTransformer {
       this.addClassToHast(node, 'wisp-pre');
       if (lineNumbers) this.addClassToHast(node, 'wisp-ln');
       node.properties.tabindex = 0;
+      // 行数与折叠标记（不含 JS 时仍完整显示，脚本负责实际折叠）
+      const code = node.children.find((c: any) => c.type === 'element' && c.tagName === 'code') as any;
+      const lines = (code?.children ?? []).filter((c: any) => c.type === 'element' && c.properties?.class === 'line').length;
+      (this.meta as any).__wispFrame = { lines, fold: undefined as number | undefined };
+      if (fold?.enabled) {
+        const m = parseFoldMeta((this.options.meta as any)?.__raw);
+        const preview = m?.fold ? (m.lines ?? fold.previewLines) : fold.previewLines;
+        const on = m ? m.fold : lines > fold.maxLines;
+        if (on && lines > preview) (this.meta as any).__wispFrame.fold = preview;
+      }
     },
     root(root) {
       const pre = root.children[0];
       if (!pre || pre.type !== 'element') return;
       const lang = String(pre.properties.dataLanguage ?? 'text');
+      const fr = ((this.meta as any).__wispFrame ?? {}) as { lines?: number; fold?: number };
+      const extra: Record<string, string | number> = {};
+      if (fr.lines) extra['data-lines'] = fr.lines;
+      if (fr.fold) extra['data-fold'] = fr.fold;
       root.children = [
         {
           type: 'element',
           tagName: 'div',
-          properties: { class: 'wisp-code', 'data-language': lang },
+          properties: { class: 'wisp-code', 'data-language': lang, ...extra },
           children: [
             {
               type: 'element',
@@ -105,6 +138,6 @@ export function wispShikiConfig(config: WispConfig) {
     themes: { light: 'github-light', dark: 'github-dark' },
     defaultColor: false as const,
     wrap: false as const,
-    transformers: [wispDiffTransformer(), wispContrastTransformer(), wispFrameTransformer(config.features.lineNumbers)],
+    transformers: [wispDiffTransformer(), wispContrastTransformer(), wispFrameTransformer(config.features.lineNumbers, config.features.codeFold)],
   };
 }

@@ -10,7 +10,7 @@
 ## 方式一：用模板创建新站点
 
 ```bash
-npm create astro@latest -- --template <user>/astro-wisp
+npm create astro@latest -- --template xingcanlee/astro-wisp
 cd <你的项目名>
 pnpm install
 pnpm dev
@@ -19,7 +19,7 @@ pnpm dev
 ## 方式二：克隆仓库
 
 ```bash
-git clone https://github.com/<user>/astro-wisp.git
+git clone https://github.com/xingcanlee/astro-wisp.git
 cd astro-wisp
 pnpm install
 pnpm dev

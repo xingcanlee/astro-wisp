@@ -151,3 +151,80 @@
   flex-shrink: 0;
   vertical-align: -0.125em;
 }
+
+/*
+ * 滚动条：颜色只来自令牌（fg 与 bg 混合），轨道透明。
+ * 页面主滚动条保持系统宽度，只改颜色；内部滚动区（.wisp-scroll 及下列既有容器）使用细滚动条。
+ * color-scheme 由 tokens.css 在 :root / [data-theme=dark] 上设置，原生滚动条随主题切换。
+ */
+:root {
+  --wisp-scroll-thumb: color-mix(in srgb, var(--wisp-fg) 30%, var(--wisp-bg));
+  --wisp-scroll-thumb-hover: color-mix(in srgb, var(--wisp-fg) 48%, var(--wisp-bg));
+}
+html {
+  scrollbar-color: var(--wisp-scroll-thumb) transparent;
+}
+.wisp-scroll,
+.katex-display,
+.wisp-pele-body,
+.wisp-diagram-body,
+.prose pre,
+.prose table,
+.prose .wisp-table,
+.wisp-pre,
+.wisp-post-aside-inner {
+  scrollbar-width: thin;
+  scrollbar-color: var(--wisp-scroll-thumb) transparent;
+}
+/* 回落：仅支持 ::-webkit-scrollbar 而不支持 scrollbar-color 的浏览器 */
+@supports not (scrollbar-color: auto) {
+  .wisp-scroll::-webkit-scrollbar,
+  .katex-display::-webkit-scrollbar,
+  .wisp-pele-body::-webkit-scrollbar,
+  .wisp-diagram-body::-webkit-scrollbar,
+  .prose pre::-webkit-scrollbar,
+  .prose table::-webkit-scrollbar,
+  .prose .wisp-table::-webkit-scrollbar,
+  .wisp-pre::-webkit-scrollbar,
+  .wisp-post-aside-inner::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .wisp-scroll::-webkit-scrollbar-track,
+  .katex-display::-webkit-scrollbar-track,
+  .wisp-pele-body::-webkit-scrollbar-track,
+  .wisp-diagram-body::-webkit-scrollbar-track,
+  .prose pre::-webkit-scrollbar-track,
+  .prose table::-webkit-scrollbar-track,
+  .prose .wisp-table::-webkit-scrollbar-track,
+  .wisp-pre::-webkit-scrollbar-track,
+  .wisp-post-aside-inner::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .wisp-scroll::-webkit-scrollbar-thumb,
+  .katex-display::-webkit-scrollbar-thumb,
+  .wisp-pele-body::-webkit-scrollbar-thumb,
+  .wisp-diagram-body::-webkit-scrollbar-thumb,
+  .prose pre::-webkit-scrollbar-thumb,
+  .prose table::-webkit-scrollbar-thumb,
+  .prose .wisp-table::-webkit-scrollbar-thumb,
+  .wisp-pre::-webkit-scrollbar-thumb,
+  .wisp-post-aside-inner::-webkit-scrollbar-thumb {
+    background: var(--wisp-scroll-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .wisp-scroll::-webkit-scrollbar-thumb:hover,
+  .katex-display::-webkit-scrollbar-thumb:hover,
+  .wisp-pele-body::-webkit-scrollbar-thumb:hover,
+  .wisp-diagram-body::-webkit-scrollbar-thumb:hover,
+  .prose pre::-webkit-scrollbar-thumb:hover,
+  .prose table::-webkit-scrollbar-thumb:hover,
+  .prose .wisp-table::-webkit-scrollbar-thumb:hover,
+  .wisp-pre::-webkit-scrollbar-thumb:hover,
+  .wisp-post-aside-inner::-webkit-scrollbar-thumb:hover {
+    background: var(--wisp-scroll-thumb-hover);
+    background-clip: content-box;
+  }
+}

@@ -1,6 +1,6 @@
 # 常用 ML 图式
 
-每个图式都已用 `skeleton-to-excalidraw.ts` → `lint.ts` → `build.ts` → `export-png.ts` 真实跑通（light 与 dark），可直接复制后改文字和坐标。
+每个图式都已用 `wisp_diagram.py new` → `lint` → `build` → `export` 真实跑通（light 与 dark），可直接复制后改文字和坐标。
 骨架字段说明见 `excalidraw-skeleton.md`，draw.io 样式见 `drawio-cheatsheet.md`。
 
 通用约定：

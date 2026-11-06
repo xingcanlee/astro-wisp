@@ -1,17 +1,18 @@
 # Excalidraw 骨架格式
 
 骨架是一个只含“意图”的 JSON：节点的位置/尺寸/文字/语义色，以及连线的起止 id。
-`skeleton-to-excalidraw.ts` 用 Excalidraw 自己的 `convertToExcalidrawElements` 生成完整元素（seed、boundElements、文本测量等），所以**不要手写完整的 Excalidraw 元素**。
+`wisp_diagram.py new` 用 Excalidraw 自己的 `convertToExcalidrawElements` 生成完整元素（seed、boundElements、文本测量等），所以**不要手写完整的 Excalidraw 元素**。
 
 ```bash
-cd skills/wisp-diagram/scripts
-npx tsx skeleton-to-excalidraw.ts attention.skeleton.json -o attention.excalidraw [--seed N]
+W="uv run skills/wisp-diagram/scripts/wisp_diagram.py"   # 按 skill 实际位置调整
+$W new attention.skeleton.json -o attention.excalidraw [--seed N] [--build]
 ```
 
 - 不给 `-o` 时输出到同目录、去掉 `.skeleton.json` / `.json` 后缀再加 `.excalidraw`。
 - `--seed` 默认 1，同一骨架多次转换结果完全相同（可复现、diff 干净）。
 - 不在 8px 网格上的数值会输出 `warning:`（不会失败）。
-- 需要 Playwright + Chromium（首次使用前在 scripts/ 下 `npm install`，再 `npx playwright install chromium`）。
+- `--build` 转换后立即生成 `.wisp.svg`。
+- 需要 Chromium（`uv run --with playwright==1.64.1 playwright install chromium`）；Excalidraw 0.18.1 与字体首次使用时从 jsDelivr 下载并缓存到 `~/.cache/wisp-diagram/`，离线前先 `$W cache warm`（见 SKILL.md「一次性准备」）。
 
 ## 顶层字段
 

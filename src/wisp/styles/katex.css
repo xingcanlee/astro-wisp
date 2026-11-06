@@ -19,8 +19,6 @@
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  /* 滚动条出现时不遮挡下标 */
-  scrollbar-width: thin;
 }
 .katex-display > .katex {
   font-size: 1.1em;

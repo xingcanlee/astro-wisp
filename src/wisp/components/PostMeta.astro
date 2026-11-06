@@ -5,6 +5,7 @@
  */
 import config from '../../wisp.config';
 import { formatDate, toISODate } from '../utils/date';
+import Icon from './Icon.astro';
 import { slugify } from '../utils/taxonomy';
 
 export interface Props {
@@ -30,7 +31,10 @@ const slugMap = config.taxonomy.slugMap;
 ---
 
 <div class:list={['wisp-meta', className]}>
-  <time datetime={toISODate(pubDate)}>{formatDate(pubDate, lang)}</time>
+  <span class="wisp-meta-item">
+    <Icon name="calendar" size="0.95em" />
+    <time datetime={toISODate(pubDate)}>{formatDate(pubDate, lang)}</time>
+  </span>
   {
     showUpdated && (
       <span>
@@ -39,10 +43,18 @@ const slugMap = config.taxonomy.slugMap;
       </span>
     )
   }
-  {readingTime != null && <span>{zh ? `${readingTime} 分钟` : `${readingTime} min read`}</span>}
+  {
+    readingTime != null && (
+      <span class="wisp-meta-item">
+        <Icon name="clock" size="0.95em" />
+        {zh ? `${readingTime} 分钟` : `${readingTime} min read`}
+      </span>
+    )
+  }
   {
     category && (
-      <span>
+      <span class="wisp-meta-item">
+        <Icon name="folder" size="0.95em" />
         <a href={`/categories/${slugify(category, slugMap)}/`}>{category}</a>
       </span>
     )
@@ -74,6 +86,16 @@ const slugMap = config.taxonomy.slugMap;
     content: '·';
     margin-inline: 0.55em;
     color: var(--wisp-subtle);
+  }
+  .wisp-meta-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35em;
+  }
+  .wisp-meta-item :global(.wisp-icon) {
+    color: var(--wisp-subtle);
+    align-self: center;
+    vertical-align: baseline;
   }
   .wisp-meta a {
     color: var(--wisp-muted);

@@ -14,6 +14,8 @@ export interface Props {
   next?: PrevNextItem;
 }
 
+import Icon from './Icon.astro';
+
 const { prev, next } = Astro.props;
 ---
 
@@ -22,7 +24,7 @@ const { prev, next } = Astro.props;
     <nav class="wisp-prevnext" aria-label="相邻文章">
       {prev ? (
         <a href={`/posts/${prev.id}/`} rel="prev" class="is-prev">
-          <span class="label">← 上一篇</span>
+          <span class="label"><Icon name="arrow-left" /> 上一篇</span>
           <span class="title">{prev.title}</span>
         </a>
       ) : (
@@ -30,7 +32,7 @@ const { prev, next } = Astro.props;
       )}
       {next ? (
         <a href={`/posts/${next.id}/`} rel="next" class="is-next">
-          <span class="label">下一篇 →</span>
+          <span class="label">下一篇 <Icon name="arrow-right" /></span>
           <span class="title">{next.title}</span>
         </a>
       ) : (

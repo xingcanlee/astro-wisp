@@ -31,7 +31,7 @@ test('复制按钮复制的文本不含行号', async ({ page, context, browserN
   const btn = pre.locator('xpath=..').locator('.wisp-copy');
   await pre.hover();
   await btn.click();
-  await expect(btn).toHaveText('✓');
+  await expect(btn).toHaveAttribute('data-done', '');
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   const expected = await pre.locator('code').evaluate((c) => c.textContent ?? '');
   expect(copied.length).toBeGreaterThan(0);

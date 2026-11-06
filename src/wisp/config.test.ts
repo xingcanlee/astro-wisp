@@ -18,4 +18,12 @@ describe('defineWispConfig', () => {
   it('非法值抛错并带路径', () => {
     expect(() => defineWispConfig({ home: { pageSize: 0 } })).toThrow(/home\.pageSize/);
   });
+  it('codeFold 默认值与部分覆盖', () => {
+    expect(defineWispConfig().features.codeFold).toEqual({ enabled: true, maxLines: 24, previewLines: 12 });
+    const c = defineWispConfig({ features: { codeFold: { maxLines: 40 } } });
+    expect(c.features.codeFold).toEqual({ enabled: true, maxLines: 40, previewLines: 12 });
+  });
+  it('codeFold 非法值抛错', () => {
+    expect(() => defineWispConfig({ features: { codeFold: { previewLines: 0 } } })).toThrow(/codeFold\.previewLines/);
+  });
 });

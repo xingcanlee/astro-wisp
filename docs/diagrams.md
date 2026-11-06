@@ -104,7 +104,7 @@
 ### 3.4 字体
 
 - 默认**不嵌入字体**，只声明 `font-family` 栈。在 Wisp 页面里会直接使用站点已加载的 Inter 和 Noto SC。
-- `--embed-fonts`：用 `subset-font` 按图中实际出现的字符，把 Inter、Noto SC（手绘风格时加 Excalifont）裁剪成子集，以 base64 woff2 嵌入。用于发布到外部平台或导出 PNG。通常每张图几十 KB。
+- `--embed-fonts`：用 `fontTools（pyftsubset）` 按图中实际出现的字符，把 Inter、Noto SC（手绘风格时加 Excalifont）裁剪成子集，以 base64 woff2 嵌入。用于发布到外部平台或导出 PNG。通常每张图几十 KB。
 - Excalidraw 中的中文**不使用小赖体**。手绘风格下中文回落到 Noto Sans SC，保证和正文风格一致。
 
 ### 3.5 两种风格的参数
@@ -203,24 +203,25 @@ skills/wisp-diagram/
 ├─ assets/
 │  ├─ wisp.excalidrawlib
 │  └─ wisp-drawio-library.xml
-└─ scripts/                      # 独立 Node 包（package.json），skill 中用 npx tsx 调用
-   ├─ package.json
-   ├─ skeleton-to-excalidraw.ts  # 骨架 → .excalidraw（convertToExcalidrawElements，在 Playwright 中运行）
-   ├─ build.ts                   # 源文件 → 可移植 .wisp.svg（导出 + 映射 + svgo + a11y）
-   ├─ lint.ts                    # 颜色、字号、网格、字体、文件大小检查（--fix 可自动修正）
-   ├─ normalize.ts               # 解压 drawio、格式化 JSON、去掉 Excalidraw 无关的 appState
-   └─ export-png.ts
+└─ scripts/                      # Python + uv：依赖写在脚本头部（PEP 723），`uv run` 直接运行，无安装步骤
+   ├─ wisp_diagram.py            # 统一入口：lint / normalize / build / export / new / check / probe / cache
+   ├─ wisp_diagram_lib/          # 实现：骨架转换（convertToExcalidrawElements，在 Playwright 中运行）、
+   │                             #   导出 + 颜色映射 + svgo + a11y、lint（--fix）、normalize、PNG、manifest
+   ├─ tests/                     # pytest（端到端用例用 WISP_DIAGRAM_E2E=1 开启）
+   └─ pyproject.toml             # 仅供开发期跑测试
 ```
+
+站点的 `pnpm diagram <命令>`（`scripts/diagram/cli.ts`）是薄包装：转调 `uv run skills/wisp-diagram/scripts/wisp_diagram.py <命令> … --root <仓库> --manifest scripts/diagram/manifest.json`。manifest 的格式与哈希算法由 Python 实现（`wisp_diagram_lib/manifest.py`）与 `scripts/diagram/manifest.ts`、`src/wisp/lib/render-diagram.ts` 共同遵守，三者保持一致。
 
 ### 6.1 Agent 工作流（写在 SKILL.md 中）
 
 1. **判断类型**：结构化的图优先用 Mermaid（直接写进正文，最省事）；概念图、示意图用 Excalidraw；精确的结构图用 draw.io。
 2. **生成源文件**：
-   - Excalidraw：**写骨架 JSON**（只含 type、位置、尺寸、label、语义色名、箭头的起止 id），再运行 `skeleton-to-excalidraw.ts`。**禁止**手写完整的 Excalidraw 元素（version、seed、boundElements 等字段很容易出错）。
+   - Excalidraw：**写骨架 JSON**（只含 type、位置、尺寸、label、语义色名、箭头的起止 id），再运行 `wisp_diagram.py new`。**禁止**手写完整的 Excalidraw 元素（version、seed、boundElements 等字段很容易出错）。
    - draw.io：直接写未压缩的 mxGraph XML，样式字符串只能使用 `drawio-cheatsheet.md` 中的预设。
    - 也可以先写 Mermaid，再用 `@excalidraw/mermaid-to-excalidraw` 转换成手绘风格作为起点。
 3. **运行 `lint --fix`**，然后运行 `build`，生成 `.wisp.svg`。
-4. **自检**：用 `export-png --theme light` 和 `--theme dark` 各导出一张预览图，用 Read 工具查看。检查文字重叠、箭头穿过节点、在暗色下看不清的问题，修正后重新构建。
+4. **自检**：用 `wisp_diagram.py export --theme light` 和 `--theme dark` 各导出一张预览图，用 Read 工具查看。检查文字重叠、箭头穿过节点、在暗色下看不清的问题，修正后重新构建。
 5. 在 Markdown 中用 §5.1 的语法引用，**必须提供有意义的 alt 文本**。
 
 ### 6.2 骨架格式（示意）
@@ -244,10 +245,13 @@ skills/wisp-diagram/
 
 | 源格式 | 导出方式 | 依赖 |
 |---|---|---|
-| excalidraw | Playwright 打开一个本地页面，加载 `@excalidraw/excalidraw` 的 `exportToSvg` | `playwright`（Chromium） |
-| drawio | 首选 `drawio -x -f svg --embed-svg-fonts false`（desktop CLI，Linux 无头环境要配合 `xvfb-run` 和 `--no-sandbox`）；其次 Docker 镜像 `rlespinasse/drawio-export` | draw.io desktop 或 Docker |
+| excalidraw | Playwright（Python）打开一个本地页面，加载 `@excalidraw/excalidraw@0.18.1` 的 `exportToSvg` | Chromium；Excalidraw 及其依赖首次运行时从 jsDelivr 下载（锁定版本，import map 指向 `+esm` 构建）并缓存 |
+| drawio | 首选 `drawio -x -f svg --embed-svg-fonts false`（desktop CLI，Linux 无头环境要配合 `xvfb-run` 和 `--no-sandbox`）；其次 Docker 镜像 `rlespinasse/drawio-export`；最后在 Chromium 中加载 draw.io 官方 viewer | draw.io desktop、Docker 或 Chromium |
+| 后处理 | 可移植化（Python）→ svgo 4.1.0（浏览器构建，在 Chromium 中运行）→ a11y；`--embed-fonts` 用 fontTools 裁剪字体子集 | Chromium、fonttools |
 
 脚本自动探测可用的方式，按顺序回退；全部不可用时给出明确的安装提示。
+
+前端资源（Excalidraw、svgo、Excalifont / Inter / Noto Sans SC 字体分片、draw.io viewer）缓存在 `~/.cache/wisp-diagram/`（`WISP_DIAGRAM_CACHE` 可改）。`wisp_diagram.py cache warm` 预先下载全部资源（约 11 MB），之后 `WISP_DIAGRAM_OFFLINE=1` 可完全离线；`WISP_EXCALIDRAW_BUNDLE`、`WISP_DRAWIO_VIEWER` 可指定本地文件。导出结果与此前的 Node 实现（T5b）逐字节一致。
 
 ## 7. Pele（Mermaid）
 

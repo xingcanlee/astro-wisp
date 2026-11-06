@@ -20,3 +20,7 @@ Wisp —— 安静好读的技术博客主题（Astro 7 + Tailwind 4 + MDX + Pel
 - `pnpm tokens`：根据 palette.json 重新生成令牌 CSS
 - `pnpm diagram build|check|lint [--fix]`
 - `pnpm exec vitest run <path>`
+
+## Agent skills
+- 写文章：`skills/wisp-writer/SKILL.md`（`uv run skills/wisp-writer/scripts/new_post.py` / `check_post.py`）
+- 画图：`skills/wisp-diagram/SKILL.md`（`pnpm diagram ...` 或 `uv run skills/wisp-diagram/scripts/wisp_diagram.py ...`）

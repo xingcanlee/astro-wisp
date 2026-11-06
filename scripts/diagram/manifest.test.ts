@@ -1,9 +1,9 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  checkAll, contentHash, emptyManifest, entryStatus, GENERATOR, type Manifest, scanSources, serializeManifest,
+  checkAll, contentHash, emptyManifest, entryStatus, GENERATOR, type Manifest, REPO_ROOT, scanSources, serializeManifest,
 } from './manifest.ts';
 
 let root: string;
@@ -90,5 +90,20 @@ describe('serializeManifest', () => {
     expect(Object.keys(parsed.entries['a/diagrams/b.drawio']!.outputs)).toEqual(['a.svg', 'z.svg']);
     expect(parsed.generator).toBe(GENERATOR);
     expect(serializeManifest(parsed)).toBe(s);
+  });
+});
+
+describe('与 skill 的 Python 实现保持一致', () => {
+  const py = readFileSync(join(REPO_ROOT, 'skills/wisp-diagram/scripts/wisp_diagram_lib/manifest.py'), 'utf8');
+  const env = readFileSync(join(REPO_ROOT, 'skills/wisp-diagram/scripts/wisp_diagram_lib/env.py'), 'utf8');
+  it('GENERATOR 相同', () => {
+    expect(/^GENERATOR = "([^"]+)"/m.exec(env)?.[1]).toBe(GENERATOR);
+  });
+  it('扫描模式相同', () => {
+    expect(py).toContain('DEFAULT_SCAN = ("src/content/**/diagrams/*.excalidraw", "src/content/**/diagrams/*.drawio")');
+  });
+  it('已提交的 manifest.json 是本模块的稳定序列化结果（Python 写出的文件与 TS 格式逐字节一致）', () => {
+    const raw = readFileSync(join(REPO_ROOT, 'scripts/diagram/manifest.json'), 'utf8');
+    expect(serializeManifest(JSON.parse(raw) as Manifest)).toBe(raw);
   });
 });

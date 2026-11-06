@@ -2,16 +2,16 @@
  * scripts/diagram/manifest.json：记录每个图表源文件及其产物的内容哈希（diagrams.md §4）。
  * - build 只重建有变化的源文件；
  * - check 只比对哈希（CI 用，不需要浏览器或 draw.io）。
- * 本模块只依赖 node 内置模块，CI 中 `pnpm diagram check` 不会加载 Playwright。
+ * 实际的 build / check 由 skill 的 Python 实现完成（skills/wisp-diagram/scripts/wisp_diagram_lib/manifest.py，
+ * 经 `pnpm diagram` 调用）。本模块是同一格式的 TS 只读/写实现，供 src/wisp/lib/render-diagram 的测试与对照使用；
+ * 两边的哈希算法、序列化格式与 GENERATOR 必须保持一致（manifest.test.ts 有对照测试）。只依赖 node 内置模块。
  */
 import { createHash } from 'node:crypto';
 import { existsSync, globSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-// env.ts 只依赖 node 内置模块，check 仍不会加载 Playwright
-import { GENERATOR } from '../../skills/wisp-diagram/scripts/exporters/env.ts';
-
-export { GENERATOR };
+/** 生成器标识；与 skills/wisp-diagram/scripts/wisp_diagram_lib/env.py 的 GENERATOR 相同。 */
+export const GENERATOR = 'wisp-diagram@1';
 
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const MANIFEST_PATH = join(REPO_ROOT, 'scripts', 'diagram', 'manifest.json');

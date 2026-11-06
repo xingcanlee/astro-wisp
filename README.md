@@ -25,6 +25,11 @@ Wisp 基于 Astro 7、Tailwind CSS 4 和 MDX 构建，默认零 JavaScript。它
 </p>
 
 <p align="center">
+  <img src="docs/screenshots/toc-light.png" width="48%" alt="可收起的目录侧栏、阅读进度条与返回顶部（浅色主题）" />
+  <img src="docs/screenshots/code-dark.png" width="48%" alt="长代码块默认折叠，可展开（深色主题）" />
+</p>
+
+<p align="center">
   <img src="docs/screenshots/mobile-light.png" width="40%" alt="移动端页面（浅色主题）" />
   <img src="docs/screenshots/mobile-dark.png" width="40%" alt="移动端页面（深色主题）" />
 </p>
@@ -33,7 +38,8 @@ Wisp 基于 Astro 7、Tailwind CSS 4 和 MDX 构建，默认零 JavaScript。它
 
 - **Markdown / MDX**：标准 Markdown 与 MDX，脚注、任务列表、表格、标题锚点和目录。
 - **公式**：KaTeX，构建期渲染，只有含公式的文章才加载样式。
-- **代码**：Shiki 双主题（浅色、深色自动切换），可选行号和一键复制。
+- **代码**：Shiki 双主题（浅色、深色自动切换），可选行号和一键复制；超过 24 行的代码块默认折叠，可用 `fold` / `nofold` / `fold=N` 单独控制。
+- **阅读体验**：宽屏目录可收起并记住状态，h3 分组随阅读位置自动展开；顶部阅读进度条、返回顶部按钮；Lucide 图标（构建期内联）；滚动条随主题配色。
 - **Mermaid**：由 [Pele](https://www.npmjs.com/package/pele) 在构建期渲染为内联 SVG，运行时没有 Mermaid.js。
 - **图表**：Excalidraw 与 draw.io 源文件经 `pnpm diagram build` 生成可移植、可主题化的 `.wisp.svg`，读者可以下载源文件。
 - **交互讲解**：React 19 + Motion 组件（如矩阵乘法逐步演示），以 island 形式按需水合。
@@ -50,13 +56,13 @@ Wisp 基于 Astro 7、Tailwind CSS 4 和 MDX 构建，默认零 JavaScript。它
 用模板创建新站点：
 
 ```bash
-npm create astro@latest -- --template <user>/astro-wisp
+npm create astro@latest -- --template xingcanlee/astro-wisp
 ```
 
 或者克隆本仓库开发：
 
 ```bash
-git clone https://github.com/<user>/astro-wisp.git
+git clone https://github.com/xingcanlee/astro-wisp.git
 cd astro-wisp
 pnpm install
 pnpm dev        # 本地预览，http://localhost:4321
@@ -132,6 +138,8 @@ pnpm diagram build      # 增量生成 .wisp.svg，并更新 scripts/diagram/man
 pnpm diagram check      # 只校验哈希，CI 中使用，不需要浏览器
 ```
 
+`pnpm diagram` 转调 skill 的 Python 脚本（`uv run skills/wisp-diagram/scripts/wisp_diagram.py`），需要安装 [uv](https://docs.astral.sh/uv/)；构建与导出还需要 Chromium（`uv run --with playwright==1.64.1 playwright install chromium`）。
+
 `.wisp.svg`、源文件和 `manifest.json` 都要提交进仓库。图表的完整说明见 [docs/guide/diagrams.md](docs/guide/diagrams.md)，Agent 绘图流程见 [skills/wisp-diagram/SKILL.md](skills/wisp-diagram/SKILL.md)。
 
 ## 交互组件
@@ -196,7 +204,8 @@ import MatMul from '@/explainers/react/MatMul';
 | `lint [文件...] [--fix] [--strict]` | 检查颜色、字号、网格、字体、文件大小 |
 | `export <文件> [--png] [--theme light\|dark] [--scale 2] [-o out.png] [--transparent]` | 导出 PNG 预览（或发布到不支持 SVG 的平台） |
 | `new <skeleton.json> [-o out.excalidraw] [--build]` | 由骨架 JSON 生成 `.excalidraw`，可选立即构建 |
-| `probe` | 显示 draw.io 导出方式（cli / docker / browser）的探测结果 |
+| `probe` | 显示 Chromium、Excalidraw 与 draw.io 导出方式（cli / docker / browser）的探测结果 |
+| `cache [status\|warm\|clear]` | 查看、预热（离线使用前）或清空导出资源缓存 `~/.cache/wisp-diagram/` |
 
 ## 设计令牌
 
@@ -216,7 +225,8 @@ pnpm tokens
 
 - **[CLAUDE.md](CLAUDE.md)**：Claude Code 读取的项目规则，包括颜色规则、生成文件、中文排版规则和常用命令。
 - **[docs/](docs/)**：设计文档，覆盖架构、图表体系、交互组件和任务拆分。`docs/README.md` 是入口。
-- **[skills/wisp-diagram](skills/wisp-diagram/)**：一个独立的 Agent skill，用于产出符合 Wisp 风格的 Excalidraw / draw.io 图表。它不依赖 Wisp 站点，可以复制到其他项目使用。
+- **[skills/wisp-diagram](skills/wisp-diagram/)**：一个独立的 Agent skill，用于产出符合 Wisp 风格的 Excalidraw / draw.io 图表。脚本是 Python + uv（PEP 723 内联依赖），`uv run` 即可运行；不依赖 Wisp 站点，可以复制到其他项目使用。
+- **[skills/wisp-writer](skills/wisp-writer/)**：写作 skill。提供写作规范、5 种文章模板、`new_post.py`（新建文章）和 `check_post.py`（检查 frontmatter、标题层级、alt、图表引用、半角标点等），让 Agent 写出风格一致的文章。
 
 使用 skill 时，把目录复制到用户级 skills 目录即可：
 
@@ -225,7 +235,14 @@ mkdir -p ~/.claude/skills
 cp -r skills/wisp-diagram ~/.claude/skills/
 ```
 
-也可以复制到其他项目的 `.claude/skills/` 下。skill 的脚本需要依赖，首次使用前在 `scripts/` 目录执行 `npm install`，并执行 `npx playwright install chromium`。
+也可以复制到其他项目的 `.claude/skills/` 下。skill 的脚本用 Python 编写、依赖写在脚本头部（PEP 723），只要装了 [uv](https://docs.astral.sh/uv/) 就能直接运行，无需安装步骤：
+
+```bash
+uv run ~/.claude/skills/wisp-diagram/scripts/wisp_diagram.py --help
+uv run --with playwright==1.64.1 playwright install chromium   # 导出用的浏览器，装过可跳过
+```
+
+首次导出时会把锁定版本的 Excalidraw、svgo 和字体下载到 `~/.cache/wisp-diagram/`，之后可离线使用（详见 skill 的 SKILL.md）。
 
 ## 项目结构
 
@@ -245,7 +262,7 @@ astro-wisp/
 
 ## 技术栈
 
-Astro 7（Node ≥ 22.23.4）· MDX 8 · React 19 · Tailwind CSS 4 · Pele 1.13（Mermaid）· KaTeX 0.19 · Motion 14 · Shiki。图表导出依赖 Playwright Chromium，可选 draw.io desktop 或 Docker。架构说明见 [docs/architecture.md](docs/architecture.md)，依赖列表见 [package.json](package.json)。
+Astro 7（Node ≥ 22.23.4）· MDX 8 · React 19 · Tailwind CSS 4 · Pele 1.13（Mermaid）· KaTeX 0.19 · Motion 14 · Shiki。图表工具是 Python 脚本，用 uv 运行，导出依赖 Playwright Chromium，可选 draw.io desktop 或 Docker。架构说明见 [docs/architecture.md](docs/architecture.md)，依赖列表见 [package.json](package.json)。
 
 ## 文档
 

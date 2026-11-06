@@ -39,6 +39,13 @@ export const wispConfigSchema = z.object({
       mermaid: z.boolean().default(true),
       toc: z.boolean().default(true),
       diagramDownload: z.boolean().default(true),
+      codeFold: z
+        .object({
+          enabled: z.boolean().default(true),
+          maxLines: z.number().int().min(1).default(24),
+          previewLines: z.number().int().min(1).default(12),
+        })
+        .prefault({}),
     })
     .prefault({}),
   mermaid: z.object({ strict: z.boolean().default(false) }).prefault({}),

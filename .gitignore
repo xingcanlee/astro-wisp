@@ -7,3 +7,9 @@ playwright-report/
 *.log
 .DS_Store
 skills/wisp-diagram/scripts/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/

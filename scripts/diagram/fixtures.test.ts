@@ -1,11 +1,14 @@
 /**
  * tests/fixtures/diagrams 的产物检查。
  * - 静态部分（默认运行，不需要浏览器）：已提交的 .wisp.svg 满足可移植 SVG 规范。
- * - 端到端部分（WISP_DIAGRAM_E2E=1 时运行，需要 Playwright Chromium）：重新导出并与已提交产物比对。
+ * - 端到端部分（WISP_DIAGRAM_E2E=1 时运行，需要 uv 与 Chromium）：用 skill 的 Python CLI 重新导出并与已提交产物逐字节比对。
  */
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { findUv, SKILL_CLI } from './cli.ts';
 import { REPO_ROOT } from './manifest.ts';
 
 const DIR = join(REPO_ROOT, 'tests', 'fixtures', 'diagrams');
@@ -75,37 +78,33 @@ describe('fixture 覆盖', () => {
   });
 });
 
-describe.skipIf(!process.env.WISP_DIAGRAM_E2E)('端到端导出（WISP_DIAGRAM_E2E=1）', () => {
-  it('骨架 → .excalidraw 可复现，且与已提交文件一致', async () => {
-    const { skeletonToExcalidraw } = await import('../../skills/wisp-diagram/scripts/skeleton-to-excalidraw.ts');
-    const sk = JSON.parse(read('hand-attention.skeleton.json'));
-    const { json } = await skeletonToExcalidraw(sk);
-    expect(json).toBe(read('hand-attention.excalidraw'));
-  }, 120_000);
+describe.skipIf(!process.env.WISP_DIAGRAM_E2E)('端到端导出（WISP_DIAGRAM_E2E=1，需要 uv 与 Chromium）', () => {
+  const uv = findUv();
+  const run = (args: string[]) => {
+    const r = spawnSync(uv!, ['run', '--quiet', SKILL_CLI, ...args], { encoding: 'utf8', timeout: 300_000 });
+    if (r.status !== 0) throw new Error(`wisp_diagram.py ${args.join(' ')} 失败：\n${r.stdout}\n${r.stderr}`);
+    return r.stdout;
+  };
+  const tmp = mkdtempSync(join(tmpdir(), 'wisp-fixtures-'));
 
-  it('hand 与 clean 都能生成 .wisp.svg；hand 与已提交产物逐字节一致', async () => {
-    const { buildDiagram } = await import('../../skills/wisp-diagram/scripts/build.ts');
-    const { BrowserSession } = await import('../../skills/wisp-diagram/scripts/exporters/browser.ts');
-    const session = new BrowserSession();
-    try {
-      const hand = await buildDiagram(join(DIR, 'hand-attention.excalidraw'), { session, write: false });
-      expect(hand.outputs).toHaveLength(1);
-      expect(hand.unknownColors).toEqual([]);
-      expect(hand.outputs[0]!.svg).toBe(read('hand-attention.wisp.svg'));
-      const clean = await buildDiagram(join(DIR, 'clean-transformer.drawio'), { session, write: false });
-      expect(clean.outputs.map((x) => x.page?.name)).toEqual(['encoder', '数据流']);
-      expect(clean.unknownColors).toEqual([]);
-    } finally {
-      await session.close();
+  it('骨架 → .excalidraw 可复现，且与已提交文件一致', () => {
+    run(['new', join(DIR, 'hand-attention.skeleton.json'), '-o', join(tmp, 'hand-attention.excalidraw')]);
+    expect(readFileSync(join(tmp, 'hand-attention.excalidraw'), 'utf8')).toBe(read('hand-attention.excalidraw'));
+  }, 300_000);
+
+  it('hand 与 clean（browser 导出）都与已提交产物逐字节一致', () => {
+    run(['build', join(DIR, 'hand-attention.excalidraw'), join(DIR, 'clean-transformer.drawio'), '--drawio', 'browser', '--out-dir', tmp, '--strict']);
+    for (const f of ['hand-attention.wisp.svg', 'clean-transformer.wisp.svg', 'clean-transformer.page-2.wisp.svg']) {
+      expect(readFileSync(join(tmp, f), 'utf8'), f).toBe(read(f));
     }
-  }, 180_000);
+  }, 300_000);
 
-  it('PNG：light 与 dark 渲染结果不同', async () => {
-    const { svgToPng } = await import('../../skills/wisp-diagram/scripts/export-png.ts');
-    const svg = read('clean-transformer.page-2.wisp.svg');
-    const light = await svgToPng(svg, { theme: 'light', scale: 1 });
-    const dark = await svgToPng(svg, { theme: 'dark', scale: 1 });
+  it('PNG：light 与 dark 渲染结果不同', () => {
+    const svg = join(DIR, 'clean-transformer.page-2.wisp.svg');
+    run(['export', svg, '--theme', 'light', '--scale', '1', '-o', join(tmp, 'l.png')]);
+    run(['export', svg, '--theme', 'dark', '--scale', '1', '-o', join(tmp, 'd.png')]);
+    const light = readFileSync(join(tmp, 'l.png'));
     expect(light.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
-    expect(light.equals(dark)).toBe(false);
-  }, 120_000);
+    expect(light.equals(readFileSync(join(tmp, 'd.png')))).toBe(false);
+  }, 300_000);
 });

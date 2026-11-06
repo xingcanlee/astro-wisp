@@ -69,6 +69,14 @@ pnpm diagram lint --fix            # 检查并自动修正调色板颜色
 pnpm diagram check                 # 校验哈希是否与 .wisp.svg 一致（CI 用）
 ```
 
+`pnpm diagram` 是 [`skills/wisp-diagram`](../../skills/wisp-diagram/SKILL.md) 中 Python 脚本的薄包装，实际执行 `uv run skills/wisp-diagram/scripts/wisp_diagram.py …`，因此需要先安装 [uv](https://docs.astral.sh/uv/)（`curl -LsSf https://astral.sh/uv/install.sh | sh`），不需要额外的 npm 或 pip 依赖。`build`、`export`、`new` 还需要 Chromium：
+
+```bash
+uv run --with playwright==1.64.1 playwright install chromium
+```
+
+首次构建时会把锁定版本的 Excalidraw 0.18.1、svgo 4.1.0 和字体（Excalifont、Inter、Noto Sans SC）从 jsDelivr 下载到 `~/.cache/wisp-diagram/`，以后可离线使用，详见下文“导出资源缓存”。
+
 常用参数：
 
 - `--embed-fonts`：把用到的字体切片嵌入 SVG，适合发布到外部平台。每张图通常增加几十 KB。
@@ -77,7 +85,7 @@ pnpm diagram check                 # 校验哈希是否与 .wisp.svg 一致（CI
 
 `lint` 检查的内容包括：颜色必须来自 `design/palette.json`、字号与网格、字体、源文件是否超过 2MB（嵌入大图会让文件膨胀）。它不会修改文件，除非加 `--fix`。
 
-`check` 只比较哈希，不需要浏览器或 draw.io，因此可以放进 CI。如果失败，在本地运行 `pnpm diagram build` 并提交生成的 `.wisp.svg` 与 `manifest.json`。
+`check` 只比较哈希，不需要浏览器或 draw.io（只需要 uv），因此可以放进 CI。如果失败，在本地运行 `pnpm diagram build` 并提交生成的 `.wisp.svg` 与 `manifest.json`。
 
 ## 五、检查效果
 
@@ -108,11 +116,11 @@ pnpm diagram export src/content/posts/my-post/diagrams/flow.wisp.svg --png --the
 
 1. **cli**：本机安装 draw.io desktop，命令 `drawio` 在 PATH 中可用。Linux 无头环境需要 `xvfb-run` 并加上 `--no-sandbox`。也可以用环境变量 `WISP_DRAWIO_BIN` 指定可执行文件。
 2. **docker**：使用 Docker 镜像 `rlespinasse/drawio-export`。
-3. **browser**：用 Playwright 在 Chromium 中加载 draw.io 的 viewer 脚本并导出。需要已安装 Playwright Chromium。
+3. **browser**：用 Playwright 在 Chromium 中加载 draw.io 的 viewer 脚本并导出。需要已安装 Chromium（见上文）。
 
 可以用 `pnpm diagram probe` 查看哪种方式可用，用 `--drawio <方式>` 或环境变量 `WISP_DRAWIO_EXPORTER=<方式>` 强制指定。
 
-### viewer 缓存
+### 导出资源缓存
 
 browser 方式需要 draw.io 的 `viewer-static.min.js`，它按以下顺序取得：
 
@@ -120,7 +128,7 @@ browser 方式需要 draw.io 的 `viewer-static.min.js`，它按以下顺序取�
 2. 缓存文件。默认位置为 `~/.cache/wisp-diagram/drawio-viewer-static.min.js`。缓存目录可以用 `WISP_DIAGRAM_CACHE` 修改，未设置时遵循 `XDG_CACHE_HOME`。
 3. 首次使用时从 `https://viewer.diagrams.net/js/viewer-static.min.js` 下载并写入缓存。
 
-离线环境下，设置 `WISP_DIAGRAM_OFFLINE=1` 可以禁止下载，此时需要提前放好缓存或使用 `WISP_DRAWIO_VIEWER`。Excalidraw 的导出 bundle 也缓存在同一目录。
+Excalidraw（0.18.1 及其依赖）、svgo 和字体也缓存在同一目录的 `cdn/` 下，按锁定版本从 jsDelivr 下载。离线环境下，先在联网时运行一次 `pnpm diagram cache warm` 下载全部资源（约 11 MB），之后设置 `WISP_DIAGRAM_OFFLINE=1` 禁止下载；缓存不全时会报错并提示预热。`pnpm diagram cache status` 查看缓存，`WISP_EXCALIDRAW_BUNDLE=<本地 JS>` 可以指定自己的 Excalidraw 构建。
 
 ## 八、在站外使用 `.wisp.svg`
 
@@ -153,7 +161,11 @@ pnpm diagram export path/to/flow.excalidraw --png --theme dark --transparent -o 
 
 ## 十、Agent 绘图
 
-仓库的 [`skills/wisp-diagram`](../../skills/wisp-diagram/SKILL.md) 是给 AI Agent 使用的绘图 skill，包含调色板、风格规则、骨架格式和素材库。它也可以单独复制到其他项目。
+仓库的 [`skills/wisp-diagram`](../../skills/wisp-diagram/SKILL.md) 是给 AI Agent 使用的绘图 skill，包含调色板、风格规则、骨架格式、素材库和上述命令的实现。它也可以单独复制到其他项目，只需要 uv：
+
+```bash
+uv run skills/wisp-diagram/scripts/wisp_diagram.py --help
+```
 
 ## 相关链接
 

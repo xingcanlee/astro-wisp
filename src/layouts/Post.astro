@@ -10,6 +10,8 @@ import Base from './Base.astro';
 import PostMeta from '../wisp/components/PostMeta.astro';
 import TagList from '../wisp/components/TagList.astro';
 import Toc from '../wisp/components/Toc.astro';
+import ReadingProgress from '../wisp/components/ReadingProgress.astro';
+import BackToTop from '../wisp/components/BackToTop.astro';
 import PrevNext, { type PrevNextItem } from '../wisp/components/PrevNext.astro';
 import katexCssUrl from '../wisp/styles/katex.css?url';
 import diagramCssUrl from '../wisp/styles/diagram-figure.css?url';
@@ -38,6 +40,8 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3 && h.slu
 const zh = /^zh\b/i.test(lang ?? config.site.lang);
 const tocTitle = zh ? '目录' : 'Contents';
 const showToc = config.features.toc && toc !== false && tocHeadings.length >= 2;
+// 目录收起状态：首帧前写入 html[data-toc]（同时是“JS 可用”的标记，无 JS 时目录完整展开）
+const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('wisp-toc-collapsed')==='1'?'collapsed':'open'}catch(e){document.documentElement.dataset.toc='open'}`;
 ---
 
 <Base
@@ -51,10 +55,14 @@ const showToc = config.features.toc && toc !== false && tocHeadings.length >= 2;
   tags={tags}
 >
   <Fragment slot="head">
+    {showToc && <script is:inline set:html={tocInit} />}
     {hasMath && config.features.math && <link rel="stylesheet" href={katexCssUrl} />}
     {(hasDiagram || hasHandDiagram) && <link rel="stylesheet" href={diagramCssUrl} />}
     {hasHandDiagram && <link rel="preload" as="font" type="font/woff2" href={excalifontLatinUrl} crossorigin />}
   </Fragment>
+
+  <ReadingProgress />
+  <BackToTop />
 
   <div class:list={['wisp-post', { 'wisp-has-toc': showToc }]}>
     <article class="wisp-post-article">
@@ -159,6 +167,7 @@ const showToc = config.features.toc && toc !== false && tocHeadings.length >= 2;
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-width: thin;
+      scrollbar-color: var(--wisp-border) transparent;
     }
     .wisp-post-toc-inline {
       display: none;

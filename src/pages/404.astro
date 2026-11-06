@@ -1,4 +1,5 @@
 ---
+import Icon from '../wisp/components/Icon.astro';
 import Base from '../layouts/Base.astro';
 import PostCard from '../wisp/components/PostCard.astro';
 import { getPosts } from '../wisp/utils/posts';
@@ -10,7 +11,7 @@ const recent = (await getPosts()).slice(0, 3);
   <div class="wisp-container nf">
     <h1>404</h1>
     <p class="nf-lead">这个页面不存在，可能已被移动或删除。</p>
-    <p><a class="wisp-link" href="/">回到首页</a></p>
+    <p><a class="wisp-link" href="/"><Icon name="arrow-left" /> 回到首页</a></p>
     {
       recent.length > 0 && (
         <section class="nf-recent" aria-labelledby="nf-recent-title">
