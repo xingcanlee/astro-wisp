@@ -7,16 +7,29 @@
 - **Node.js ≥ 22.23.4**（Astro 7 的要求，低于此版本会安装失败）
 - **pnpm**（本项目使用 pnpm，锁文件为 `pnpm-lock.yaml`）
 
-## 方式一：用模板创建新站点
+## 方式一：复制 starter 创建新站点
+
+主题源码仓库和用户项目 starter 分开。复制 `template/` 会得到一个不带示例文章、测试 fixture 和主题开发文档的完整 Astro 项目：
 
 ```bash
-npm create astro@latest -- --template xingcanlee/astro-wisp
-cd <你的项目名>
+git clone --depth 1 https://github.com/xingcanlee/astro-wisp.git astro-wisp-source
+cp -R astro-wisp-source/template my-blog
+cd my-blog
 pnpm install
 pnpm dev
 ```
 
-## 方式二：克隆仓库
+Windows PowerShell：
+
+```powershell
+git clone --depth 1 https://github.com/xingcanlee/astro-wisp.git astro-wisp-source
+Copy-Item -Recurse astro-wisp-source/template my-blog
+Set-Location my-blog
+pnpm install
+pnpm dev
+```
+
+## 方式二：克隆仓库开发主题
 
 ```bash
 git clone https://github.com/xingcanlee/astro-wisp.git

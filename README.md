@@ -2,7 +2,7 @@
 
 **安静好读的技术博客主题。**
 
-Wisp 基于 Astro 7、Tailwind CSS 4 和 MDX 构建，默认零 JavaScript。它专注于文字的阅读体验：中文排版、代码与公式、构建期生成的图表，以及少量按需加载的交互讲解。
+Wisp 基于 Astro 7、Tailwind CSS 4 和 MDX 构建，不加载运行时框架。它专注于文字的阅读体验：中文排版、代码与公式、构建期生成的图表，以及少量按需加载的交互讲解。
 
 ## 截图
 
@@ -47,26 +47,23 @@ Wisp 基于 Astro 7、Tailwind CSS 4 和 MDX 构建，默认零 JavaScript。它
 - **中文排版**：思源黑体（Noto Sans SC）按 unicode-range 分片自托管，中英文间距自动处理，不做负字距。
 - **订阅与搜索引擎**：RSS（默认全文）、Sitemap。
 - **无障碍**：跳转链接、语义化结构、键盘可操作的交互组件、尊重 `prefers-reduced-motion`。
-- **默认零 JS**：只有主题切换、代码复制等小脚本，以及用到的交互组件才加载 JavaScript。
+- **少量客户端增强**：主题切换、代码复制和图片 Lightbox 使用小型原生脚本，不加载运行时框架；交互讲解组件才按需加载 React。
 
 ## 快速开始
 
 环境要求：**Node.js ≥ 22.23.4** 和 **pnpm**。
 
-用模板创建新站点：
+用 starter 创建新站点：先获取本仓库，再只复制 `template/`；这样不会把主题仓库的示例文章、测试 fixture 和开发文档带进用户项目。
 
 ```bash
-npm create astro@latest -- --template xingcanlee/astro-wisp
-```
-
-或者克隆本仓库开发：
-
-```bash
-git clone https://github.com/xingcanlee/astro-wisp.git
-cd astro-wisp
+git clone --depth 1 https://github.com/xingcanlee/astro-wisp.git astro-wisp-source
+cp -R astro-wisp-source/template my-blog
+cd my-blog
 pnpm install
 pnpm dev        # 本地预览，http://localhost:4321
 ```
+
+`template/` 是独立可复制的完整 Astro 项目，包含运行时主题源码和最小站点骨架；主题仓库根目录则保留测试、示例和开发工具。Windows PowerShell 可使用 `Copy-Item -Recurse astro-wisp-source/template my-blog`。主题维护者修改运行时文件后，可运行 `node --experimental-strip-types scripts/sync-template.ts` 同步模板（不会覆盖模板自己的站点配置和文章）。
 
 更多步骤见 [docs/guide/getting-started.md](docs/guide/getting-started.md)。
 
@@ -248,14 +245,10 @@ uv run --with playwright==1.64.1 playwright install chromium   # 导出用的浏
 
 ```text
 astro-wisp/
-├─ src/
-│  ├─ wisp.config.ts      # 站点配置
-│  ├─ content/posts/      # 文章（每篇一个目录）
-│  ├─ wisp/               # 主题核心：配置、集成、插件、组件、样式
-│  ├─ explainers/         # 交互讲解组件（core 纯 TS，react 渲染层）
-│  └─ layouts/ pages/     # 布局与路由
+├─ src/                  # 主题源码、页面、布局和示例内容
+├─ template/             # 可独立复制的干净用户项目 starter
 ├─ design/palette.json    # 设计令牌（唯一来源）
-├─ scripts/               # gen-tokens、diagram CLI、对比度检查
+├─ scripts/               # 主题开发、同步、diagram CLI、对比度检查
 ├─ skills/wisp-diagram/   # 图表 Agent skill（可独立分发）
 └─ docs/                  # 设计文档；docs/guide/ 为使用指南
 ```

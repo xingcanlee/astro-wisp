@@ -53,6 +53,33 @@ test('图表 figure 存在，下载链接返回 200', async ({ page, request }) 
   }
 });
 
+test('图表和 Mermaid SVG 可用键盘打开 lightbox，并恢复焦点', async ({ page }) => {
+  const triggers = page.locator('[data-wisp-lightbox-trigger]');
+  expect(await triggers.count()).toBeGreaterThanOrEqual(8);
+
+  const trigger = triggers.first();
+  await trigger.focus();
+  await page.keyboard.press('Enter');
+  const dialog = page.locator('dialog.wisp-lightbox');
+  await expect(dialog).toHaveAttribute('open', '');
+  await expect(dialog.locator('[data-lightbox-media] svg')).toHaveAttribute('role', 'img');
+  await expect(dialog.locator('[data-lightbox-close]')).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toHaveAttribute('open', '');
+  await expect(trigger).toBeFocused();
+
+  await trigger.press('Space');
+  await expect(dialog).toHaveAttribute('open', '');
+  await dialog.locator('[data-lightbox-close]').click();
+  await expect(dialog).not.toHaveAttribute('open', '');
+
+  await trigger.click();
+  await expect(dialog).toHaveAttribute('open', '');
+  await dialog.click({ position: { x: 4, y: 4 } });
+  await expect(dialog).not.toHaveAttribute('open', '');
+});
+
 test('页面中所有 id 唯一', async ({ page }) => {
   const dup = await page.evaluate(() => {
     const seen = new Map<string, number>();
