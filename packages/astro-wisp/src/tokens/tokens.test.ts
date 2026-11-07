@@ -72,7 +72,8 @@ describe('覆盖调色板', () => {
   });
   it('提交的生成文件与默认调色板一致（忘了跑 pnpm tokens 时失败）', () => {
     for (const [rel, content] of Object.entries(genAll())) {
-      expect(readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8'), rel).toBe(content);
+      const actual = readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+      expect(actual, rel).toBe(content.replace(/\r\n/g, '\n'));
     }
   });
 });

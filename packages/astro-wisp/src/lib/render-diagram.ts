@@ -94,7 +94,7 @@ const toPosix = (p: string) => p.split(sep).join('/');
 
 /** 与 skills/wisp-diagram/scripts/build.ts 的 outputPathFor 一致（不引入导出器依赖）。 */
 export function outputPathFor(file: string, pageIndex = 0): string {
-  return join(dirname(file), pageIndex === 0 ? `${stemOf(file)}.wisp.svg` : `${stemOf(file)}.page-${pageIndex + 1}.wisp.svg`);
+  return toPosix(join(dirname(file), pageIndex === 0 ? `${stemOf(file)}.wisp.svg` : `${stemOf(file)}.page-${pageIndex + 1}.wisp.svg`));
 }
 
 export { postId };
@@ -132,7 +132,7 @@ export function sourceForDownloadKey(key: string, root = REPO_ROOT): string | un
   const rel = dir === 'shared' ? `${SHARED_DIR}/${file}`
     : dir === '' ? `${POSTS_DIR}/diagrams/${file}`
     : `${POSTS_DIR}/${dir}/diagrams/${file}`;
-  return join(root, rel);
+  return toPosix(join(root, rel));
 }
 
 export const CONTENT_TYPES: Record<string, string> = {

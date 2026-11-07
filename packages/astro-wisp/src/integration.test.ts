@@ -47,8 +47,8 @@ describe('astro-wisp 集成', () => {
   it('components 覆盖：虚拟模块指向站点文件；未知组件名报错并列出可选项', () => {
     const { load, root } = setup({ components: { Footer: './src/components/MyFooter.astro' } });
     expect(load('virtual:wisp/components/Footer')).toContain(JSON.stringify(join(root, 'src/components/MyFooter.astro')));
-    expect(load('virtual:wisp/components/Header')).toMatch(/components\/Header\.astro"/);
-    expect(load('virtual:wisp/components/Post')).toMatch(/layouts\/Post\.astro"/);
+    expect(load('virtual:wisp/components/Header').replaceAll('\\\\', '/')).toMatch(/components\/Header\.astro"/);
+    expect(load('virtual:wisp/components/Post').replaceAll('\\\\', '/')).toMatch(/layouts\/Post\.astro"/);
     expect(() => setup({ components: { Nope: './x.astro' } })).toThrow(/未知的组件名：Nope。可覆盖：.*Footer/);
   });
 
@@ -80,7 +80,7 @@ describe('astro-wisp 集成', () => {
   });
 
   it('没有覆盖调色板时直接使用包内提交的令牌文件', () => {
-    expect(setup().load('virtual:wisp/theme-css')).toMatch(/styles\/tokens\.css";\nimport .*styles\/pele\.css";\nimport .*styles\/diagram\.css";$/);
+    expect(setup().load('virtual:wisp/theme-css').replaceAll('\\\\', '/')).toMatch(/styles\/tokens\.css";\nimport .*styles\/pele\.css";\nimport .*styles\/diagram\.css";$/);
   });
 
   it('virtual.d.ts 为每个可覆盖组件声明了类型', () => {
