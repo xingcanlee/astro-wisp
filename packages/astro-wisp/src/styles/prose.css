@@ -36,7 +36,7 @@
 .prose p {
   margin-block: 1em;
   text-indent: 0;
-  text-wrap: pretty;
+  text-wrap: wrap;
 }
 .prose > :first-child {
   margin-top: 0;
