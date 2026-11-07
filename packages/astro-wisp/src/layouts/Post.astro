@@ -52,6 +52,7 @@ const { title, description, pubDate, updatedDate, tags, category, lang, toc, cov
 const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3 && h.slug !== 'footnote-label');
 const zh = /^zh\b/i.test(lang ?? config.site.lang);
 const tocTitle = zh ? '目录' : 'Contents';
+const seriesTitle = zh ? '系列文章' : 'Series';
 const showToc = config.features.toc && toc !== false && tocHeadings.length >= 2;
 const showSeries = series.length > 0;
 // 目录收起状态：首帧前写入 html[data-toc]（同时是“JS 可用”的标记，无 JS 时目录完整展开）
@@ -81,7 +82,7 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
   <div class:list={['wisp-post', { 'wisp-has-toc': showToc, 'wisp-has-series': showSeries }]}>
     {showSeries && (
       <div class="wisp-post-series-inline">
-        <SeriesNav items={series} currentId={post.id} variant="inline" />
+        <SeriesNav items={series} currentId={post.id} variant="inline" title={seriesTitle} />
       </div>
     )}
 
@@ -109,7 +110,7 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
       </div>
 
       <footer>
-        <PrevNext prev={prev} next={next} />
+        <PrevNext prev={prev} next={next} lang={lang} />
       </footer>
     </article>
 
@@ -124,7 +125,7 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
     {showSeries && (
       <aside class="wisp-post-series-aside" aria-label="系列文章">
         <div class="wisp-post-series-aside-inner">
-          <SeriesNav items={series} currentId={post.id} />
+          <SeriesNav items={series} currentId={post.id} title={seriesTitle} />
         </div>
       </aside>
     )}
@@ -192,13 +193,13 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
       display: block;
       grid-column: 3;
       grid-row: 1;
-      padding-inline-start: clamp(2rem, 4vw - 1rem, 3rem);
+      padding-inline: 1.25rem clamp(2rem, 4vw - 1rem, 3rem);
     }
     .wisp-post-series-aside {
       display: block;
       grid-column: 1;
       grid-row: 1;
-      padding-inline-end: clamp(2rem, 4vw - 1rem, 3rem);
+      padding-inline: clamp(2rem, 4vw - 1rem, 3rem) 1.25rem;
     }
     .wisp-post-series-aside-inner {
       position: sticky;

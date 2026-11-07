@@ -17,7 +17,7 @@ export interface Props {
   label?: string;
 }
 
-const { tags, base = '/tags/', class: className, label = '标签' } = Astro.props;
+const { tags, base = '/tags/', class: className, label = (/^zh\b/i.test(config.site.lang) ? '标签' : 'Tags') } = Astro.props;
 const linkBase = sitePath(import.meta.env.BASE_URL, base);
 ---
 
@@ -45,6 +45,9 @@ const linkBase = sitePath(import.meta.env.BASE_URL, base);
     list-style: none;
   }
   .wisp-tags a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
     color: var(--wisp-muted);
     transition: color 150ms;
   }

@@ -44,7 +44,7 @@ export interface DiagramEnv {
   dev: boolean;
   /** features.diagramDownload */
   downloads?: boolean;
-  /** site.url；用于“在 draw.io 中打开”的绝对 URL */
+  /** Astro site；用于“在 draw.io 中打开”的绝对 URL */
   siteUrl?: string;
   /** Astro base，默认 `/` */
   base?: string;
@@ -281,7 +281,7 @@ export function prepareSvg(svg: string, opts: { suffix: string; alt?: string; fa
 
 const PLACEHOLDER_HOSTS = /(^|\.)(example\.(com|org|net)|localhost)$/i;
 
-/** “在 draw.io 中打开”需要公开可访问的绝对 URL；site.url 未配置或仍是示例域名时不显示。 */
+/** “在 draw.io 中打开”需要公开可访问的绝对 URL；Astro site 未配置或仍是示例域名时不显示。 */
 function absoluteUrl(siteUrl: string | undefined, href: string): string | undefined {
   if (!siteUrl) return undefined;
   try {

@@ -106,7 +106,7 @@ pnpm diagram export src/content/posts/my-post/diagrams/flow.wisp.svg --png --the
 - 构建时源文件会被复制到 `dist/diagrams/`。开发服务器也会直接提供这些地址。
 - `.excalidraw` 以 `application/json` 提供，`.drawio` 以 `application/xml` 提供，两者都带 `download` 属性。
 - 关闭：`features.diagramDownload: false`（见 [配置参考](./configuration.md)）。
-- 对于 `.drawio`，如果 `site.url` 设为真实域名，页面上还会出现“在 draw.io 中打开”的链接。`site.url` 默认为 `https://example.com`，正式发布前应改掉。Excalidraw 没有可以直接打开远程文件的方式，因此不提供在线打开链接。
+- 对于 `.drawio`，如果 Astro 配置中的 `site` 设为真实域名，页面上还会出现“在 draw.io 中打开”的链接。正式发布前应把 `site` 改成正式域名。Excalidraw 没有可以直接打开远程文件的方式，因此不提供在线打开链接。
 
 部署时可以设置响应头，见 [部署](./deployment.md)。
 

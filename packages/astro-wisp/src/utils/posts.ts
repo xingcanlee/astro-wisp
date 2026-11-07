@@ -8,6 +8,11 @@ export interface SeriesItem {
   order: number;
 }
 
+export interface SeriesNeighbors {
+  prev?: SeriesItem;
+  next?: SeriesItem;
+}
+
 /** 纯逻辑只依赖这几个字段，便于单测。 */
 export interface PostLike {
   id: string;
@@ -44,6 +49,15 @@ export function filterAndSortSeries<T extends { id: string; data: { title: strin
       a.id.localeCompare(b.id),
     )
     .map((post) => ({ id: post.id, title: post.data.title, order: post.data.series!.order }));
+}
+
+/** 返回当前系列文章的前后章节；系列顺序优先于全站发布时间。 */
+export function seriesNeighbors(series: SeriesItem[], currentId: string): SeriesNeighbors {
+  const index = series.findIndex((item) => item.id === currentId);
+  return {
+    prev: index > 0 ? series[index - 1] : undefined,
+    next: index >= 0 && index < series.length - 1 ? series[index + 1] : undefined,
+  };
 }
 
 /**

@@ -65,8 +65,13 @@
 
 /* 文章页宽屏且显示右侧目录时，宽内容只向左突破，避免压到 sticky 目录 */
 @media (min-width: 75rem) {
-  .wisp-has-toc .wisp-wide {
+  .wisp-has-toc:not(.wisp-has-series) .wisp-wide {
     --wisp-wide-w: max(100%, min(100% + (100vw - 100%) / 2 - 3rem, 56rem));
     margin-inline: calc(100% - var(--wisp-wide-w)) 0;
+  }
+  /* 系列栏占据正文左侧时，宽内容留在正文列内，避免覆盖导航。 */
+  .wisp-has-series .wisp-wide {
+    --wisp-wide-w: 100%;
+    margin-inline: 0;
   }
 }

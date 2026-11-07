@@ -11,7 +11,7 @@
  * };
  * ```
  *
- * 扩展 frontmatter：`postsSchema({ extend: z.object({ series: z.string().optional() }) })`。
+ * 扩展 frontmatter：`postsSchema({ extend: z.object({ series: z.object({ id: z.string(), order: z.number() }).optional() }) })`。
  */
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';

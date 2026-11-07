@@ -23,20 +23,40 @@ const icons = [...(copy ? ['copy', 'check'] : []), ...(fold ? ['chevron-down', '
             const s = el('span', 'wisp-sr');
             b.type = 'button';
             b.innerHTML = I('copy');
-            b.setAttribute('aria-label', '复制代码');
+            b.setAttribute('aria-label', document.documentElement.lang.startsWith('zh') ? '复制代码' : 'Copy code');
             s.setAttribute('role', 'status');
             s.setAttribute('aria-live', 'polite');
             b.onclick = async () => {
               const c = pre.querySelector('code').cloneNode(true);
               c.querySelectorAll('[style*="user-select"]').forEach((e) => e.remove());
+              const text = c.textContent ?? '';
+              let copied = false;
               try {
-                await navigator.clipboard.writeText(c.textContent);
-              } catch {
+                if (navigator.clipboard?.writeText) {
+                  await navigator.clipboard.writeText(text);
+                  copied = true;
+                }
+              } catch {}
+              if (!copied) {
+                const fallback = document.createElement('textarea');
+                fallback.value = text;
+                fallback.setAttribute('readonly', '');
+                fallback.style.cssText = 'position:fixed;inset:-9999px;opacity:0';
+                document.body.append(fallback);
+                fallback.select();
+                try {
+                  const execCopy = Reflect.get(document, 'execCommand');
+                  copied = Boolean(execCopy?.call(document, 'copy'));
+                } catch {}
+                fallback.remove();
+              }
+              if (!copied) {
+                s.textContent = document.documentElement.lang.startsWith('zh') ? '复制失败' : 'Copy failed';
                 return;
               }
               b.innerHTML = I('check');
               b.dataset.done = '';
-              s.textContent = '已复制';
+              s.textContent = document.documentElement.lang.startsWith('zh') ? '已复制' : 'Copied';
               setTimeout(() => {
                 b.innerHTML = I('copy');
                 delete b.dataset.done;
@@ -51,7 +71,8 @@ const icons = [...(copy ? ['copy', 'check'] : []), ...(fold ? ['chevron-down', '
             const set = (open) => {
               box.toggleAttribute('data-folded', !open);
               f.setAttribute('aria-expanded', open);
-              f.innerHTML = I(open ? 'chevron-up' : 'chevron-down') + '<span>' + (open ? '收起' : '展开全部 ' + box.dataset.lines + ' 行') + '</span>';
+              const zh = document.documentElement.lang.startsWith('zh');
+              f.innerHTML = I(open ? 'chevron-up' : 'chevron-down') + '<span>' + (open ? (zh ? '收起' : 'Collapse') : (zh ? '展开全部 ' + box.dataset.lines + ' 行' : 'Show all ' + box.dataset.lines + ' lines')) + '</span>';
             };
             f.type = 'button';
             f.setAttribute('aria-controls', pre.id);

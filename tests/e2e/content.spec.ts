@@ -25,7 +25,7 @@ test('代码块有行号（::before 计数器）', async ({ page }) => {
   expect(content).not.toBe('none');
 });
 
-test('复制按钮复制的文本不含行号', async ({ page, context, browserName }) => {
+test('复制按钮复制的文本不含行号', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const pre = page.locator('pre.wisp-ln').first();
   const btn = pre.locator('xpath=..').locator('.wisp-copy');
@@ -39,6 +39,30 @@ test('复制按钮复制的文本不含行号', async ({ page, context, browserN
   // 每行都不应以行号开头
   for (const l of copied.split('\n')) expect(l).not.toMatch(/^\s*\d+\s*$/);
   await expect(btn.locator('xpath=following-sibling::span[@role="status"]')).toHaveText('已复制');
+});
+
+test('剪贴板不可用时给出复制失败反馈', async ({ page }) => {
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: async () => { throw new Error('blocked'); } },
+    });
+    (document as Document & { execCommand?: () => boolean }).execCommand = () => false;
+  });
+  const pre = page.locator('pre.wisp-ln').first();
+  const btn = pre.locator('xpath=..').locator('.wisp-copy');
+  await btn.click();
+  await expect(btn.locator('xpath=following-sibling::span[@role="status"]')).toHaveText('复制失败');
+});
+
+test('移动端交互入口有足够的触控高度', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.reload();
+  const heights = await page.locator('.wisp-toc-inline summary, .wisp-series-inline summary, .wisp-diagram-actions a, .wisp-copy, .wisp-theme-toggle').evaluateAll((els) =>
+    els.map((el) => Math.round(el.getBoundingClientRect().height)),
+  );
+  expect(heights.length).toBeGreaterThan(0);
+  expect(Math.min(...heights)).toBeGreaterThanOrEqual(44);
 });
 
 test('图表 figure 存在，下载链接返回 200', async ({ page, request }) => {

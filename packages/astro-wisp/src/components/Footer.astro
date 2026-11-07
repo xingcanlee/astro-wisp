@@ -31,6 +31,7 @@ const iconOf: Record<string, string> = {
   link: 'link',
 };
 const owner = config.site.author || config.site.title;
+const zh = /^zh\b/i.test(config.site.lang);
 ---
 
 <footer class="wisp-footer">
@@ -48,7 +49,7 @@ const owner = config.site.author || config.site.title;
     </p>
     {
       config.social.length > 0 && (
-        <ul aria-label="社交链接">
+        <ul aria-label={zh ? '社交链接' : 'Social links'}>
           {config.social.map((s) => {
             const external = /^https?:/.test(s.href);
             const href = s.kind === 'email' && !s.href.startsWith('mailto:') ? `mailto:${s.href}` : sitePath(import.meta.env.BASE_URL, s.href);
@@ -95,6 +96,10 @@ const owner = config.site.author || config.site.title;
     margin: 0;
   }
   .wisp-footer p .wisp-footer-author {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-block: 0.25rem;
     width: auto;
     height: auto;
     border-radius: 0;
@@ -111,8 +116,8 @@ const owner = config.site.author || config.site.title;
   .wisp-footer a {
     display: inline-grid;
     place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.75rem;
+    height: 2.75rem;
     border-radius: 6px;
     color: var(--wisp-muted);
     transition: color 150ms;

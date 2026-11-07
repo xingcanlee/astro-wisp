@@ -229,4 +229,11 @@ html {
     background-clip: content-box;
   }
 }
+
+@media (max-width: 40rem) {
+  .wisp-pre[data-wisp-overflow],
+  .prose .wisp-table[data-wisp-overflow] {
+    box-shadow: inset -0.9rem 0 0.9rem -0.9rem var(--wisp-muted);
+  }
+}
 }

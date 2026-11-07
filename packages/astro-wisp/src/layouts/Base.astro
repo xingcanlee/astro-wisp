@@ -6,8 +6,8 @@
  */
 // 第一个引入：声明 cascade layer 顺序
 import '../styles/layers.css';
-// 思源黑体用外部 CSS（101 个分片，浏览器跨页缓存）；Inter / JetBrains Mono 由 Astro Fonts API 提供（见 src/fonts.ts）
-import '@fontsource-variable/noto-sans-sc';
+// 思源黑体只在 CJK 页面加载；Inter / JetBrains Mono 由 Astro Fonts API 提供（见 src/fonts.ts）
+import notoCssUrl from '@fontsource-variable/noto-sans-sc/index.css?url';
 import 'virtual:wisp/theme-css';
 import '../styles/global.css';
 // 站点的 customCss：不分层、最后引入，可以覆盖主题样式和令牌
@@ -57,10 +57,12 @@ const {
 
 const site = Astro.site ?? new URL(config.siteUrl);
 const base = import.meta.env.BASE_URL;
-const canonical = new URL(Astro.props.canonical ?? Astro.url.pathname, site).href;
+const canonicalPath = Astro.props.canonical ?? Astro.url.pathname;
+const canonical = new URL(sitePath(base, canonicalPath), site).href;
 const fullTitle = title && title !== config.site.title ? `${title} · ${config.site.title}` : config.site.title;
-const imageUrl = image ? new URL(image, site).href : undefined;
+const imageUrl = image ? new URL(sitePath(base, image), site).href : undefined;
 const ogLocale = lang.replace('-', '_');
+const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
 ---
 
 <!doctype html>
@@ -89,6 +91,7 @@ const ogLocale = lang.replace('-', '_');
     <Font cssVariable="--font-wisp-sans" preload={[{ subset: 'latin', weight: 400, style: 'normal' }]} />
     <Font cssVariable="--font-wisp-mono" />
     <meta name="generator" content={Astro.generator} />
+    {needsCjkFont && <link rel="stylesheet" href={notoCssUrl} />}
 
     <meta property="og:site_name" content={config.site.title} />
     <meta property="og:title" content={title ?? config.site.title} />
@@ -97,6 +100,7 @@ const ogLocale = lang.replace('-', '_');
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={ogLocale} />
     {imageUrl && <meta property="og:image" content={imageUrl} />}
+    {imageUrl && <meta property="og:image:alt" content={description} />}
     {type === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
     {type === 'article' && modifiedTime && <meta property="article:modified_time" content={modifiedTime.toISOString()} />}
     {type === 'article' && tags.map((t) => <meta property="article:tag" content={t} />)}
@@ -112,6 +116,30 @@ const ogLocale = lang.replace('-', '_');
     <Footer />
     <Lightbox />
     <CopyButton />
+    <script is:inline>
+      (() => {
+        const zh = document.documentElement.lang.startsWith('zh');
+        const update = () => {
+          document.querySelectorAll('.wisp-pre, .wisp-table').forEach((el) => {
+            const overflow = el.scrollWidth > el.clientWidth + 1;
+            el.toggleAttribute('data-wisp-overflow', overflow);
+            if (el.classList.contains('wisp-pre')) {
+              if (overflow) el.setAttribute('aria-label', zh ? '代码，可横向滚动' : 'Code, horizontally scrollable');
+              else el.removeAttribute('aria-label');
+            } else if (overflow) {
+              el.setAttribute('role', 'region');
+              el.setAttribute('aria-label', zh ? '表格，可横向滚动' : 'Table, horizontally scrollable');
+            } else {
+              el.removeAttribute('role');
+              el.removeAttribute('aria-label');
+            }
+          });
+        };
+        update();
+        addEventListener('resize', update, { passive: true });
+        if (window.ResizeObserver) new ResizeObserver(update).observe(document.body);
+      })();
+    </script>
   </body>
 </html>
 

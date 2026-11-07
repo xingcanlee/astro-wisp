@@ -58,16 +58,26 @@ const isCurrent = (href: string) => href !== '/' && norm(decodeURI(routePath)).s
   .wisp-nav {
     display: flex;
     align-items: center;
+    min-width: 0;
     gap: 0.75rem;
   }
   .wisp-nav ul {
     display: flex;
+    min-width: 0;
+    overflow-x: auto;
     gap: 1.25rem;
     margin: 0;
     padding: 0;
     list-style: none;
+    scrollbar-width: none;
+  }
+  .wisp-nav ul::-webkit-scrollbar {
+    display: none;
   }
   .wisp-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
     color: var(--wisp-muted);
     font-size: 0.9375rem;
     transition: color 150ms;
@@ -78,6 +88,17 @@ const isCurrent = (href: string) => href !== '/' && norm(decodeURI(routePath)).s
     color: var(--wisp-fg);
   }
   @media (max-width: 23.99rem) {
+    .wisp-header-inner {
+      gap: 0.5rem;
+    }
+    .wisp-brand {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .wisp-nav {
+      gap: 0.25rem;
+    }
     .wisp-nav ul {
       gap: 0.875rem;
     }

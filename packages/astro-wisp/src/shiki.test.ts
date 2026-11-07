@@ -3,8 +3,6 @@ import { createShikiHighlighter } from '@astrojs/markdown-remark/shiki';
 import { wispShikiConfig, parseFoldMeta } from './shiki';
 import { wispConfigSchema } from './config';
 
-const cfg = (lineNumbers: boolean) => wispConfigSchema.parse({ features: { lineNumbers } });
-
 async function render(code: string, lang: string, lineNumbers = true, meta?: string, fold: object = {}) {
   const c = wispShikiConfig(wispConfigSchema.parse({ features: { lineNumbers, codeFold: fold } }));
   const h = await createShikiHighlighter({ themes: c.themes as any, langs: [lang] as any });

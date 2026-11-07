@@ -120,6 +120,10 @@
     grid-row: 3;
     justify-content: flex-start;
   }
+  .wisp-diagram-actions a {
+    min-height: 2.75rem;
+    padding-inline: 0.25rem;
+  }
   .wisp-diagram:not(.wisp-has-caption) > .wisp-diagram-actions {
     grid-row: 2;
   }

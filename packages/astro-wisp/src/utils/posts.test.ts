@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterAndSortPosts, filterAndSortSeries, groupByYear } from './posts';
+import { filterAndSortPosts, filterAndSortSeries, groupByYear, seriesNeighbors } from './posts';
 
 const p = (id: string, d: string, draft = false) => ({ id, data: { pubDate: new Date(d), draft } });
 const posts = [p('a', '2025-03-01'), p('b', '2026-11-06'), p('c', '2026-01-02', true), p('d', '2024-12-31')];
@@ -35,5 +35,16 @@ describe('filterAndSortSeries', () => {
       { id: 'first', data: { title: 'First', pubDate: new Date('2026-02-01'), series: { id: 'x', order: 1 } } },
     ];
     expect(filterAndSortSeries(input, 'x').map((x) => x.id)).toEqual(['first', 'later']);
+  });
+
+  it('按系列顺序返回当前章节的前后项', () => {
+    const series = [
+      { id: 'intro', title: 'Intro', order: 1 },
+      { id: 'practice', title: 'Practice', order: 3 },
+      { id: 'graphs', title: 'Graphs', order: 4 },
+    ];
+    expect(seriesNeighbors(series, 'practice')).toEqual({ prev: series[0], next: series[2] });
+    expect(seriesNeighbors(series, 'intro')).toEqual({ next: series[1] });
+    expect(seriesNeighbors(series, 'graphs')).toEqual({ prev: series[1] });
   });
 });

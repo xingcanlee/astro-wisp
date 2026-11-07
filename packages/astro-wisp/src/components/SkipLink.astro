@@ -8,7 +8,10 @@ export interface Props {
   /** 链接文字，默认“跳到正文” */
   label?: string;
 }
-const { target = 'main', label = '跳到正文' } = Astro.props;
+import config from 'virtual:wisp/config';
+
+const zh = /^zh\b/i.test(config.site.lang);
+const { target = 'main', label = (zh ? '跳到正文' : 'Skip to content') } = Astro.props;
 ---
 
 <a href={`#${target}`} class="wisp-skip">{label}</a>

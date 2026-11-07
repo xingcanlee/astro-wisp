@@ -4,11 +4,12 @@
  * 点击平滑滚动到顶部（reduced-motion 下直接跳转），随后把焦点移到页面主标题（没有则 main）。无 JS 时不显示。
  */
 import Icon from 'virtual:wisp/components/Icon';
+import config from 'virtual:wisp/config';
 
 export interface Props {
   label?: string;
 }
-const { label = '返回顶部' } = Astro.props;
+const { label = (/^zh\b/i.test(config.site.lang) ? '返回顶部' : 'Back to top') } = Astro.props;
 ---
 
 <button type="button" class="wisp-top" aria-label={label} data-back-to-top>

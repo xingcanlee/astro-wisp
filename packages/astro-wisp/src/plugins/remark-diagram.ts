@@ -10,7 +10,7 @@ export interface RemarkDiagramOptions {
   dev?: boolean;
   /** features.diagramDownload */
   downloads?: boolean;
-  /** site.url（用于“在 draw.io 中打开”） */
+  /** Astro site（用于“在 draw.io 中打开”） */
   siteUrl?: string;
   /** Astro base */
   base?: string;

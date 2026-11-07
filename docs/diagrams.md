@@ -186,7 +186,7 @@ import Diagram from 'astro-wisp/components/Diagram.astro';
   - dev 环境：注册 Vite middleware，把 `/diagrams/<post-id>/<file>` 映射到 `src/content/posts/<post-id>/diagrams/<file>`。
   - build 环境：在 `astro:build:done` 钩子中，把所有被引用的源文件复制到 `dist/diagrams/<post-id>/`。
 - 响应头：`.excalidraw` 使用 `application/json`，`.drawio` 使用 `application/xml`，并带 `download` 属性。
-- 可选的“在 draw.io 中打开”链接：`https://app.diagrams.net/#U<encodeURIComponent(绝对URL)>`（仅在配置了 `site.url` 时显示）。Excalidraw 没有不经上传就能打开远程文件的方式，所以不提供在线打开链接。
+- 可选的“在 draw.io 中打开”链接：`https://app.diagrams.net/#U<encodeURIComponent(绝对URL)>`（仅在 Astro 配置了真实 `site` 时显示）。Excalidraw 没有不经上传就能打开远程文件的方式，所以不提供在线打开链接。
 - `features.diagramDownload` 可以关闭这个功能。
 
 ## 6. `wisp-diagram` skill（让 Agent 产出 Wisp 风格的图）

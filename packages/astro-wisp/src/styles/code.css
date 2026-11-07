@@ -106,6 +106,12 @@
   opacity: 0;
   transition: opacity 150ms, color 150ms, border-color 150ms;
 }
+@media (max-width: 64rem) {
+  .wisp-copy {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
 .wisp-code:hover .wisp-copy,
 .wisp-copy:focus-visible,
 .wisp-code:focus-within .wisp-copy {
