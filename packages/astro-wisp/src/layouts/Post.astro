@@ -13,7 +13,9 @@ import Toc from 'virtual:wisp/components/Toc';
 import ReadingProgress from 'virtual:wisp/components/ReadingProgress';
 import BackToTop from 'virtual:wisp/components/BackToTop';
 import PrevNext from 'virtual:wisp/components/PrevNext';
+import SeriesNav from 'virtual:wisp/components/SeriesNav';
 import type { PrevNextItem } from '../components/PrevNext.astro';
+import type { SeriesItem } from '../components/SeriesNav.astro';
 import katexCssUrl from '../styles/katex.css?url';
 import diagramCssUrl from '../styles/diagram-figure.css?url';
 import { Font } from 'astro:assets';
@@ -31,15 +33,27 @@ export interface Props {
   hasHandDiagram?: boolean;
   prev?: PrevNextItem;
   next?: PrevNextItem;
+  series?: SeriesItem[];
 }
 
-const { post, headings = [], readingTime, hasMath = false, hasDiagram = false, hasHandDiagram = false, prev, next } = Astro.props;
+const {
+  post,
+  headings = [],
+  readingTime,
+  hasMath = false,
+  hasDiagram = false,
+  hasHandDiagram = false,
+  prev,
+  next,
+  series = [],
+} = Astro.props;
 const { title, description, pubDate, updatedDate, tags, category, lang, toc, cover } = post.data;
 // 排除 GFM 脚注区的隐藏标题（id=footnote-label）
 const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3 && h.slug !== 'footnote-label');
 const zh = /^zh\b/i.test(lang ?? config.site.lang);
 const tocTitle = zh ? '目录' : 'Contents';
 const showToc = config.features.toc && toc !== false && tocHeadings.length >= 2;
+const showSeries = series.length > 0;
 // 目录收起状态：首帧前写入 html[data-toc]（同时是“JS 可用”的标记，无 JS 时目录完整展开）
 const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('wisp-toc-collapsed')==='1'?'collapsed':'open'}catch(e){document.documentElement.dataset.toc='open'}`;
 ---
@@ -64,7 +78,13 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
   <ReadingProgress />
   <BackToTop />
 
-  <div class:list={['wisp-post', { 'wisp-has-toc': showToc }]}>
+  <div class:list={['wisp-post', { 'wisp-has-toc': showToc, 'wisp-has-series': showSeries }]}>
+    {showSeries && (
+      <div class="wisp-post-series-inline">
+        <SeriesNav items={series} currentId={post.id} variant="inline" />
+      </div>
+    )}
+
     <article class="wisp-post-article">
       <header class="wisp-post-header">
         <h1>{title}</h1>
@@ -97,6 +117,14 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
       <aside class="wisp-post-aside" aria-label={tocTitle}>
         <div class="wisp-post-aside-inner">
           <Toc headings={tocHeadings} variant="aside" title={tocTitle} />
+        </div>
+      </aside>
+    )}
+
+    {showSeries && (
+      <aside class="wisp-post-series-aside" aria-label="系列文章">
+        <div class="wisp-post-series-aside-inner">
+          <SeriesNav items={series} currentId={post.id} />
         </div>
       </aside>
     )}
@@ -143,15 +171,20 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
   .wisp-post-aside {
     display: none;
   }
+  .wisp-post-series-aside {
+    display: none;
+  }
 
   /* ≥ 1200px：正文居中，目录放在右侧留白中 sticky */
   @media (min-width: 75rem) {
-    .wisp-post.wisp-has-toc {
+    .wisp-post.wisp-has-toc,
+    .wisp-post.wisp-has-series {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 42em) minmax(0, 1fr);
       max-width: none;
     }
-    .wisp-has-toc .wisp-post-article {
+    .wisp-post.wisp-has-toc .wisp-post-article,
+    .wisp-post.wisp-has-series .wisp-post-article {
       grid-column: 2;
       grid-row: 1;
     }
@@ -160,6 +193,26 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
       grid-column: 3;
       grid-row: 1;
       padding-inline-start: clamp(2rem, 4vw - 1rem, 3rem);
+    }
+    .wisp-post-series-aside {
+      display: block;
+      grid-column: 1;
+      grid-row: 1;
+      padding-inline-end: clamp(2rem, 4vw - 1rem, 3rem);
+    }
+    .wisp-post-series-aside-inner {
+      position: sticky;
+      top: 2.5rem;
+      max-width: 14rem;
+      max-height: calc(100dvh - 5rem);
+      margin-inline-start: auto;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: var(--wisp-border) transparent;
+    }
+    .wisp-post-series-inline {
+      display: none;
     }
     .wisp-post-aside-inner {
       position: sticky;

@@ -14,6 +14,12 @@ describe('defineWispConfig', () => {
     expect(c.features.math).toBe(false);
     expect(c.features.mermaid).toBe(true);
     expect(c.site.lang).toBe('zh-CN');
+    expect(c.site.authorGithub).toBeUndefined();
+  });
+  it('accepts an author GitHub URL', () => {
+    expect(defineWispConfig({ site: { authorGithub: 'https://github.com/xingcanlee' } }).site.authorGithub)
+      .toBe('https://github.com/xingcanlee');
+    expect(() => defineWispConfig({ site: { authorGithub: 'xingcanlee' } })).toThrow(/site\.authorGithub/);
   });
   it('非法值抛错并带路径', () => {
     expect(() => defineWispConfig({ home: { pageSize: 0 } })).toThrow(/home\.pageSize/);

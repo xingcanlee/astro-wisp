@@ -89,11 +89,11 @@ describe('renderDiagram', () => {
     const r = renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, alt: '流程', caption: '图 1：<b>', seq: 1 }, env());
     expect(r.ok).toBe(true);
     expect(r.style).toBe('hand');
-    expect(r.html).toMatch(/^<figure class="wisp-figure wisp-diagram" data-style="hand"><div class="wisp-diagram-body" tabindex="0" role="group" aria-label="流程" style="--wd-w:848px"><svg /);
+    expect(r.html).toMatch(/^<figure class="wisp-figure wisp-diagram wisp-has-caption" data-style="hand"><div class="wisp-diagram-body" tabindex="0" role="group" aria-label="流程" style="--wd-w:848px"><svg /);
     expect(r.html).toContain('<figcaption>图 1：&lt;b&gt;</figcaption>');
     expect(r.html).toContain('href="/diagrams/demo/flow.excalidraw" download="flow.excalidraw"');
     expect(r.html).toContain('aria-label="下载源文件 flow.excalidraw（Excalidraw）"');
-    expect(r.html).toMatch(/class="wisp-diagram-dl"[^>]*><svg [^>]*class="wisp-icon"[^>]*aria-hidden="true"[\s\S]*?<\/svg>源文件<\/a>/);
+    expect(r.html).toMatch(/class="wisp-diagram-dl"[^>]*title="下载源文件 flow\.excalidraw"[^>]*><svg [^>]*class="wisp-icon"[^>]*aria-hidden="true"[\s\S]*?<\/svg>下载源文件<\/a>/);
     expect(r.html).not.toContain('app.diagrams.net'); // Excalidraw 没有在线打开
     expect(r.html).toContain('>流程</title>');
   });
@@ -110,7 +110,7 @@ describe('renderDiagram', () => {
   });
   it('adds open-in-draw.io link only with a real site url', () => {
     const r = renderDiagram({ src: './diagrams/model.drawio', from: repo.post, seq: 1 }, env());
-    expect(r.html).toMatch(/class="wisp-diagram-open"[^>]*><svg [^>]*class="wisp-icon"[\s\S]*?<\/svg>在 draw\.io 中打开<\/a>/);
+    expect(r.html).toMatch(/class="wisp-diagram-open"[^>]*aria-label="在 draw\.io 中打开"[^>]*><svg [^>]*class="wisp-icon"[\s\S]*?<\/svg>打开 draw\.io<\/a>/);
     expect(r.html).toContain(`https://app.diagrams.net/#U${encodeURIComponent('https://blog.dev/diagrams/demo/model.drawio')}`);
     const r2 = renderDiagram({ src: './diagrams/model.drawio', from: repo.post, seq: 1 }, env({ siteUrl: 'https://example.com' }));
     expect(r2.html).not.toContain('app.diagrams.net');

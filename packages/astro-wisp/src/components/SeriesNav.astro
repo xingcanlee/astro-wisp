@@ -1,0 +1,149 @@
+---
+/**
+ * 系列文章导航：宽屏放在正文左侧，窄屏折叠到正文前。
+ * 路由层负责按 series.order 排好序，组件只负责展示当前文章和链接。
+ */
+import Icon from 'virtual:wisp/components/Icon';
+import { sitePath } from '../utils/paths';
+
+export interface SeriesItem {
+  id: string;
+  title: string;
+  order: number;
+}
+
+export interface Props {
+  items: SeriesItem[];
+  currentId: string;
+  variant?: 'aside' | 'inline';
+  title?: string;
+}
+
+const { items, currentId, variant = 'aside', title = '系列文章' } = Astro.props;
+const headingId = variant === 'aside' ? 'wisp-series-title-aside' : 'wisp-series-title-inline';
+---
+
+{
+  items.length > 0 &&
+    (variant === 'inline' ? (
+      <details class="wisp-series wisp-series-inline">
+        <summary>
+          <Icon name="chevron-right" class="wisp-series-chev" />
+          {title}
+        </summary>
+        <ol>
+          {items.map((item) => (
+            <li>
+              <a
+                href={sitePath(import.meta.env.BASE_URL, `/posts/${item.id}/`)}
+                aria-current={item.id === currentId ? 'page' : undefined}
+              >
+                {item.title}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </details>
+    ) : (
+      <nav class="wisp-series wisp-series-aside" aria-labelledby={headingId}>
+        <p id={headingId} class="wisp-series-title">{title}</p>
+        <ol>
+          {items.map((item) => (
+            <li>
+              <a
+                href={sitePath(import.meta.env.BASE_URL, `/posts/${item.id}/`)}
+                aria-current={item.id === currentId ? 'page' : undefined}
+              >
+                {item.title}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    ))
+}
+
+<style>
+  @layer components {
+  .wisp-series {
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+  .wisp-series ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .wisp-series li {
+    margin: 0;
+  }
+  .wisp-series a {
+    display: block;
+    padding-block: 0.3rem;
+    color: var(--wisp-muted);
+    transition:
+      color 150ms,
+      border-color 150ms;
+  }
+  .wisp-series a:hover {
+    color: var(--wisp-fg);
+  }
+  .wisp-series a[aria-current='page'] {
+    color: var(--wisp-accent);
+  }
+  .wisp-series-aside {
+    border-inline-start: 1px solid var(--wisp-border);
+  }
+  .wisp-series-title {
+    margin: 0 0 0.5rem;
+    color: var(--wisp-fg);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+  }
+  .wisp-series-aside a {
+    margin-inline-start: -1px;
+    padding-inline: 0.9rem;
+    border-inline-start: 1px solid transparent;
+  }
+  .wisp-series-aside a[aria-current='page'] {
+    border-inline-start-color: var(--wisp-accent);
+  }
+  .wisp-series-inline {
+    margin: 0 0 2.5rem;
+    padding-block: 0.75rem;
+    border-block: 1px solid var(--wisp-border);
+  }
+  .wisp-series-inline summary {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    color: var(--wisp-muted);
+    font-weight: 600;
+    list-style: none;
+    transition: color 150ms;
+  }
+  .wisp-series-inline summary::-webkit-details-marker {
+    display: none;
+  }
+  .wisp-series-inline summary:hover,
+  .wisp-series-inline[open] summary {
+    color: var(--wisp-fg);
+  }
+  .wisp-series-inline[open] summary :global(.wisp-series-chev) {
+    transform: rotate(90deg);
+  }
+  .wisp-series-inline ol {
+    margin-top: 0.5rem;
+  }
+  .wisp-series :global(.wisp-series-chev) {
+    flex: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .wisp-series :global(.wisp-series-chev) {
+      transition: transform 150ms;
+    }
+  }
+  }
+</style>

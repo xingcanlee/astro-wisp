@@ -161,8 +161,10 @@ src/content/posts/attention-explained/
 <figure class="wisp-figure wisp-diagram" data-style="hand">
   <svg class="wisp-d" …>…</svg>
   <figcaption>图 1：Q·Kᵀ → softmax → ·V</figcaption>
-  <a class="wisp-diagram-dl" href="/diagrams/attention-explained/attention-flow.excalidraw"
-     download aria-label="下载源文件 attention-flow.excalidraw（Excalidraw）">源文件</a>
+  <div class="wisp-diagram-actions">
+    <a class="wisp-diagram-dl" href="/diagrams/attention-explained/attention-flow.excalidraw"
+       download title="下载源文件 attention-flow.excalidraw">下载源文件</a>
+  </div>
 </figure>
 ```
 

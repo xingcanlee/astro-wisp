@@ -56,6 +56,10 @@ declare module 'virtual:wisp/components/PrevNext' {
   const C: typeof import('astro-wisp/components/PrevNext.astro').default;
   export default C;
 }
+declare module 'virtual:wisp/components/SeriesNav' {
+  const C: typeof import('astro-wisp/components/SeriesNav.astro').default;
+  export default C;
+}
 declare module 'virtual:wisp/components/ReadingProgress' {
   const C: typeof import('astro-wisp/components/ReadingProgress.astro').default;
   export default C;

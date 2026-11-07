@@ -57,10 +57,10 @@ for (const h of list) {
           <p id="wisp-toc-title" class="wisp-toc-title">
             {title}
           </p>
-          <button type="button" class="wisp-toc-toggle" aria-expanded="true" aria-controls="wisp-toc-list" data-toc-toggle>
-            <Icon name="panel-right-close" class="wisp-toc-ico-close" />
-            <Icon name="panel-right-open" class="wisp-toc-ico-open" />
-            <span class="sr-only">{title}</span>
+          <button type="button" class="wisp-toc-toggle" aria-label={`收起${title}`} aria-expanded="true" aria-controls="wisp-toc-list" data-toc-toggle data-toc-title={title}>
+            <Icon name="chevron-right" class="wisp-toc-ico-close" />
+            <Icon name="chevron-left" class="wisp-toc-ico-open" />
+            <span class="sr-only" data-toc-action-label>收起{title}</span>
           </button>
         </div>
         <ol id="wisp-toc-list">
@@ -176,7 +176,12 @@ for (const h of list) {
   }
   .wisp-toc-toggle:hover,
   .wisp-toc-sub-toggle:hover {
-    color: var(--wisp-fg);
+    color: var(--wisp-accent);
+  }
+  .wisp-toc-toggle:focus-visible,
+  .wisp-toc-sub-toggle:focus-visible {
+    outline: 2px solid var(--wisp-accent);
+    outline-offset: 2px;
   }
   .wisp-toc-sub-toggle {
     width: 1.5rem;
@@ -282,7 +287,14 @@ for (const h of list) {
 <script>
   const root = document.documentElement;
   const btn = document.querySelector<HTMLButtonElement>('[data-toc-toggle]');
-  const sync = () => btn?.setAttribute('aria-expanded', String(root.dataset.toc !== 'collapsed'));
+  const actionLabel = btn?.querySelector<HTMLElement>('[data-toc-action-label]');
+  const title = btn?.dataset.tocTitle ?? '目录';
+  const sync = () => {
+    const expanded = root.dataset.toc !== 'collapsed';
+    btn?.setAttribute('aria-expanded', String(expanded));
+    btn?.setAttribute('aria-label', `${expanded ? '收起' : '展开'}${title}`);
+    if (actionLabel) actionLabel.textContent = `${expanded ? '收起' : '展开'}${title}`;
+  };
   sync();
   btn?.addEventListener('click', () => {
     const c = root.dataset.toc !== 'collapsed';

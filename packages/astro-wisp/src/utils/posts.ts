@@ -2,6 +2,12 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 
 export type PostEntry = CollectionEntry<'posts'>;
 
+export interface SeriesItem {
+  id: string;
+  title: string;
+  order: number;
+}
+
 /** 纯逻辑只依赖这几个字段，便于单测。 */
 export interface PostLike {
   id: string;
@@ -23,6 +29,21 @@ export function groupByYear<T extends PostLike>(posts: T[]): Array<{ year: numbe
     (map.get(y) ?? map.set(y, []).get(y)!).push(p);
   }
   return [...map.entries()].sort((a, b) => b[0] - a[0]).map(([year, posts]) => ({ year, posts }));
+}
+
+/** 按系列顺序返回文章导航项，未加入该系列的文章不参与排序。 */
+export function filterAndSortSeries<T extends { id: string; data: { title: string; pubDate: Date; series?: { id: string; order: number } } }>(
+  posts: T[],
+  seriesId: string,
+): SeriesItem[] {
+  return posts
+    .filter((post) => post.data.series?.id === seriesId)
+    .sort((a, b) =>
+      a.data.series!.order - b.data.series!.order ||
+      a.data.pubDate.getTime() - b.data.pubDate.getTime() ||
+      a.id.localeCompare(b.id),
+    )
+    .map((post) => ({ id: post.id, title: post.data.title, order: post.data.series!.order }));
 }
 
 /**

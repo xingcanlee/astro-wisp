@@ -120,6 +120,7 @@ frontmatter 字段（`astro-wisp/content` 的 `postsSchema()`，可用 `extend` 
 | `cover` | 图片 | 否 | — | 封面图 |
 | `lang` | string | 否 | — | 文章语言，覆盖站点语言 |
 | `toc` | boolean | 否 | `true` | 是否显示目录 |
+| `series` | `{ id: string; order: integer ≥ 1 }` | 否 | — | 系列文章标识与顺序；宽屏文章页显示系列导航 |
 
 文章 id 即目录名（`my-first-post`），URL 为 `/posts/my-first-post/`。完整写作说明见 [docs/guide/writing.md](docs/guide/writing.md)。
 
@@ -201,6 +202,7 @@ export default defineConfig({
 | `site.title` | string | `Wisp` | 站点标题 |
 | `site.description` | string | `安静好读的技术博客` | 站点描述 |
 | `site.author` | string | `""` | 作者 |
+| `site.authorGithub` | URL | — | 配置后页脚作者名链接到 GitHub |
 | `site.lang` | string | `zh-CN` | 站点语言 |
 | `nav` | `{label, href}[]` | 归档、标签、关于 | 顶部导航 |
 | `social` | `{kind, href, label?}[]` | RSS | 社交链接，`kind` 可选 github、x、mastodon、bluesky、email、rss、link |
@@ -235,7 +237,7 @@ export default defineConfig({
 
    可覆盖的名称：`Header`、`Footer`、`PostCard`、`PostMeta`、`Toc`、`TagList`、`Pagination`、`PrevNext`、`ThemeToggle`、`Icon`、`Figure`、`Diagram` 等全部组件，以及布局 `Base`、`Post`、`Page`。写错名称时启动报错并列出可选项。
 4. **页面**：`routes: { about: false }` 关掉主题的路由，再在 `src/pages/` 中自己实现。自定义页面可以复用 `astro-wisp/layouts/Base.astro` 等布局，以及 `astro-wisp/utils` 中的 `getPosts()`、`getTags()`。
-5. **内容模型**：`postsSchema({ extend: z.object({ series: z.string().optional() }) })` 扩展 frontmatter。
+5. **内容模型**：文章 frontmatter 已内置 `series.id` / `series.order`，其他字段再用 `postsSchema({ extend })` 扩展。
 
 ## 命令
 

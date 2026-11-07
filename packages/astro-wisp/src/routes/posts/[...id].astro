@@ -1,7 +1,7 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import { render } from 'astro:content';
-import { getPosts, type PostEntry } from '../../utils/posts';
+import { filterAndSortSeries, getPosts, type PostEntry, type SeriesItem } from '../../utils/posts';
 import Post from 'virtual:wisp/components/Post';
 
 export const getStaticPaths = (async () => {
@@ -16,6 +16,7 @@ export const getStaticPaths = (async () => {
         post,
         prev: older && { id: older.id, title: older.data.title },
         next: newer && { id: newer.id, title: newer.data.title },
+        series: post.data.series ? filterAndSortSeries(posts, post.data.series.id) : [],
       },
     };
   });
@@ -25,9 +26,10 @@ interface Props {
   post: PostEntry;
   prev?: { id: string; title: string };
   next?: { id: string; title: string };
+  series: SeriesItem[];
 }
 
-const { post, prev, next } = Astro.props;
+const { post, prev, next, series } = Astro.props;
 const { Content, headings, remarkPluginFrontmatter } = await render(post);
 ---
 
@@ -40,6 +42,7 @@ const { Content, headings, remarkPluginFrontmatter } = await render(post);
   hasHandDiagram={Boolean(remarkPluginFrontmatter.hasHandDiagram)}
   prev={prev}
   next={next}
+  series={series}
 >
   <Content />
 </Post>

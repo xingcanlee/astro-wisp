@@ -36,7 +36,16 @@ const owner = config.site.author || config.site.title;
 <footer class="wisp-footer">
   <div class="wisp-container">
   <div class="wisp-footer-inner">
-    <p>© {year} {owner}</p>
+    <p>
+      © {year}{' '}
+      {
+        config.site.authorGithub ? (
+          <a class="wisp-footer-author" href={config.site.authorGithub} rel="me noopener">{owner}</a>
+        ) : (
+          owner
+        )
+      }
+    </p>
     {
       config.social.length > 0 && (
         <ul aria-label="社交链接">
@@ -84,6 +93,12 @@ const owner = config.site.author || config.site.title;
   }
   .wisp-footer p {
     margin: 0;
+  }
+  .wisp-footer p .wisp-footer-author {
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    color: inherit;
   }
   .wisp-footer ul {
     display: flex;

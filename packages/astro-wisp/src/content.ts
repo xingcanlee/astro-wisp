@@ -48,6 +48,12 @@ const postFields = ({ image }: SchemaContext) =>
     cover: image().optional(),
     lang: z.string().optional(),
     toc: z.boolean().default(true),
+    series: z
+      .object({
+        id: z.string().min(1),
+        order: z.number().int().min(1),
+      })
+      .optional(),
   });
 
 const pageFields = z.object({

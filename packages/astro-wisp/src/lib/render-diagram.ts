@@ -359,21 +359,21 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     if (showDl && href) {
       links.push(
         `<a class="wisp-diagram-dl" href="${escAttr(href)}" download="${escAttr(file)}" type="${escAttr(contentTypeFor(file).split(';')[0]!)}"` +
-        ` aria-label="${escAttr(`下载源文件 ${file}（${KIND_NAME[style]}）`)}">${iconSvg('file-down')}源文件</a>`,
+        ` aria-label="${escAttr(`下载源文件 ${file}（${KIND_NAME[style]}）`)}" title="${escAttr(`下载源文件 ${file}`)}">${iconSvg('file-down')}下载源文件</a>`,
       );
       const absHref = style === 'clean' ? absoluteUrl(env.siteUrl, href) : undefined;
       if (absHref) {
         links.push(
           `<a class="wisp-diagram-open" href="${escAttr(`https://app.diagrams.net/#U${encodeURIComponent(absHref)}`)}"` +
-          ` target="_blank" rel="noopener noreferrer">${iconSvg('external-link')}在 draw.io 中打开</a>`,
+          ` target="_blank" rel="noopener noreferrer" aria-label="在 draw.io 中打开" title="在 draw.io 中打开">${iconSvg('external-link')}打开 draw.io</a>`,
         );
       }
     }
 
-    const cls = ['wisp-figure', 'wisp-diagram', ...(ref.wide ? ['wisp-wide'] : [])].join(' ');
+    const caption = ref.caption?.trim();
+    const cls = ['wisp-figure', 'wisp-diagram', ...(caption ? ['wisp-has-caption'] : []), ...(ref.wide ? ['wisp-wide'] : [])].join(' ');
     const pageAttr = style === 'clean' && pages[pageIndex] ? ` data-page="${escAttr(pages[pageIndex]!)}"` : '';
     const bodyStyle = width ? ` style="--wd-w:${Math.round(width * 100) / 100}px"` : '';
-    const caption = ref.caption?.trim();
     const html =
       `<figure class="${cls}" data-style="${style}"${pageAttr}>` +
       // 窄屏下可横向滚动：容器需可键盘聚焦（WCAG scrollable-region-focusable）

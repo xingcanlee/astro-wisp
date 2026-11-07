@@ -42,6 +42,7 @@ export default defineConfig({
 | `site.title` | string | `Wisp` | 站点标题，用于页头和 RSS 频道名 |
 | `site.description` | string | `安静好读的技术博客` | 站点描述，用于首页和 RSS |
 | `site.author` | string | `""` | 作者名 |
+| `site.authorGithub` | URL | — | 配置后页脚作者名链接到 GitHub |
 | `site.lang` | string | `zh-CN` | 站点语言，默认写入 `<html lang>`；交互组件的界面语言也跟随它 |
 
 正式域名不在这里配置，使用 Astro 自己的 [`site`](https://docs.astro.build/en/reference/configuration-reference/#site) 选项（见上例）。未设置时构建会给出警告，并暂用 `https://example.com`。
@@ -175,13 +176,12 @@ wisp({ palette: './design/palette.json' })
 
 ```ts
 import { defineCollection } from 'astro:content';
-import { z } from 'astro/zod';
 import { pagesLoader, pagesSchema, postsLoader, postsSchema } from 'astro-wisp/content';
 
 export const collections = {
   posts: defineCollection({
     loader: postsLoader(), // 默认 ./src/content/posts，可传 { base }
-    schema: postsSchema({ extend: z.object({ series: z.string().optional() }) }),
+    schema: postsSchema(),
   }),
   pages: defineCollection({ loader: pagesLoader(), schema: pagesSchema() }),
 };

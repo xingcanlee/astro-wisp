@@ -2,6 +2,10 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.2.4
+
+- 支持作者 GitHub 链接、图表操作 metadata 行、轻量目录收起图标和系列文章导航。
+
 ## 0.2.3
 
 - 修复正文段落使用 `text-wrap: pretty` 导致浏览器为避免孤行而提前换行的问题。

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterAndSortPosts, groupByYear } from './posts';
+import { filterAndSortPosts, filterAndSortSeries, groupByYear } from './posts';
 
 const p = (id: string, d: string, draft = false) => ({ id, data: { pubDate: new Date(d), draft } });
 const posts = [p('a', '2025-03-01'), p('b', '2026-11-06'), p('c', '2026-01-02', true), p('d', '2024-12-31')];
@@ -25,4 +25,15 @@ describe('groupByYear', () => {
     expect(g[0]!.posts.map((x) => x.id)).toEqual(['b', 'c']);
   });
   it('空输入', () => expect(groupByYear([])).toEqual([]));
+});
+
+describe('filterAndSortSeries', () => {
+  it('只保留系列文章并按 order 排序', () => {
+    const input = [
+      { id: 'later', data: { title: 'Later', pubDate: new Date('2026-01-01'), series: { id: 'x', order: 2 } } },
+      { id: 'other', data: { title: 'Other', pubDate: new Date('2025-01-01'), series: { id: 'y', order: 1 } } },
+      { id: 'first', data: { title: 'First', pubDate: new Date('2026-02-01'), series: { id: 'x', order: 1 } } },
+    ];
+    expect(filterAndSortSeries(input, 'x').map((x) => x.id)).toEqual(['first', 'later']);
+  });
 });
