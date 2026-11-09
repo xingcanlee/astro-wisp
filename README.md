@@ -120,7 +120,7 @@ frontmatter 字段（`astro-wisp/content` 的 `postsSchema()`，可用 `extend` 
 | `cover` | 图片 | 否 | — | 封面图 |
 | `lang` | string | 否 | — | 文章语言，覆盖站点语言 |
 | `toc` | boolean | 否 | `true` | 是否显示目录 |
-| `series` | `{ id: string; order: integer ≥ 1 }` | 否 | — | 系列文章标识与顺序；宽屏文章页显示系列导航 |
+| `series` | `{ id: string; order: integer ≥ 1 }` | 否 | — | 系列文章标识与顺序；首页按系列列出总目录，文章页显示系列导航和页眉书眉 |
 
 文章 id 即目录名（`my-first-post`），URL 为 `/posts/my-first-post/`。完整写作说明见 [docs/guide/writing.md](docs/guide/writing.md)。
 
@@ -235,7 +235,7 @@ export default defineConfig({
    <p class="text-muted">额外的一行</p>
    ```
 
-   可覆盖的名称：`Header`、`Footer`、`PostCard`、`PostMeta`、`Toc`、`TagList`、`Pagination`、`PrevNext`、`ThemeToggle`、`Icon`、`Figure`、`Diagram` 等全部组件，以及布局 `Base`、`Post`、`Page`。写错名称时启动报错并列出可选项。
+   可覆盖的名称：`Header`、`Footer`、`PostCard`、`PostMeta`、`Toc`、`TagList`、`Pagination`、`PrevNext`、`ThemeToggle`、`Icon`、`Figure`、`Diagram` 等全部组件，以及布局 `Base`、`Post`、`Page`。`Base` 与 `Header` 有可选的 `running` prop（书眉：`{ label, href?, position?, title? }`），文章页用它在站名后显示系列与位置，覆盖这两个组件时请透传。写错名称时启动报错并列出可选项。
 4. **页面**：`routes: { about: false }` 关掉主题的路由，再在 `src/pages/` 中自己实现。自定义页面可以复用 `astro-wisp/layouts/Base.astro` 等布局，以及 `astro-wisp/utils` 中的 `getPosts()`、`getTags()`。
 5. **内容模型**：文章 frontmatter 已内置 `series.id` / `series.order`，其他字段再用 `postsSchema({ extend })` 扩展。
 
@@ -275,7 +275,11 @@ export default defineConfig({
 
 所有颜色只来自调色板。主题自带的默认调色板是 [`packages/astro-wisp/design/palette.json`](packages/astro-wisp/design/palette.json)，主题包内的 `tokens.css`、Pele 映射、图表的 `--wd-*` 映射、交互组件的色调列表和 Excalidraw/draw.io 素材库都由它生成（`pnpm tokens`）。
 
-站点不需要运行生成命令：用 `wisp({ palette })` 覆盖调色板，集成会在构建期生成令牌。不要手改生成文件，也不要在组件中写十六进制颜色。设计规范见 [docs/design-system.md](docs/design-system.md)。
+站点不需要运行生成命令：用 `wisp({ palette })` 覆盖调色板，集成会在构建期生成令牌。不要手改生成文件，也不要在组件中写十六进制颜色。令牌机制见 [docs/design-system.md](docs/design-system.md)。
+
+## 外观规范
+
+主题的视觉规范（字体、配色、圆角、间距、组件样式、品牌原则）写在 [DESIGN.md](DESIGN.md)，随 npm 包发布，安装后位于 `node_modules/astro-wisp/DESIGN.md`。站点或 Agent 用 `customCss` 或覆盖组件改样式之前，先读它。
 
 ## 给 AI Agent
 

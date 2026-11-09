@@ -6,33 +6,39 @@
  * 横向滚动不会滚到标签下面。
  */
 .wisp-code {
-  --wisp-code-bar: 2.25rem;
+  --wisp-code-bar: 2.125rem;
+  --wisp-code-size: 0.8125rem;
   position: relative;
   margin-block: 1.75em;
   padding-top: var(--wisp-code-bar);
   border: 1px solid var(--wisp-border);
-  border-radius: 10px;
+  border-radius: 4px;
   background: var(--wisp-code-bg);
   color: var(--wisp-fg);
 }
+/* 宽屏：代码清单向两侧各伸出 1rem，多放约 4 个字符，行尾注释少截断 */
+@media (min-width: 48rem) {
+  .prose .wisp-code {
+    margin-inline: -1rem;
+  }
+}
+/* 标题栏：与代码同底，只用一条发丝线分开，像手册里清单的题注行 */
 .wisp-code::before {
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
   height: var(--wisp-code-bar);
   border-bottom: 1px solid var(--wisp-border);
-  border-radius: 9px 9px 0 0;
-  background: color-mix(in srgb, var(--wisp-code-bg) 55%, var(--wisp-surface-2));
   pointer-events: none;
 }
 .wisp-pre {
   margin: 0;
-  padding: 0.875rem 0 1rem;
+  padding: 0.75rem 0 0.875rem;
   background: transparent;
-  border-radius: 0 0 9px 9px;
+  border-radius: 0 0 3px 3px;
   overflow-x: auto; /* 长行横向滚动，不折行 */
   font-family: var(--wisp-font-mono);
-  font-size: 0.84375rem;
+  font-size: var(--wisp-code-size);
   line-height: 1.7;
   tab-size: 2;
   color: var(--shiki-light);
@@ -67,9 +73,10 @@
   content: counter(line);
   display: inline-block;
   width: 2ch;
-  margin-right: 1.25rem;
+  margin-right: 1rem;
   text-align: right;
   color: var(--wisp-subtle);
+  font-variant-numeric: tabular-nums;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -98,7 +105,6 @@
   font-family: var(--wisp-font-mono);
   font-size: 0.75rem;
   line-height: var(--wisp-code-bar);
-  letter-spacing: 0.02em;
   color: var(--wisp-muted);
   pointer-events: none;
   user-select: none;
@@ -115,7 +121,7 @@
   height: var(--wisp-code-bar);
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: 3px;
   background: transparent;
   color: var(--wisp-muted);
   font-size: 0.9375rem;
@@ -160,7 +166,7 @@
 /* 长代码折叠：无 JS 时完整显示；脚本给外层加 data-folded 后才限制高度 */
 .wisp-code[data-folded] .wisp-pre {
   /* 上内边距 + N 行 + 半行余量，让最后一行之后露出渐变（上内边距与 .wisp-pre 一致） */
-  max-height: calc(0.875rem + var(--fold, 12) * 1.7 * 0.84375rem + 0.5rem);
+  max-height: calc(0.75rem + var(--fold, 12) * 1.7 * var(--wisp-code-size) + 0.5rem);
   overflow-y: hidden;
 }
 .wisp-fold {
@@ -174,7 +180,7 @@
   padding: 0 1rem;
   border: 0;
   border-top: 1px solid var(--wisp-border);
-  border-radius: 0 0 9px 9px;
+  border-radius: 0 0 3px 3px;
   background: var(--wisp-code-bg);
   color: var(--wisp-muted);
   font-family: var(--wisp-font-sans);

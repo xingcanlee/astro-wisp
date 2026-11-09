@@ -18,8 +18,8 @@
   padding: 0.625rem 1rem;
   border: 1px solid var(--wisp-border);
   border-bottom: 0;
-  border-radius: 12px 12px 0 0;
-  background: var(--wisp-surface);
+  border-radius: 4px 4px 0 0;
+  background: var(--wisp-bg);
   color: var(--wisp-fg);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -30,12 +30,12 @@
 .wisp-player {
   overflow: hidden;
   border: 1px solid var(--wisp-border);
-  border-radius: 12px;
+  border-radius: 4px;
   background: var(--wisp-bg);
   padding: 0;
 }
 .wisp-explainer__title + .wisp-player {
-  border-radius: 0 0 12px 12px;
+  border-radius: 0 0 4px 4px;
 }
 .wisp-player__stage {
   padding: 1.25rem 1rem;
@@ -74,7 +74,7 @@
   border-top: 1px solid var(--wisp-border);
   background: var(--wisp-surface);
   color: var(--wisp-fg);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   line-height: 1.6;
 }
 
@@ -97,13 +97,21 @@
   min-height: 2.5rem;
   padding: 0 0.5rem;
   border: 1px solid var(--wisp-border);
-  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
   background: var(--wisp-bg);
   color: var(--wisp-fg);
   font: inherit;
   font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition: background-color 150ms, border-color 150ms, transform 120ms;
+}
+.wisp-player button .wisp-icon {
+  width: 1rem;
+  height: 1rem;
 }
 .wisp-player button:active:not(:disabled) {
   transform: scale(0.94);
@@ -140,7 +148,6 @@
 }
 .wisp-player__count {
   color: var(--wisp-muted);
-  font-family: var(--wisp-font-mono);
   font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
 }

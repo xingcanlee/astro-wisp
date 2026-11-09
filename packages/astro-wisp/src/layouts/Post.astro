@@ -60,7 +60,17 @@ const showSeries = series.length > 0;
 const seriesIndex = series.findIndex((item) => item.id === post.id);
 const seriesName = showSeries ? series[0]!.title.split(/[：:]/)[0]!.trim() : '';
 const seriesHref = showSeries ? sitePath(import.meta.env.BASE_URL, `/posts/${series[0]!.id}/`) : '';
-const seriesPos = seriesIndex >= 0 ? (zh ? `第 ${seriesIndex + 1}/${series.length} 篇` : `${seriesIndex + 1} of ${series.length}`) : '';
+// 进度是篇数计数（总览篇也算一篇），不是章节号，所以不补零
+const seriesPos = seriesIndex >= 0 ? (zh ? `${seriesIndex + 1} / ${series.length} 篇` : `${seriesIndex + 1} of ${series.length}`) : '';
+// 章节号：标题以编号开头（如「05 MLA 的两个技巧」）时拆出来，单独排成章节号
+const numbered = /^(\d{1,3})[\s　]+(.+)$/.exec(title);
+const chapterNo = numbered?.[1];
+const titleText = numbered ? numbered[2]! : title;
+const running = showSeries
+  ? { label: seriesName, href: seriesHref, position: seriesPos, title: titleText }
+  : category
+    ? { label: category, title }
+    : undefined;
 // 目录收起状态：首帧前写入 html[data-toc]（同时是“JS 可用”的标记，无 JS 时目录完整展开）
 const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('wisp-toc-collapsed')==='1'?'collapsed':'open'}catch(e){document.documentElement.dataset.toc='open'}`;
 ---
@@ -74,6 +84,7 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
   publishedTime={pubDate}
   modifiedTime={updatedDate}
   tags={tags}
+  running={running}
 >
   <Fragment slot="head">
     {showToc && <script is:inline set:html={tocInit} />}
@@ -94,13 +105,10 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
 
     <article class="wisp-post-article">
       <header class="wisp-post-header">
-        {showSeries && (
-          <p class="wisp-post-kicker">
-            <a href={seriesHref} class="wisp-draw">{seriesName}</a>
-            {seriesPos && <span>{seriesPos}</span>}
-          </p>
-        )}
-        <h1>{title}</h1>
+        <h1>
+          {chapterNo && <span class="wisp-chapter-no">{chapterNo}</span>}
+          <span class="wisp-chapter-title">{titleText}</span>
+        </h1>
         <PostMeta
           pubDate={pubDate}
           updatedDate={updatedDate}
@@ -157,44 +165,43 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
   }
   @media (min-width: 48rem) {
     .wisp-post {
-      padding-top: 4rem;
+      padding-top: 3.5rem;
     }
   }
   .wisp-post-article {
     min-width: 0;
   }
 
+  /* 章首：章节号 + 标题 + 元信息，下方一条发丝线收住，像手册的章首页 */
   .wisp-post-header {
-    margin-bottom: 2.75rem;
-  }
-  .wisp-post-kicker {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.25rem 0.75rem;
-    margin: 0 0 1rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-  }
-  .wisp-post-kicker a {
-    color: var(--wisp-accent);
-    font-weight: 600;
-  }
-  .wisp-post-kicker span {
-    color: var(--wisp-muted);
-    font-variant-numeric: tabular-nums;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--wisp-border);
   }
   .wisp-post-header h1 {
-    margin: 0 0 1rem;
-    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.375rem);
+    margin: 0 0 1.25rem;
+    font-size: clamp(1.75rem, 1.25rem + 1.8vw, 2.25rem);
     font-weight: 700;
-    line-height: 1.25;
+    line-height: 1.3;
     letter-spacing: 0;
     text-wrap: pretty;
   }
+  /* 章节号：大号细体强调色数字，独占一行；与目录、系列栏里的编号同源 */
+  .wisp-chapter-no {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--wisp-accent);
+    font-size: 1.5em;
+    font-weight: 300;
+    line-height: 1;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .wisp-chapter-title {
+    display: block;
+  }
   .wisp-post-header :global(.wisp-post-tags) {
-    margin-top: 0.5rem;
-    font-size: 0.875rem;
+    margin-top: 0.625rem;
+    font-size: 0.8125rem;
   }
 
   .wisp-post-aside,
@@ -206,8 +213,8 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
   .wisp-post-aside-inner,
   .wisp-post-series-aside-inner {
     position: sticky;
-    top: 5.5rem;
-    max-height: calc(100dvh - 7rem);
+    top: calc(var(--wisp-header-h) + 2rem);
+    max-height: calc(100dvh - var(--wisp-header-h) - 3rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;

@@ -16,7 +16,7 @@
   color: var(--wisp-muted);
   font-size: 0.875rem;
   line-height: 1.6;
-  text-align: center;
+  text-align: start;
 }
 
 /* Mermaid 渲染体：图表始终在容器内缩小，不创建横向滚动区 */
@@ -43,7 +43,7 @@
   padding: 0.75em 1em;
   border: 1px solid var(--wisp-border);
   border-inline-start: 2px solid var(--wisp-sem-error);
-  border-radius: 6px;
+  border-radius: 4px;
   background-color: var(--wisp-surface);
   color: var(--wisp-fg);
   font-size: 0.875rem;

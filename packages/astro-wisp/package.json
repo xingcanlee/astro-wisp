@@ -1,6 +1,6 @@
 {
   "name": "astro-wisp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Wisp —— 安静好读的技术博客主题（Astro 集成）",
   "author": "xingcanlee",
@@ -47,6 +47,7 @@
   },
   "files": [
     "CHANGELOG.md",
+    "DESIGN.md",
     "index.ts",
     "virtual.d.ts",
     "bin",

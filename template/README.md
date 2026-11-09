@@ -28,6 +28,7 @@ src/styles/custom.css    # 可选：覆盖主题样式
 |---|---|
 | 改配色 | `wisp({ palette: { color: { base: { accent: { light: '…', dark: '…' } } } } })` 或指向一个 JSON 文件 |
 | 改样式 | `wisp({ customCss: ['./src/styles/custom.css'] })` |
+| 看外观规范 | 主题的视觉规范随包发布：`node_modules/astro-wisp/DESIGN.md`。覆盖样式或组件前先读它 |
 | 改组件 | `wisp({ components: { Footer: './src/components/Footer.astro' } })` |
 | 自己写某个页面 | `wisp({ routes: { about: false } })`，然后写 `src/pages/about.astro` |
 | 加 frontmatter 字段 | `postsSchema({ extend: z.object({ … }) })` |

@@ -41,6 +41,8 @@ export interface Props {
   tags?: string[];
   /** 不希望被索引（如 404、草稿预览） */
   noindex?: boolean;
+  /** 页眉的书眉（running head）：文章页传入系列名、章节位置与标题 */
+  running?: { label: string; href?: string; position?: string; title?: string };
 }
 
 const {
@@ -53,6 +55,7 @@ const {
   modifiedTime,
   tags = [],
   noindex = false,
+  running,
 } = Astro.props;
 
 const site = Astro.site ?? new URL(config.siteUrl);
@@ -109,7 +112,7 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
   </head>
   <body>
     <SkipLink />
-    <Header />
+    <Header running={running} />
     <main id="main" tabindex="-1">
       <slot />
     </main>
@@ -136,6 +139,17 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
               el.removeAttribute('role');
               el.removeAttribute('aria-label');
             }
+          });
+          // 图表缩印比例：自然宽度放不进正文栏、被缩到 60% 以下时，在题注行标出比例，提示可点击放大
+          document.querySelectorAll('.wisp-diagram').forEach((fig) => {
+            const body = fig.querySelector(':scope > .wisp-diagram-body');
+            const svg = body?.querySelector(':scope > svg');
+            const natural = body ? parseFloat(getComputedStyle(body).getPropertyValue('--wd-w')) : 0;
+            if (!natural || !svg) return;
+            const scale = svg.getBoundingClientRect().width / natural;
+            const pct = `${Math.round(scale * 100)}%`;
+            if (scale < 0.6) fig.setAttribute('data-wisp-scale', zh ? `${pct} · 点击放大` : `${pct} · click to enlarge`);
+            else fig.removeAttribute('data-wisp-scale');
           });
         };
         update();

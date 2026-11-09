@@ -7,12 +7,13 @@
  * to media that is already rendered, so disabling JavaScript leaves the
  * original image or SVG untouched.
  */
+import Icon from 'virtual:wisp/components/Icon';
 ---
 
 <dialog class="wisp-lightbox" aria-labelledby="wisp-lightbox-title">
   <div class="wisp-lightbox-frame">
     <button class="wisp-lightbox-close" type="button" data-lightbox-close aria-label="关闭">
-      <span aria-hidden="true">×</span>
+      <Icon name="x" size={20} />
     </button>
     <div class="wisp-lightbox-media" data-lightbox-media></div>
     <p class="wisp-sr-only" id="wisp-lightbox-title" data-lightbox-title></p>

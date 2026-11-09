@@ -4,7 +4,8 @@
 
 | 文档 | 内容 |
 |---|---|
-| [design-system.md](./design-system.md) | 全局视觉规范：色彩令牌、中文排版、间距、组件外观 |
+| [../DESIGN.md](../DESIGN.md) | **外观规范**：字体、配色、圆角、间距、组件样式、品牌原则。随 npm 包发布（`node_modules/astro-wisp/DESIGN.md`），站点或 Agent 覆盖样式前先读它 |
+| [design-system.md](./design-system.md) | 令牌机制：调色板、令牌生成、对比度检查、Tailwind 映射 |
 | [architecture.md](./architecture.md) | 技术栈、目录结构、内容模型、Markdown 管线、路由、配置 |
 | [diagrams.md](./diagrams.md) | 图表体系：Pele / Excalidraw / draw.io、可移植 SVG 规范、源文件存放与下载、wisp-diagram skill |
 | [explainers.md](./explainers.md) | React 交互式讲解组件（算法、矩阵乘、LLM 原理） |

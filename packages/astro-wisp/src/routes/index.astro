@@ -1,10 +1,12 @@
 ---
 /**
- * 首页：
- * 1. 首屏：站点名、描述、两个入口按钮；右侧是「系列地图」——每个系列一行，每篇一格，按实际篇数画出。
- * 2. 系列：每个系列一张卡片（篇数、最近更新、前几篇的标题、开始阅读）。
- * 3. 精选：不属于任何系列的精选文章（系列总览篇已经由系列卡片代表）。
- * 4. 最新文章：分页列表（排除精选，与 /page/n/ 一致）。
+ * 首页 = 一本技术手册的扉页 + 总目录：
+ * 1. 扉页：站点名、描述、版本说明行（系列数 · 篇数 · 更新日期）、开始阅读入口。
+ * 2. 目录：每个系列是一个「部分」，左边是部分号、系列名、副题与简介，右边是完整篇目——
+ *    编号 + 标题 + 点线引导 + 阅读时长，像手册目录里的页码。
+ * 3. 其他文章：不属于任何系列的文章（精选优先）。
+ * 4. 修订记录：最近更新的几篇，链接到归档。
+ * 没有系列时，目录区省略，「其他文章」承担全部列表并分页。
  */
 import Base from 'virtual:wisp/components/Base';
 import PostCard from 'virtual:wisp/components/PostCard';
@@ -24,166 +26,135 @@ const href = (id: string) => sitePath(base, `/posts/${id}/`);
 const series = summarizeSeries(all);
 const seriesName = (title: string) => title.split(/[：:]/)[0]!.trim();
 const seriesSub = (title: string) => title.split(/[：:]/).slice(1).join('：').trim();
+const split = (t: string) => {
+  const m = /^(\d{1,3})[\s　]+(.+)$/.exec(t);
+  return m ? { no: m[1]!, text: m[2]! } : { no: '', text: t };
+};
 
-const featured = all.filter((p) => p.data.featured).slice(0, config.home.featuredCount);
-const featuredIds = new Set(featured.map((p) => p.id));
-// 系列成员（包括系列总览篇）由系列卡片展示，精选区只放独立文章
-const featuredSolo = featured.filter((p) => !p.data.series);
-// “最新文章”不重复精选文章（第 1 页补足 pageSize 篇），与 /page/n/ 的切分一致
-const latest = all.filter((p) => !featuredIds.has(p.id));
-const posts = latest.slice(0, config.home.pageSize);
+// 目录里每篇的阅读时长（点线引导后的「页码」）
+const byId = new Map(all.map((p) => [p.id, p]));
+const seriesPosts = series.flatMap((s) => s.items.map((i) => byId.get(i.id)!));
+const seriesTimes = new Map(
+  (await getReadingTimes(seriesPosts)).map((t, i) => [seriesPosts[i]!.id, t] as const),
+);
+const minutes = (t: number | undefined) => (t == null ? '' : zh ? `${t} 分钟` : `${t} min`);
+
+// 不属于系列的文章：精选在前，其余按时间；有系列时只列这些，没有系列时就是全部文章
+const solo = all.filter((p) => !p.data.series);
+const featuredSolo = solo.filter((p) => p.data.featured).slice(0, config.home.featuredCount);
+const featuredIds = new Set(featuredSolo.map((p) => p.id));
+const soloRest = solo.filter((p) => !featuredIds.has(p.id));
+const soloShown = [...featuredSolo, ...soloRest].slice(0, config.home.pageSize);
+const soloTimes = await getReadingTimes(soloShown);
+// 没有系列时保留分页（/page/n/ 的切分与此一致：排除精选）
+const featuredAll = new Set(all.filter((p) => p.data.featured).slice(0, config.home.featuredCount));
+const latest = all.filter((p) => !featuredAll.has(p));
 const totalPages = Math.max(1, Math.ceil(latest.length / config.home.pageSize));
-const [soloTimes, times] = await Promise.all([getReadingTimes(featuredSolo), getReadingTimes(posts)]);
 
+const recent = all.slice(0, 5);
 const lastUpdated = all[0]?.data.pubDate;
-const start = series[0] ? { href: href(series[0].firstId), label: zh ? `从「${seriesName(series[0].title)}」开始读` : `Start with ${seriesName(series[0].title)}` }
-  : all[0] ? { href: href(all[0].id), label: zh ? '读最新一篇' : 'Read the latest post' } : undefined;
-const stats = zh
-  ? [series.length > 0 ? `${series.length} 个系列` : '', `${all.length} 篇笔记`, lastUpdated ? `更新于 ${formatDate(lastUpdated, config.site.lang)}` : ''].filter(Boolean)
-  : [series.length > 0 ? `${series.length} series` : '', `${all.length} notes`, lastUpdated ? `Updated ${formatDate(lastUpdated, config.site.lang)}` : ''].filter(Boolean);
-// 系列地图里最长的一行决定格子宽度的基准
-const maxCount = Math.max(1, ...series.map((s) => s.items.length));
+const start = series[0]
+  ? { href: href(series[0].firstId), label: zh ? `从「${seriesName(series[0].title)}」开始读` : `Start with ${seriesName(series[0].title)}` }
+  : all[0]
+    ? { href: href(all[0].id), label: zh ? '读最新一篇' : 'Read the latest post' }
+    : undefined;
+const colophon = zh
+  ? [series.length > 0 ? `${series.length} 个系列` : '', `${all.length} 篇`, lastUpdated ? `更新于 ${formatDate(lastUpdated, config.site.lang)}` : ''].filter(Boolean)
+  : [series.length > 0 ? `${series.length} series` : '', `${all.length} posts`, lastUpdated ? `Updated ${formatDate(lastUpdated, config.site.lang)}` : ''].filter(Boolean);
 ---
 
 <Base>
   <div class="wisp-shell home">
-    <section class="home-hero" aria-labelledby="home-title">
-      <div class="home-hero-text">
-        <p class="wisp-eyebrow home-stats">{stats.join(' · ')}</p>
-        <h1 id="home-title">{config.site.title}</h1>
-        <p class="home-lead">{config.site.description}</p>
-        <div class="home-actions">
-          {start && (
-            <a class="wisp-btn wisp-btn--primary" href={start.href}>
-              {start.label}
-              <Icon name="arrow-right" size={16} />
-            </a>
-          )}
-          <a class="wisp-btn" href={sitePath(base, '/archive/')}>{zh ? '浏览全部文章' : 'Browse all posts'}</a>
-        </div>
+    <header class="home-title">
+      <h1>{config.site.title}</h1>
+      <p class="home-lead">{config.site.description}</p>
+      <p class="home-colophon">{colophon.join(' · ')}</p>
+      <div class="home-actions">
+        {start && (
+          <a class="wisp-btn wisp-btn--primary" href={start.href}>
+            {start.label}
+            <Icon name="arrow-right" size={16} />
+          </a>
+        )}
+        <a class="wisp-btn" href={sitePath(base, '/archive/')}>{zh ? '全部文章' : 'All posts'}</a>
       </div>
-      {
-        series.length > 0 && (
-          <figure class="home-map" aria-label={zh ? '系列一览' : 'Series overview'} style={`--max:${maxCount}`}>
-            <p class="wisp-eyebrow home-map-head" aria-hidden="true">
-              <span>{zh ? '系列' : 'Series'}</span>
-              <span>{zh ? '每格一篇' : 'One cell per post'}</span>
-            </p>
-            {series.map((s, row) => (
-              <a class="home-map-row" href={href(s.firstId)} style={`--row:${row}`}>
-                <span class="home-map-name">{seriesName(s.title)}</span>
-                <span class="home-map-ticks" aria-hidden="true" style={`--n:${s.items.length}`}>
-                  {s.items.map((_, i) => (
-                    <i style={`--i:${i}`} />
-                  ))}
-                </span>
-                <span class="home-map-count">{s.items.length}</span>
-              </a>
-            ))}
-          </figure>
-        )
-      }
-      {
-        series.length === 0 && all.length > 0 && (
-          <nav class="home-map home-recent" aria-labelledby="home-recent-title">
-            <p id="home-recent-title" class="wisp-eyebrow home-map-head">
-              <span>{zh ? '最近更新' : 'Recently updated'}</span>
-            </p>
-            <ul>
-              {all.slice(0, 4).map((p) => (
-                <li>
-                  <a class="home-map-row home-recent-row" href={href(p.id)}>
-                    <span class="home-recent-title">{p.data.title}</span>
-                    <time datetime={toISODate(p.data.pubDate)}>{formatDate(p.data.pubDate, config.site.lang)}</time>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        )
-      }
-    </section>
+    </header>
 
     {
       series.length > 0 && (
-        <section class="home-section" aria-labelledby="series-title">
-          <header class="home-section-head">
-            <h2 id="series-title">{zh ? '系列' : 'Series'}</h2>
-            <p>{zh ? '按顺序读：每一篇都接着上一篇留下的问题。' : 'Read in order: each post picks up where the last one stopped.'}</p>
-          </header>
-          <ul class="home-series">
-            {series.map((s) => {
-              const rest = s.items.filter((i) => i.id !== s.firstId);
-              const shown = rest.slice(0, 4);
+        <section class="home-contents" aria-labelledby="contents-title">
+          <h2 id="contents-title" class="home-h2">{zh ? '目录' : 'Contents'}</h2>
+          {series.map((s, i) => (
+            <section class="part" aria-labelledby={`part-${i}`}>
+              <div class="part-head">
+                <h3 id={`part-${i}`} class="part-title">
+                  <span class="part-no">{i + 1}</span>
+                  <a href={href(s.firstId)}>{seriesName(s.title)}</a>
+                </h3>
+                {seriesSub(s.title) && <p class="part-sub">{seriesSub(s.title)}</p>}
+                {s.description && <p class="part-desc">{s.description}</p>}
+                <p class="part-meta">
+                  {zh ? `${s.items.length} 篇` : `${s.items.length} posts`} ·{' '}
+                  <time datetime={toISODate(s.updated)}>{formatDate(s.updated, config.site.lang)}</time>
+                </p>
+              </div>
+              <ol class="part-list">
+                {s.items.map((item) => {
+                  const { no, text } = split(item.title);
+                  return (
+                    <li>
+                      <a href={href(item.id)}>
+                        <span class="part-item-no">{no}</span>
+                        <span class="part-item-title">{item.id === s.firstId && !no ? (zh ? '总览' : 'Overview') : text}</span>
+                        <span class="part-leader" aria-hidden="true" />
+                        <span class="part-item-time">{minutes(seriesTimes.get(item.id))}</span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          ))}
+        </section>
+      )
+    }
+
+    {
+      soloShown.length > 0 && (
+        <section class="home-section" aria-labelledby="solo-title">
+          <h2 id="solo-title" class="home-h2">{series.length > 0 ? (zh ? '其他文章' : 'Other posts') : (zh ? '文章' : 'Posts')}</h2>
+          <ul class="home-list">
+            {soloShown.map((post, i) => (
+              <li>
+                <PostCard post={post} readingTime={soloTimes[i]} headingLevel={3} showTags={false} />
+              </li>
+            ))}
+          </ul>
+          {series.length === 0 && <Pagination current={1} total={totalPages} />}
+        </section>
+      )
+    }
+
+    {
+      recent.length > 0 && (
+        <section class="home-section" aria-labelledby="recent-title">
+          <h2 id="recent-title" class="home-h2">{zh ? '修订记录' : 'Recent changes'}</h2>
+          <ol class="home-revisions">
+            {recent.map((p) => {
+              const d = p.data.updatedDate ?? p.data.pubDate;
+              const owner = p.data.series ? series.find((s) => s.id === p.data.series!.id) : undefined;
               return (
-                <li class="series-card">
-                  <p class="series-card-meta">
-                    {zh ? `${s.items.length} 篇` : `${s.items.length} posts`}
-                    <span aria-hidden="true">·</span>
-                    <time datetime={toISODate(s.updated)}>{formatDate(s.updated, config.site.lang)}</time>
-                  </p>
-                  <h3 class="series-card-title">
-                    <a href={href(s.firstId)}>{seriesName(s.title)}</a>
-                  </h3>
-                  {seriesSub(s.title) && <p class="series-card-sub">{seriesSub(s.title)}</p>}
-                  {s.description && <p class="series-card-desc">{s.description}</p>}
-                  {shown.length > 0 && (
-                    <ol class="series-card-list">
-                      {shown.map((item) => (
-                        <li>
-                          <a href={href(item.id)}>
-                            <span class="wisp-draw">{item.title}</span>
-                          </a>
-                        </li>
-                      ))}
-                      {rest.length > shown.length && (
-                        <li class="series-card-more">{zh ? `还有 ${rest.length - shown.length} 篇` : `${rest.length - shown.length} more`}</li>
-                      )}
-                    </ol>
-                  )}
-                  <a class="series-card-cta" href={href(s.firstId)} tabindex="-1" aria-hidden="true">
-                    {zh ? '开始阅读' : 'Start reading'}
-                    <Icon name="arrow-right" size={16} />
-                  </a>
+                <li>
+                  <time datetime={toISODate(d)}>{toISODate(d)}</time>
+                  <a href={href(p.id)} lang={p.data.lang}>{p.data.title}</a>
+                  <span class="home-rev-part">{owner ? seriesName(owner.title) : ''}</span>
                 </li>
               );
             })}
-          </ul>
-        </section>
-      )
-    }
-
-    {
-      featuredSolo.length > 0 && (
-        <section class="home-section home-narrow" aria-labelledby="featured-title">
-          <header class="home-section-head">
-            <h2 id="featured-title">{zh ? '精选' : 'Featured'}</h2>
-          </header>
-          <ul class="home-list">
-            {featuredSolo.map((post, i) => (
-              <li>
-                <PostCard post={post} readingTime={soloTimes[i]} headingLevel={3} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )
-    }
-
-    {
-      posts.length > 0 && (
-        <section class="home-section home-narrow" aria-labelledby="latest-title">
-          <header class="home-section-head">
-            <h2 id="latest-title">{zh ? '最新文章' : 'Latest posts'}</h2>
-          </header>
-          <ul class="home-list">
-            {posts.map((post, i) => (
-              <li>
-                <PostCard post={post} readingTime={times[i]} headingLevel={3} showTags={false} />
-              </li>
-            ))}
-          </ul>
-          <Pagination current={1} total={totalPages} />
+          </ol>
+          <a class="home-more wisp-link" href={sitePath(base, '/archive/')}>
+            {zh ? '查看归档' : 'View archive'}
+          </a>
         </section>
       )
     }
@@ -194,39 +165,39 @@ const maxCount = Math.max(1, ...series.map((s) => s.items.length));
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
   .home {
-    padding-top: 1.5rem;
+    padding-bottom: 1rem;
   }
 
-  /* ---------- 首屏 ---------- */
-  .home-hero {
-    display: grid;
-    gap: 2.5rem;
-    align-items: center;
-    padding-block: 1rem 3.5rem;
-    border-bottom: 1px solid var(--wisp-border);
+  /* ---------- 扉页 ---------- */
+  .home-title {
+    max-width: 44rem;
+    padding-block: 4rem 3.5rem;
   }
-  @media (min-width: 60rem) {
-    .home-hero {
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-      gap: var(--wisp-gutter);
-      min-height: min(28rem, calc(100dvh - 10rem));
-      padding-block: 2.5rem 4rem;
+  @media (min-width: 48rem) {
+    .home-title {
+      padding-block: 6.5rem 5rem;
     }
   }
-  .home-hero h1 {
-    margin: 0.75rem 0 0;
-    font-size: clamp(2.5rem, 1.5rem + 4vw, 4rem);
-    font-weight: 750;
-    line-height: 1.05;
+  .home-title h1 {
+    margin: 0;
+    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4rem);
+    font-weight: 700;
+    line-height: 1.1;
     letter-spacing: 0;
   }
   .home-lead {
-    max-width: 32rem;
     margin: 1.25rem 0 0;
-    color: var(--wisp-muted);
+    max-width: 34rem;
+    color: var(--wisp-fg);
     font-size: 1.125rem;
     line-height: 1.7;
     text-wrap: pretty;
+  }
+  .home-colophon {
+    margin: 0.75rem 0 0;
+    color: var(--wisp-muted);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
   }
   .home-actions {
     display: flex;
@@ -234,268 +205,222 @@ const maxCount = Math.max(1, ...series.map((s) => s.items.length));
     gap: 0.75rem;
     margin-top: 2rem;
   }
-  @media (max-width: 39.99rem) {
-    .home-actions .wisp-btn {
-      justify-content: center;
-      width: 100%;
-    }
-  }
 
-  /* 系列地图：每个系列一行，每篇一格；格子宽度按最长系列等分，短系列的行自然更短 */
-  .home-map {
-    display: grid;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 1.5rem;
-    border: 1px solid var(--wisp-border);
-    border-radius: 14px;
-    background: var(--wisp-surface);
-  }
-  .home-map-head {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 0.75rem 0.5rem;
-    border-bottom: 1px solid var(--wisp-border);
-    margin-bottom: 0.5rem;
-  }
-  .home-map-row {
-    display: grid;
-    grid-template-columns: minmax(5rem, 8rem) minmax(0, 1fr) 2rem;
-    align-items: center;
-    gap: 1rem;
-    min-height: 3.25rem;
-    padding: 0.75rem;
-    border-radius: 8px;
-    color: var(--wisp-fg);
-    transition: background-color 150ms;
-  }
-  .home-map-row:hover {
-    background: var(--wisp-bg);
-  }
-  .home-recent ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .home-recent-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .home-recent-title {
-    overflow: hidden;
-    font-weight: 600;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .home-recent-row time {
-    color: var(--wisp-muted);
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .home-map-name {
-    overflow: hidden;
-    font-size: 0.9375rem;
-    font-weight: 600;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .home-map-count {
-    color: var(--wisp-muted);
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-    text-align: end;
-  }
-  .home-map-ticks {
-    display: grid;
-    grid-template-columns: repeat(var(--max), minmax(0, 1fr));
-    gap: 3px;
-    height: 2.25rem;
-  }
-  .home-map-ticks i {
-    border-radius: 2px;
-    background: color-mix(in srgb, var(--wisp-accent) 28%, var(--wisp-surface-2));
-    transform-origin: bottom;
-    transition: background-color 200ms, transform 200ms var(--wisp-ease);
-  }
-  /* 第一格是总览篇：强调色实心 */
-  .home-map-ticks i:first-child {
-    background: var(--wisp-accent);
-  }
-  .home-map-row:hover .home-map-ticks i {
-    background: color-mix(in srgb, var(--wisp-accent) 55%, var(--wisp-surface-2));
-  }
-  .home-map-row:hover .home-map-ticks i:first-child {
-    background: var(--wisp-accent);
-  }
-  /* 首屏入场：格子按顺序升起一次（只在首次加载，减少动态效果时不播放） */
-  @media (prefers-reduced-motion: no-preference) {
-    .home-map-ticks i {
-      animation: home-tick 520ms var(--wisp-ease) both;
-      animation-delay: calc(var(--row) * 120ms + var(--i) * 22ms + 150ms);
-    }
-    .home-hero-text {
-      animation: home-rise 600ms var(--wisp-ease) both;
-    }
-  }
-  @keyframes home-tick {
-    from {
-      transform: scaleY(0.15);
-      opacity: 0;
-    }
-  }
-  @keyframes home-rise {
-    from {
-      transform: translateY(8px);
-      opacity: 0;
-    }
-  }
-
-  /* ---------- 区块 ---------- */
-  .home-section {
-    padding-top: 4rem;
-  }
-  .home-section-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem 2rem;
-    margin-bottom: 1.75rem;
-  }
-  .home-section-head h2 {
-    margin: 0;
-    font-size: 1.625rem;
+  /* ---------- 区块标题：前景色粗线 + 标题，像手册里的分隔页 ---------- */
+  .home-h2 {
+    margin: 0 0 2rem;
+    padding-top: 0.875rem;
+    border-top: 2px solid var(--wisp-fg);
+    font-size: 1.25rem;
     font-weight: 700;
+    line-height: 1.35;
   }
-  .home-section-head p {
-    margin: 0;
-    color: var(--wisp-muted);
-    font-size: 0.9375rem;
+  .home-section {
+    margin-top: 5rem;
   }
-  .home-narrow {
-    max-width: calc(var(--wisp-measure) + var(--wisp-side) + var(--wisp-gutter));
+  .home-section > .home-list,
+  .home-section > .home-revisions,
+  .home-section > .home-more {
+    max-width: var(--wisp-measure);
   }
 
-  /* ---------- 系列卡片 ---------- */
-  .home-series {
+  /* ---------- 目录：每个系列一个部分 ---------- */
+  .part {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-    gap: 1.25rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    gap: 1.25rem 3rem;
+    padding-block: 2rem;
   }
-  .series-card {
-    position: relative;
+  .part + .part {
+    border-top: 1px solid var(--wisp-border);
+  }
+  .part:first-of-type {
+    padding-top: 0;
+  }
+  @media (min-width: 60rem) {
+    .part {
+      grid-template-columns: minmax(14rem, 20rem) minmax(0, 1fr);
+      align-items: start;
+    }
+    .part-head {
+      position: sticky;
+      top: calc(var(--wisp-header-h) + 1.5rem);
+    }
+  }
+  .part-title {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 1.75rem;
-    border: 1px solid var(--wisp-border);
-    border-radius: 14px;
-    background: var(--wisp-bg);
-    transition:
-      transform 200ms var(--wisp-ease),
-      border-color 200ms,
-      box-shadow 200ms;
-  }
-  .series-card:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--wisp-accent) 45%, var(--wisp-border));
-    box-shadow: 0 10px 30px -18px color-mix(in srgb, var(--wisp-fg) 40%, transparent);
-  }
-  .series-card-meta {
-    display: flex;
-    gap: 0.5rem;
+    align-items: baseline;
+    gap: 0.625rem;
     margin: 0;
-    color: var(--wisp-muted);
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .series-card-title {
-    margin: 0.25rem 0 0;
     font-size: 1.5rem;
     font-weight: 700;
-    line-height: 1.25;
+    line-height: 1.3;
   }
-  /* 整卡可点：标题链接的 ::after 铺满卡片；卡内其他链接叠在它上面 */
-  .series-card-title a {
+  .part-no {
+    color: var(--wisp-accent);
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+  }
+  .part-title a {
     color: var(--wisp-fg);
-  }
-  .series-card-title a::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-  }
-  .series-card-sub {
-    margin: 0;
-    color: var(--wisp-fg);
-    font-size: 1rem;
-    font-weight: 500;
-  }
-  .series-card-desc {
-    margin: 0;
-    color: var(--wisp-muted);
-    font-size: 0.9375rem;
-    line-height: 1.7;
-  }
-  .series-card-list {
-    position: relative;
-    z-index: 1;
-    margin: 0.75rem 0 0;
-    padding: 0.75rem 0 0;
-    border-top: 1px solid var(--wisp-border);
-    list-style: none;
-    font-size: 0.875rem;
-  }
-  .series-card-list a {
-    display: block;
-    padding-block: 0.3rem;
-    overflow: hidden;
-    color: var(--wisp-muted);
-    text-overflow: ellipsis;
-    white-space: nowrap;
     transition: color 150ms;
   }
-  .series-card-list a:hover {
-    color: var(--wisp-fg);
-  }
-  .series-card-more {
-    padding-block: 0.3rem;
-    color: var(--wisp-subtle);
-  }
-  .series-card-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    margin-top: auto;
-    padding-top: 1rem;
+  .part-title a:hover {
     color: var(--wisp-accent);
-    font-size: 0.9375rem;
-    font-weight: 600;
   }
-  .series-card-cta :global(.wisp-icon) {
-    transition: transform 200ms var(--wisp-ease);
+  .part-sub {
+    margin: 0.5rem 0 0;
+    color: var(--wisp-fg);
+    font-weight: 500;
+    line-height: 1.6;
   }
-  .series-card:hover .series-card-cta :global(.wisp-icon) {
-    transform: translateX(3px);
+  .part-desc {
+    margin: 0.5rem 0 0;
+    color: var(--wisp-muted);
+    font-size: 0.875rem;
+    line-height: 1.7;
+    text-wrap: pretty;
+  }
+  .part-meta {
+    margin: 0.75rem 0 0;
+    color: var(--wisp-muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
   }
 
-  /* ---------- 文章列表 ---------- */
-  .home-list {
+  /* 篇目：编号 | 标题 | 点线引导 | 阅读时长；窄屏时宽屏两列 */
+  .part-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    column-gap: 3rem;
+  }
+  @media (min-width: 80rem) {
+    .part-list {
+      columns: 2;
+    }
+  }
+  .part-list li {
+    break-inside: avoid;
+  }
+  .part-list a {
     display: flex;
-    flex-direction: column;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding-block: 0.4375rem;
+    color: var(--wisp-fg);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  .part-item-no {
+    flex: none;
+    width: 1.5rem;
+    color: var(--wisp-subtle);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    transition: color 150ms;
+  }
+  .part-item-title {
+    min-width: 0;
+    transition: color 150ms;
+    text-wrap: pretty;
+  }
+  .part-leader {
+    flex: 1 1 1.5rem;
+    min-width: 1.5rem;
+    align-self: flex-end;
+    margin-bottom: 0.4375rem;
+    border-bottom: 1px dotted var(--wisp-subtle);
+    opacity: 0.6;
+  }
+  .part-item-time {
+    flex: none;
+    color: var(--wisp-muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .part-list a:hover .part-item-title {
+    color: var(--wisp-accent);
+  }
+  .part-list a:hover .part-item-no {
+    color: var(--wisp-accent);
+  }
+
+  /* ---------- 其他文章 ---------- */
+  .home-list {
     margin: 0;
     padding: 0;
     list-style: none;
   }
   .home-list > li {
-    padding-block: 1.5rem;
-    border-top: 1px solid var(--wisp-border);
+    padding-block: 1.25rem;
   }
   .home-list > li:first-child {
     padding-top: 0;
-    border-top: 0;
+  }
+  .home-list > li + li {
+    border-top: 1px solid var(--wisp-border);
+  }
+
+  /* ---------- 修订记录：日期 | 标题 | 所属系列 ---------- */
+  .home-revisions {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--wisp-fg);
+    border-bottom: 1px solid var(--wisp-fg);
+  }
+  .home-revisions li {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    gap: 1rem;
+    align-items: baseline;
+    padding-block: 0.625rem;
+    font-size: 0.9375rem;
+  }
+  .home-revisions li + li {
+    border-top: 1px solid var(--wisp-border);
+  }
+  .home-revisions time,
+  .home-rev-part {
+    color: var(--wisp-muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .home-revisions a {
+    color: var(--wisp-fg);
+    transition: color 150ms;
+  }
+  .home-revisions a:hover {
+    color: var(--wisp-accent);
+  }
+  @media (max-width: 39.99rem) {
+    .home-revisions li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.125rem;
+    }
+    .home-rev-part {
+      display: none;
+    }
+  }
+  .home-more {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .home-title > * {
+      animation: home-rise 520ms var(--wisp-ease) both;
+    }
+    .home-title > :nth-child(2) { animation-delay: 60ms; }
+    .home-title > :nth-child(3) { animation-delay: 120ms; }
+    .home-title > :nth-child(4) { animation-delay: 180ms; }
+  }
+  @keyframes home-rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
   }
   }
 </style>

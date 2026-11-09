@@ -135,7 +135,7 @@ const posts = await getPosts();
 - 组件：`BackToTop`、`CopyButton`、`Diagram`、`Figure`、`Footer`、`Header`、`Icon`、`Lightbox`、`Pagination`、`PostCard`、`PostMeta`、`PrevNext`、`ReadingProgress`、`SkipLink`、`TagList`、`ThemeToggle`、`Toc`
 - 布局：`Base`、`Post`、`Page`
 
-覆盖组件收到与默认组件相同的 props，也可以导入默认实现再包装：
+覆盖组件收到与默认组件相同的 props（0.4.0 起 `Base` 与 `Header` 多了可选的 `running` prop，用于页眉书眉，包装时请用 `{...props}` 透传），也可以导入默认实现再包装。样式覆盖前请先读主题的外观规范 `node_modules/astro-wisp/DESIGN.md`：
 
 ```astro
 ---
