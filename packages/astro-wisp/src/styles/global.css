@@ -129,19 +129,39 @@
   }
 }
 
+/*
+ * 版式尺寸：正文栏宽、侧栏宽、栏间距，以及由它们算出的整站外框宽度。
+ * 页头、页脚、文章三栏网格、首页都用同一个外框（.wisp-shell），左右边线全站对齐。
+ */
+:root {
+  --wisp-measure: 38rem;
+  --wisp-side: 15rem;
+  --wisp-gutter: 3rem;
+  --wisp-shell: calc(var(--wisp-measure) + 2 * var(--wisp-side) + 2 * var(--wisp-gutter));
+  --wisp-pad: 20px;
+  --wisp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@media (min-width: 48rem) {
+  :root {
+    --wisp-pad: 32px;
+  }
+}
+
 @layer components {
-  /* 页面外边距：移动端 20px，平板 32px，桌面居中 */
+  /* 整站外框：页头、页脚、文章网格、首页 */
+  .wisp-shell {
+    width: 100%;
+    max-width: calc(var(--wisp-shell) + 2 * var(--wisp-pad));
+    margin-inline: auto;
+    padding-inline: var(--wisp-pad);
+  }
+
+  /* 单栏页面（归档、标签、关于、分页）：正文栏宽居中，与文章正文同宽 */
   .wisp-container {
     width: 100%;
-    max-width: calc(42rem + 2 * 20px);
+    max-width: calc(var(--wisp-measure) + 2 * var(--wisp-pad));
     margin-inline: auto;
-    padding-inline: 20px;
-  }
-  @media (min-width: 48rem) {
-    .wisp-container {
-      max-width: calc(42rem + 2 * 32px);
-      padding-inline: 32px;
-    }
+    padding-inline: var(--wisp-pad);
   }
 
   /* 正文中的强调色文字链接（非 prose 区域使用） */
@@ -153,6 +173,76 @@
   }
   .wisp-link:hover {
     text-decoration-thickness: 2px;
+  }
+
+  /* 小标签：区块名、侧栏标题、卡片眉题 */
+  .wisp-eyebrow {
+    margin: 0;
+    color: var(--wisp-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  /* 按钮：一套主按钮 + 一套次按钮；悬停上移 1px，按下回落 */
+  .wisp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0 1.125rem;
+    border: 1px solid var(--wisp-border);
+    border-radius: 8px;
+    background: var(--wisp-bg);
+    color: var(--wisp-fg);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      transform 160ms var(--wisp-ease),
+      background-color 160ms,
+      border-color 160ms,
+      color 160ms;
+  }
+  .wisp-btn:hover {
+    border-color: var(--wisp-muted);
+    transform: translateY(-1px);
+  }
+  .wisp-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+  .wisp-btn--primary {
+    border-color: var(--wisp-accent);
+    background: var(--wisp-accent);
+    color: var(--wisp-accent-fg);
+  }
+  .wisp-btn--primary:hover {
+    border-color: var(--wisp-accent);
+    background: color-mix(in srgb, var(--wisp-accent) 88%, var(--wisp-fg));
+  }
+  .wisp-btn .wisp-icon {
+    transition: transform 160ms var(--wisp-ease);
+  }
+  .wisp-btn:hover .wisp-icon:last-child {
+    transform: translateX(2px);
+  }
+
+  /* 下划线从左往右画出：导航、页脚、卡片内的文字链接 */
+  .wisp-draw {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0 1px;
+    transition:
+      background-size 220ms var(--wisp-ease),
+      color 150ms;
+  }
+  .wisp-draw:hover,
+  .wisp-draw:focus-visible {
+    background-size: 100% 1px;
   }
 }
 
@@ -242,6 +332,6 @@ html {
 .prose .wisp-table[data-wisp-overflow],
 .prose .katex-display[data-wisp-overflow],
 .wisp-explainer__scroll[data-wisp-overflow] {
-  box-shadow: inset -0.9rem 0 0.9rem -0.9rem var(--wisp-muted);
+  box-shadow: inset -1.25rem 0 1rem -1rem color-mix(in srgb, var(--wisp-fg) 10%, transparent);
 }
 }

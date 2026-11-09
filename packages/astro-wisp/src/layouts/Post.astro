@@ -19,6 +19,7 @@ import type { SeriesItem } from '../components/SeriesNav.astro';
 import katexCssUrl from '../styles/katex.css?url';
 import diagramCssUrl from '../styles/diagram-figure.css?url';
 import { Font } from 'astro:assets';
+import { sitePath } from '../utils/paths';
 
 export interface Props {
   post: PostEntry;
@@ -55,6 +56,11 @@ const tocTitle = zh ? '目录' : 'Contents';
 const seriesTitle = zh ? '系列文章' : 'Series';
 const showToc = config.features.toc && toc !== false && tocHeadings.length >= 2;
 const showSeries = series.length > 0;
+// 文章头部的系列眉题：「系列名 · 第 n/N 篇」，链接到系列第一篇（总览篇）
+const seriesIndex = series.findIndex((item) => item.id === post.id);
+const seriesName = showSeries ? series[0]!.title.split(/[：:]/)[0]!.trim() : '';
+const seriesHref = showSeries ? sitePath(import.meta.env.BASE_URL, `/posts/${series[0]!.id}/`) : '';
+const seriesPos = seriesIndex >= 0 ? (zh ? `第 ${seriesIndex + 1}/${series.length} 篇` : `${seriesIndex + 1} of ${series.length}`) : '';
 // 目录收起状态：首帧前写入 html[data-toc]（同时是“JS 可用”的标记，无 JS 时目录完整展开）
 const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('wisp-toc-collapsed')==='1'?'collapsed':'open'}catch(e){document.documentElement.dataset.toc='open'}`;
 ---
@@ -88,6 +94,12 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
 
     <article class="wisp-post-article">
       <header class="wisp-post-header">
+        {showSeries && (
+          <p class="wisp-post-kicker">
+            <a href={seriesHref} class="wisp-draw">{seriesName}</a>
+            {seriesPos && <span>{seriesPos}</span>}
+          </p>
+        )}
         <h1>{title}</h1>
         <PostMeta
           pubDate={pubDate}
@@ -125,7 +137,7 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
     {showSeries && (
       <aside class="wisp-post-series-aside" aria-label="系列文章">
         <div class="wisp-post-series-aside-inner">
-          <SeriesNav items={series} currentId={post.id} title={seriesTitle} />
+          <SeriesNav items={series} currentId={post.id} title={seriesName || seriesTitle} />
         </div>
       </aside>
     )}
@@ -135,17 +147,16 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
+  /* 窄屏：单栏，正文栏宽居中；系列与目录折叠在正文前 */
   .wisp-post {
     width: 100%;
-    max-width: calc(42em + 2 * 20px);
+    max-width: calc(var(--wisp-measure) + 2 * var(--wisp-pad));
     margin-inline: auto;
-    padding-inline: 20px;
-    padding-top: 3rem;
+    padding-inline: var(--wisp-pad);
+    padding-top: 2.5rem;
   }
   @media (min-width: 48rem) {
     .wisp-post {
-      max-width: calc(42em + 2 * 32px);
-      padding-inline: 32px;
       padding-top: 4rem;
     }
   }
@@ -154,85 +165,111 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
   }
 
   .wisp-post-header {
-    margin-bottom: 2.5rem;
+    margin-bottom: 2.75rem;
+  }
+  .wisp-post-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    margin: 0 0 1rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  .wisp-post-kicker a {
+    color: var(--wisp-accent);
+    font-weight: 600;
+  }
+  .wisp-post-kicker span {
+    color: var(--wisp-muted);
+    font-variant-numeric: tabular-nums;
   }
   .wisp-post-header h1 {
-    margin: 0 0 0.75rem;
-    font-size: 2rem;
-    font-weight: 600;
-    line-height: 1.35;
-    letter-spacing: 0.01em;
+    margin: 0 0 1rem;
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.375rem);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: 0;
     text-wrap: pretty;
   }
   .wisp-post-header :global(.wisp-post-tags) {
-    margin-top: 0.35rem;
+    margin-top: 0.5rem;
     font-size: 0.875rem;
   }
 
-  .wisp-post-aside {
-    display: none;
-  }
+  .wisp-post-aside,
   .wisp-post-series-aside {
     display: none;
   }
 
-  /* ≥ 75rem：正文居中，系列/目录分列两侧；内容带限宽，超宽屏下侧栏向内容带两边展开 */
-  @media (min-width: 75rem) {
+  /* 侧栏共用：吸顶、限高、底部渐隐提示还有内容 */
+  .wisp-post-aside-inner,
+  .wisp-post-series-aside-inner {
+    position: sticky;
+    top: 5.5rem;
+    max-height: calc(100dvh - 7rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--wisp-border) transparent;
+    padding-bottom: 2rem;
+    mask-image: linear-gradient(to bottom, black calc(100% - 3rem), transparent);
+    max-width: var(--wisp-side);
+  }
+
+  /* 目录贴外框右缘，系列贴外框左缘：两侧栏的外边线与页头对齐 */
+  .wisp-post-aside-inner {
+    margin-inline-start: auto;
+  }
+
+  /* ≥ 60rem 且有目录：正文 + 右侧目录两栏，左边线与页头品牌对齐，右边线与页头右缘对齐 */
+  @media (min-width: 60rem) {
+    .wisp-post.wisp-has-toc {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(12rem, var(--wisp-side));
+      column-gap: var(--wisp-gutter);
+      max-width: calc(var(--wisp-shell) + 2 * var(--wisp-pad));
+    }
+    .wisp-post.wisp-has-toc .wisp-post-article {
+      grid-column: 1;
+      grid-row: 1;
+      max-width: var(--wisp-measure);
+    }
+    .wisp-post.wisp-has-toc .wisp-post-aside {
+      display: block;
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .wisp-post.wisp-has-toc .wisp-post-toc-inline {
+      display: none;
+    }
+  }
+
+  /* ≥ 72rem：三栏。系列 | 正文 | 目录，两侧栏等宽，正文居中在页头正下方 */
+  @media (min-width: 72rem) {
     .wisp-post.wisp-has-toc,
     .wisp-post.wisp-has-series {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 42em) minmax(0, 1fr);
-      column-gap: clamp(2rem, 2.5vw, 3rem);
-      max-width: 92rem;
-      margin-inline: auto;
-      padding-inline: clamp(2rem, 2.5vw, 3rem);
+      grid-template-columns: minmax(12rem, 1fr) minmax(0, var(--wisp-measure)) minmax(12rem, 1fr);
+      column-gap: var(--wisp-gutter);
+      max-width: calc(var(--wisp-shell) + 2 * var(--wisp-pad));
     }
     .wisp-post.wisp-has-toc .wisp-post-article,
     .wisp-post.wisp-has-series .wisp-post-article {
       grid-column: 2;
       grid-row: 1;
+      max-width: none;
     }
-    .wisp-post-aside {
-      display: block;
+    .wisp-post.wisp-has-toc .wisp-post-aside {
       grid-column: 3;
-      grid-row: 1;
-      padding-inline: 0;
     }
     .wisp-post-series-aside {
       display: block;
       grid-column: 1;
       grid-row: 1;
-      padding-inline: 0;
-    }
-    .wisp-post-series-aside-inner {
-      position: sticky;
-      top: 5rem;
-      max-width: 17rem;
-      max-height: calc(100dvh - 6rem);
-      margin-inline-start: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      /* 滚动条占位稳定，避免条目展开/收起时文本水平抖动 */
-      scrollbar-gutter: stable;
-      scrollbar-width: thin;
-      scrollbar-color: var(--wisp-border) transparent;
     }
     .wisp-post-series-inline {
-      display: none;
-    }
-    .wisp-post-aside-inner {
-      position: sticky;
-      top: 5rem;
-      max-width: 17rem;
-      max-height: calc(100dvh - 6rem);
-      margin-inline-start: auto;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scrollbar-gutter: stable;
-      scrollbar-width: thin;
-      scrollbar-color: var(--wisp-border) transparent;
-    }
-    .wisp-post-toc-inline {
       display: none;
     }
   }

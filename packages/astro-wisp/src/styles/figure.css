@@ -67,10 +67,17 @@
   margin-inline: calc((100% - var(--wisp-wide-w)) / 2);
 }
 
-/* 文章页宽屏且显示右侧目录时，宽内容只向左突破，避免压到 sticky 目录 */
-@media (min-width: 75rem) {
+/* 两栏（正文 + 目录）时宽内容留在正文栏内，不压到目录 */
+@media (min-width: 60rem) {
+  .wisp-has-toc .wisp-wide {
+    --wisp-wide-w: 100%;
+    margin-inline: 0;
+  }
+}
+/* 三栏且左栏空着（只有目录、没有系列）时，宽内容向左突破到左栏 */
+@media (min-width: 72rem) {
   .wisp-has-toc:not(.wisp-has-series) .wisp-wide {
-    --wisp-wide-w: max(100%, min(100% + (100vw - 100%) / 2 - 3rem, 56rem));
+    --wisp-wide-w: calc(100% + 12rem + var(--wisp-gutter, 3rem));
     margin-inline: calc(100% - var(--wisp-wide-w)) 0;
   }
   /* 系列栏占据正文左侧时，宽内容留在正文列内，避免覆盖导航。 */
@@ -78,4 +85,26 @@
     --wisp-wide-w: 100%;
     margin-inline: 0;
   }
+}
+
+/*
+ * Mermaid：图按原始尺寸的 75% 为下限缩放（16px 字 → 不小于 12px），放不下时在容器内横向滚动，
+ * 而不是把整张图压到字看不清。--pele-w 由 remark-pele 写入（SVG 的原始宽度）。
+ */
+.wisp-pele-body[style*="--pele-w"] {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.wisp-pele-body[style*="--pele-w"] > svg {
+  width: 100%;
+  min-width: min(var(--pele-w), calc(var(--pele-w) * 0.75));
+  max-width: var(--pele-w);
+}
+/* 横向可滚动时的边缘提示（经典 scroll shadow：local 背景遮罩 + scroll 背景阴影，纯 CSS） */
+.wisp-pele-body[style*="--pele-w"] {
+  background:
+    linear-gradient(to right, var(--wisp-bg) 40%, transparent) left / 2rem 100% no-repeat local,
+    linear-gradient(to left, var(--wisp-bg) 40%, transparent) right / 2rem 100% no-repeat local,
+    linear-gradient(to right, color-mix(in srgb, var(--wisp-fg) 9%, transparent), transparent) left / 0.75rem 100% no-repeat scroll,
+    linear-gradient(to left, color-mix(in srgb, var(--wisp-fg) 9%, transparent), transparent) right / 0.75rem 100% no-repeat scroll;
 }

@@ -1,11 +1,13 @@
 ---
 /**
- * 页脚：与顶栏同一容器宽度的整行收尾。
- * 只放顶栏没有的信息：左侧版权，右侧 GitHub 与订阅入口。
+ * 页脚：与顶栏同一外框（.wisp-shell）。
+ * 上半部分：站点名与描述、系列入口、站点导航；下半部分：版权与 GitHub / 订阅图标。
+ * 读完一篇文章时，这里是去下一处的地方。
  */
 import config from 'virtual:wisp/config';
 import Icon from 'virtual:wisp/components/Icon';
 import { sitePath } from '../utils/paths';
+import { getPosts, summarizeSeries } from '../utils/posts';
 
 export interface Props {
   /** 版权年份，默认当前构建年份 */
@@ -33,10 +35,51 @@ const iconOf: Record<string, string> = {
 };
 const owner = config.site.author || config.site.title;
 const zh = /^zh\b/i.test(config.site.lang);
+const base = import.meta.env.BASE_URL;
+const series = summarizeSeries(await getPosts()).slice(0, 6);
 ---
 
 <footer class="wisp-footer">
-  <div class="wisp-container">
+  <div class="wisp-shell">
+    <div class="wisp-footer-top">
+      <div class="wisp-footer-about">
+        <a href={sitePath(base, '/')} class="wisp-footer-brand">{config.site.title}</a>
+        {config.site.description && <p>{config.site.description}</p>}
+      </div>
+      {
+        series.length > 0 && (
+          <nav class="wisp-footer-col" aria-labelledby="wisp-footer-series">
+            <p id="wisp-footer-series" class="wisp-eyebrow">{zh ? '系列' : 'Series'}</p>
+            <ul>
+              {series.map((s) => (
+                <li>
+                  <a href={sitePath(base, `/posts/${s.firstId}/`)}>
+                    <span class="wisp-draw">{s.title.split(/[：:]/)[0]}</span>
+                    <span class="wisp-footer-count">{s.items.length}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+      {
+        config.nav.length > 0 && (
+          <nav class="wisp-footer-col" aria-labelledby="wisp-footer-site">
+            <p id="wisp-footer-site" class="wisp-eyebrow">{zh ? '站点' : 'Site'}</p>
+            <ul>
+              {config.nav.map((item) => (
+                <li>
+                  <a href={sitePath(base, item.href)}>
+                    <span class="wisp-draw">{item.label}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+    </div>
     <div class="wisp-footer-inner">
       <p class="wisp-footer-copy">© {year} {owner}</p>
       {
@@ -56,7 +99,7 @@ const zh = /^zh\b/i.test(config.site.lang);
                   const href =
                     s.kind === 'email' && !s.href.startsWith('mailto:')
                       ? `mailto:${s.href}`
-                      : sitePath(import.meta.env.BASE_URL, s.href);
+                      : sitePath(base, s.href);
                   const label = s.label ?? defaultLabel[s.kind];
                   return (
                     <li>
@@ -85,42 +128,81 @@ const zh = /^zh\b/i.test(config.site.lang);
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
   .wisp-footer {
-    margin-top: 5rem;
+    margin-top: 6rem;
     border-top: 1px solid var(--wisp-border);
+    background: var(--wisp-surface);
     color: var(--wisp-muted);
     font-size: 0.875rem;
     line-height: 1.6;
   }
-  /* 宽屏文章两侧已有 sticky 目录/系列栏，页脚再叠加 6rem 会形成过高的空白带。 */
-  @media (min-width: 75rem) {
-    :global(main:has(.wisp-post.wisp-has-toc) + .wisp-footer),
-    :global(main:has(.wisp-post.wisp-has-series) + .wisp-footer) {
-      margin-top: 3rem;
+  .wisp-footer-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2rem 1.5rem;
+    padding-block: 3rem 2.5rem;
+  }
+  @media (min-width: 48rem) {
+    .wisp-footer-top {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--wisp-gutter);
     }
-    :global(main:has(.wisp-post.wisp-has-toc) + .wisp-footer .wisp-footer-inner),
-    :global(main:has(.wisp-post.wisp-has-series) + .wisp-footer .wisp-footer-inner) {
-      padding-block: 0.75rem 0.875rem;
+  }
+  .wisp-footer-about {
+    grid-column: 1 / -1;
+  }
+  @media (min-width: 48rem) {
+    .wisp-footer-about {
+      grid-column: auto;
     }
+  }
+  .wisp-footer-about p {
+    max-width: 26rem;
+    margin: 0.5rem 0 0;
+  }
+  .wisp-footer-brand {
+    color: var(--wisp-fg);
+    font-size: 1rem;
+    font-weight: 650;
+  }
+  .wisp-footer-col ul {
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .wisp-footer-col a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+    padding-block: 0.4rem;
+    color: var(--wisp-fg);
+    transition: color 150ms;
+  }
+  .wisp-footer-col a:hover {
+    color: var(--wisp-accent);
+  }
+  .wisp-footer-count {
+    color: var(--wisp-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
   }
   .wisp-footer-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 0.75rem 2rem;
-    padding-block: 0.875rem;
+    gap: 0.5rem 2rem;
+    padding-block: 0.75rem;
+    border-top: 1px solid var(--wisp-border);
   }
   .wisp-footer-copy {
-    display: flex;
-    align-items: center;
-    min-width: 0;
     margin: 0;
   }
   .wisp-footer-links {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    margin: 0 -0.5rem 0 0;
+    margin: 0 -0.75rem 0 0;
     padding: 0;
     list-style: none;
   }
@@ -131,17 +213,12 @@ const zh = /^zh\b/i.test(config.site.lang);
     height: 2.75rem;
     border-radius: 6px;
     color: var(--wisp-muted);
-    transition: color 150ms, background-color 150ms;
+    transition: color 150ms, background-color 150ms, transform 160ms var(--wisp-ease);
   }
   .wisp-footer-links a:hover {
     color: var(--wisp-accent);
-    background-color: var(--wisp-surface);
-  }
-  @media (max-width: 40rem) {
-    .wisp-footer-inner {
-      gap: 0.5rem 1rem;
-      padding-block: 0.75rem;
-    }
+    background-color: var(--wisp-surface-2);
+    transform: translateY(-1px);
   }
   }
 </style>

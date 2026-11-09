@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterAndSortPosts, filterAndSortSeries, groupByYear, seriesNeighbors } from './posts';
+import { filterAndSortPosts, filterAndSortSeries, groupByYear, seriesNeighbors, summarizeSeries } from './posts';
 
 const p = (id: string, d: string, draft = false) => ({ id, data: { pubDate: new Date(d), draft } });
 const posts = [p('a', '2025-03-01'), p('b', '2026-11-06'), p('c', '2026-01-02', true), p('d', '2024-12-31')];
@@ -46,5 +46,27 @@ describe('filterAndSortSeries', () => {
     expect(seriesNeighbors(series, 'practice')).toEqual({ prev: series[0], next: series[2] });
     expect(seriesNeighbors(series, 'intro')).toEqual({ next: series[1] });
     expect(seriesNeighbors(series, 'graphs')).toEqual({ prev: series[1] });
+  });
+});
+
+describe('summarizeSeries', () => {
+  const d = (s: string) => new Date(s);
+  const posts = [
+    { id: 'a/intro', data: { title: 'A 总览', description: 'A desc', pubDate: d('2026-01-01'), series: { id: 'a', order: 1 } } },
+    { id: 'a/02', data: { title: 'A 第二篇', pubDate: d('2026-03-01'), series: { id: 'a', order: 2 } } },
+    { id: 'b/intro', data: { title: 'B 总览', pubDate: d('2026-02-01'), series: { id: 'b', order: 1 } } },
+    { id: 'solo', data: { title: 'Solo', pubDate: d('2026-04-01') } },
+  ];
+
+  it('按系列分组，系列名取 order 最小的一篇，按最近更新降序', () => {
+    const list = summarizeSeries(posts);
+    expect(list.map((s) => s.id)).toEqual(['a', 'b']);
+    expect(list[0]).toMatchObject({ title: 'A 总览', description: 'A desc', firstId: 'a/intro' });
+    expect(list[0]!.items.map((i) => i.id)).toEqual(['a/intro', 'a/02']);
+    expect(list[0]!.updated).toEqual(d('2026-03-01'));
+  });
+
+  it('没有系列时返回空数组', () => {
+    expect(summarizeSeries([posts[3]!])).toEqual([]);
   });
 });

@@ -4,21 +4,41 @@
 
 @layer utilities {
 
+/*
+ * 外观：一张卡片。标题是卡片的顶栏（左对齐），中间是白底舞台（SVG），底部是浅底的说明 + 控制条。
+ * 舞台用页面底色而不是 surface，组件内部的灰色轨道/格子才不会“灰上加灰”。
+ */
 .wisp-explainer {
-  margin-block: 2rem;
+  margin-block: 2.25rem;
   margin-inline: 0;
 }
+.prose .wisp-explainer__title,
 .wisp-explainer__title {
-  margin-bottom: 0.5rem;
-  color: var(--wisp-muted);
-  font-size: 0.875rem;
+  margin: 0;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--wisp-border);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  background: var(--wisp-surface);
+  color: var(--wisp-fg);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: start;
 }
 
 .wisp-player {
+  overflow: hidden;
   border: 1px solid var(--wisp-border);
-  border-radius: 8px;
-  background: var(--wisp-surface);
-  padding: 1rem;
+  border-radius: 12px;
+  background: var(--wisp-bg);
+  padding: 0;
+}
+.wisp-explainer__title + .wisp-player {
+  border-radius: 0 0 12px 12px;
+}
+.wisp-player__stage {
+  padding: 1.25rem 1rem;
 }
 .wisp-player:focus-visible,
 .wisp-player button:focus-visible,
@@ -49,9 +69,10 @@
 
 .wisp-player__caption {
   min-height: 3em;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
+  margin-top: 0;
+  padding: 0.875rem 1rem 0;
   border-top: 1px solid var(--wisp-border);
+  background: var(--wisp-surface);
   color: var(--wisp-fg);
   font-size: 0.9375rem;
   line-height: 1.6;
@@ -62,7 +83,9 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 0.75rem;
-  margin-top: 0.75rem;
+  margin-top: 0;
+  padding: 0.75rem 1rem 1rem;
+  background: var(--wisp-surface);
 }
 .wisp-player__buttons,
 .wisp-player__speed {
@@ -80,7 +103,10 @@
   font: inherit;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: background-color 150ms, border-color 150ms;
+  transition: background-color 150ms, border-color 150ms, transform 120ms;
+}
+.wisp-player button:active:not(:disabled) {
+  transform: scale(0.94);
 }
 .wisp-player button:hover:not(:disabled) {
   border-color: var(--wisp-accent);
@@ -122,6 +148,20 @@
 @media (prefers-reduced-motion: reduce) {
   .wisp-player button {
     transition: none;
+  }
+}
+/* 窄屏：进度条、页码、倍速并在第二行，控制条两行放下 */
+@media (max-width: 39.99rem) {
+  .wisp-player__buttons {
+    flex: 1 0 100%;
+  }
+  .wisp-player__range {
+    flex-basis: 4.5rem;
+    min-width: 4.5rem;
+  }
+  .wisp-player__speed button {
+    min-width: 2.75rem;
+    padding-inline: 0.25rem;
   }
 }
 }

@@ -1,5 +1,6 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { isAbsolute, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
 import { unified } from '@astrojs/markdown-remark';
@@ -23,6 +24,20 @@ import { checkContrast } from './tokens/contrast';
 import { wispFonts } from './fonts';
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
+
+/**
+ * rehype-katex 生成公式 HTML 时用的是它自己依赖的 katex；主题的公式样式（styles/katex.css）和目录里的标题公式
+ * （Toc.astro）如果用的是另一个版本，类名会对不上（0.19 把 .sizing 改名为 .katex-sizing，上下标就不再缩小）。
+ * 这里找到 rehype-katex 实际加载的那份 katex，下面用 Vite alias 让整个构建里的 `katex` 都指向它。
+ */
+export function rehypeKatexKatexDir(): string | undefined {
+  try {
+    const rk = fileURLToPath(import.meta.resolve('rehype-katex'));
+    return dirname(createRequire(rk).resolve('katex/package.json'));
+  } catch {
+    return undefined;
+  }
+}
 const astroFiles = (dir: string) =>
   readdirSync(here(dir))
     .filter((f) => f.endsWith('.astro'))
@@ -151,6 +166,7 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
         if (!has('@astrojs/mdx')) integrations.push(mdx());
         if (!has('@astrojs/sitemap') && astroConfig.site) integrations.push(sitemap());
 
+        const katexDir = config.features.math ? rehypeKatexKatexDir() : undefined;
         updateConfig({
           integrations,
           // Astro Fonts API：与站点自己的 fonts 配置合并（数组拼接），站点可以再注册其他字体
@@ -161,6 +177,7 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
             shikiConfig: wispShikiConfig(config),
           },
           vite: {
+            resolve: katexDir ? { alias: [{ find: /^katex(\/.*)?$/, replacement: `${katexDir}$1` }] } : undefined,
             ssr: {
               noExternal: [
                 // RSS 全文渲染静态导入 @astrojs/mdx/server.js，需要打进 SSR 产物（见 routes/rss.xml.ts）

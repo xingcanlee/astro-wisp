@@ -172,8 +172,8 @@ function renderHeadingText(text: string): string {
     margin: 0;
     color: var(--wisp-fg);
     font-weight: 600;
-    font-size: 0.8125rem;
-    letter-spacing: 0.02em;
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
   }
   .wisp-toc-toggle,
   .wisp-toc-sub-toggle {
@@ -218,14 +218,23 @@ function renderHeadingText(text: string): string {
   }
   .wisp-toc-aside a {
     margin-inline-start: -1px;
-    padding-inline-start: 0.9rem;
-    border-inline-start: 1px solid transparent;
+    padding: 0.3rem 0.5rem 0.3rem 0.875rem;
+    border-inline-start: 2px solid transparent;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.8125rem;
     transition:
       color 150ms,
+      background-color 150ms,
       border-color 150ms;
+  }
+  .wisp-toc-aside a:hover {
+    background-color: var(--wisp-surface);
   }
   .wisp-toc-aside a[aria-current='true'] {
     border-inline-start-color: var(--wisp-accent);
+    background-color: var(--wisp-surface);
+    color: var(--wisp-fg);
+    font-weight: 500;
   }
   .wisp-toc-row {
     display: flex;
@@ -241,8 +250,8 @@ function renderHeadingText(text: string): string {
     border-inline-start: 0;
   }
   .wisp-toc-aside li ol a {
-    padding-inline-start: 1.8rem;
-    font-size: 0.8125rem;
+    padding-inline-start: 1.75rem;
+    font-size: 0.78125rem;
   }
 
   /* 以下规则只在 JS 可用时生效（html[data-toc] 由 Post 内联脚本写入）；无 JS 时目录完整展开 */

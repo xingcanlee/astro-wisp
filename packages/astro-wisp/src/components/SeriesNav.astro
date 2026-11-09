@@ -52,7 +52,10 @@ const inlineTitle = position ? `${title} · ${position}` : title;
       </details>
     ) : (
       <nav class="wisp-series wisp-series-aside" aria-labelledby={headingId}>
-        <p id={headingId} class="wisp-series-title">{title}</p>
+        <p id={headingId} class="wisp-series-title">
+          <span>{title}</span>
+          <span class="wisp-series-count">{currentIndex >= 0 ? `${currentIndex + 1} / ${items.length}` : items.length}</span>
+        </p>
         <ol>
           {items.map((item) => (
             <li>
@@ -97,24 +100,48 @@ const inlineTitle = position ? `${title} · ${position}` : title;
   .wisp-series a[aria-current='page'] {
     color: var(--wisp-accent);
   }
-  /* 左栏竖线朝内（贴正文一侧），与右栏 TOC 的 border-inline-start 对称 */
-  .wisp-series-aside {
-    border-inline-end: 1px solid var(--wisp-border);
+  /* 侧栏：与目录同一种写法——左侧细轨道，当前项强调色竖条 + 浅底 */
+  .wisp-series-aside ol {
+    border-inline-start: 1px solid var(--wisp-border);
   }
   .wisp-series-title {
-    margin: 0 0 0.5rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 0 0 0.75rem;
     color: var(--wisp-fg);
     font-weight: 600;
-    font-size: 0.8125rem;
-    letter-spacing: 0.02em;
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+  }
+  .wisp-series-count {
+    flex: none;
+    color: var(--wisp-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
   }
   .wisp-series-aside a {
-    margin-inline-end: -1px;
-    padding-inline: 0.9rem;
-    border-inline-end: 1px solid transparent;
+    margin-inline-start: -1px;
+    padding: 0.35rem 0.5rem 0.35rem 0.875rem;
+    border-inline-start: 2px solid transparent;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    transition:
+      color 150ms,
+      background-color 150ms,
+      border-color 150ms;
+  }
+  .wisp-series-aside a:hover {
+    background-color: var(--wisp-surface);
   }
   .wisp-series-aside a[aria-current='page'] {
-    border-inline-end-color: var(--wisp-accent);
+    border-inline-start-color: var(--wisp-accent);
+    background-color: var(--wisp-surface);
+    color: var(--wisp-fg);
+    font-weight: 500;
   }
   .wisp-series-inline {
     margin: 0 0 2.5rem;

@@ -68,3 +68,38 @@ export async function getPosts(opts: { includeDrafts?: boolean } = {}): Promise<
   const includeDrafts = opts.includeDrafts ?? import.meta.env.DEV;
   return filterAndSortPosts(await getCollection('posts'), { includeDrafts });
 }
+
+export interface SeriesSummary {
+  /** frontmatter 中的 series.id */
+  id: string;
+  /** 系列名：取系列中 order 最小的一篇（通常是总览篇）的标题 */
+  title: string;
+  description?: string;
+  /** 系列第一篇（总览篇）的文章 id，用作入口 */
+  firstId: string;
+  items: SeriesItem[];
+  /** 系列中最新一篇的发布时间 */
+  updated: Date;
+}
+
+/** 把文章按 series.id 分组成系列摘要，按最近更新时间降序；同时间按系列 id 升序。 */
+export function summarizeSeries<
+  T extends { id: string; data: { title: string; description?: string; pubDate: Date; series?: { id: string; order: number } } },
+>(posts: T[]): SeriesSummary[] {
+  const ids = [...new Set(posts.map((p) => p.data.series?.id).filter((id): id is string => !!id))];
+  return ids
+    .map((id) => {
+      const items = filterAndSortSeries(posts, id);
+      const members = posts.filter((p) => p.data.series?.id === id);
+      const first = members.find((p) => p.id === items[0]!.id)!;
+      return {
+        id,
+        title: first.data.title,
+        description: first.data.description,
+        firstId: first.id,
+        items,
+        updated: new Date(Math.max(...members.map((p) => p.data.pubDate.getTime()))),
+      };
+    })
+    .sort((a, b) => b.updated.getTime() - a.updated.getTime() || a.id.localeCompare(b.id));
+}
