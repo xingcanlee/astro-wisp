@@ -62,6 +62,10 @@
   max-inline-size: none;
   margin-inline: calc((100% - var(--wisp-wide-w)) / 2);
 }
+/* .prose figure 会把 margin-inline 重置为 0；保持宽内容相对正文居中。 */
+.prose .wisp-wide {
+  margin-inline: calc((100% - var(--wisp-wide-w)) / 2);
+}
 
 /* 文章页宽屏且显示右侧目录时，宽内容只向左突破，避免压到 sticky 目录 */
 @media (min-width: 75rem) {

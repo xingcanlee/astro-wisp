@@ -8,8 +8,12 @@ import { getReadingTimes } from '../../utils/reading';
 import config from 'virtual:wisp/config';
 
 export const getStaticPaths = (async ({ paginate }) => {
-  // Astro 内置分页；第 1 页就是首页（/，带精选区），这里只生成第 2 页起
-  return paginate(await getPosts(), { pageSize: config.home.pageSize }).slice(1);
+  // 首页会单独展示精选文章，因此分页也排除它们，避免第 2 页重复出现。
+  const all = await getPosts();
+  const featured = all.filter((p) => p.data.featured).slice(0, config.home.featuredCount);
+  const featuredIds = new Set(featured.map((p) => p.id));
+  // Astro 内置分页；第 1 页就是首页（/，带精选区），这里只生成第 2 页起。
+  return paginate(all.filter((p) => !featuredIds.has(p.id)), { pageSize: config.home.pageSize }).slice(1);
 }) satisfies GetStaticPaths;
 
 interface Props {

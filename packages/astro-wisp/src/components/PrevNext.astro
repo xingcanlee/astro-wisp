@@ -53,7 +53,8 @@ const zh = /^zh\b/i.test(lang);
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
-    margin-top: 4rem;
+    /* 文章收尾：不再叠加 4rem，给底部页脚留出呼吸但避免整段过长 */
+    margin-top: 3rem;
     padding-top: 1.5rem;
     border-top: 1px solid var(--wisp-border);
   }

@@ -136,7 +136,9 @@
 
     for (const source of document.querySelectorAll('.prose img, .prose svg')) {
       if (!(source instanceof HTMLElement || source instanceof SVGElement)) continue;
-      if (source.closest('a, button, dialog, pre, .wisp-diagram-actions')) continue;
+      // 交互讲解组件（React islands）内的 SVG 是可操作舞台，增强成放大触发器
+      // 会弹出静态克隆、并与客户端水合打架（role 不一致），必须排除。
+      if (source.closest('.wisp-explainer, .wisp-explainer__scroll, a, button, dialog, pre, .wisp-diagram-actions')) continue;
       if (source instanceof SVGElement) {
         if (source.matches('.wisp-icon') || source.parentElement?.closest('svg')) continue;
         if (!source.closest('figure, .wisp-pele-body, .wisp-diagram-body')) continue;

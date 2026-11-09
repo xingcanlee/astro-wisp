@@ -8,6 +8,7 @@ export interface PlayerLabels {
   last: string;
   play: string;
   pause: string;
+  replay: string;
   reducedMotion: string;
   progress: string;
   /** 进度的朗读文本 */
@@ -25,7 +26,8 @@ export const ZH: PlayerLabels = {
   last: '最后一步',
   play: '播放',
   pause: '暂停',
-  reducedMotion: '自动播放已关闭（系统设置为减少动态效果）',
+  replay: '重新播放',
+  reducedMotion: '系统已减少过渡动画；手动播放仍可用',
   progress: '进度',
   stepOf: (i, n) => `第 ${i} 步，共 ${n} 步`,
   speed: '播放速度',
@@ -40,7 +42,8 @@ export const EN: PlayerLabels = {
   last: 'Last step',
   play: 'Play',
   pause: 'Pause',
-  reducedMotion: 'Autoplay is off (reduced motion is enabled)',
+  replay: 'Replay',
+  reducedMotion: 'Transitions are reduced; manual playback is still available',
   progress: 'Progress',
   stepOf: (i, n) => `Step ${i} of ${n}`,
   speed: 'Playback speed',

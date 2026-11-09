@@ -120,15 +120,18 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
       (() => {
         const zh = document.documentElement.lang.startsWith('zh');
         const update = () => {
-          document.querySelectorAll('.wisp-pre, .wisp-table').forEach((el) => {
+          document.querySelectorAll('.wisp-pre, .wisp-table, .katex-display, .wisp-explainer__scroll').forEach((el) => {
             const overflow = el.scrollWidth > el.clientWidth + 1;
             el.toggleAttribute('data-wisp-overflow', overflow);
             if (el.classList.contains('wisp-pre')) {
               if (overflow) el.setAttribute('aria-label', zh ? '代码，可横向滚动' : 'Code, horizontally scrollable');
               else el.removeAttribute('aria-label');
             } else if (overflow) {
+              const isTable = el.classList.contains('wisp-table');
+              const existing = el.getAttribute('aria-label');
+              const baseLabel = existing || (isTable ? (zh ? '表格' : 'Table') : (zh ? '内容' : 'Content'));
               el.setAttribute('role', 'region');
-              el.setAttribute('aria-label', zh ? '表格，可横向滚动' : 'Table, horizontally scrollable');
+              el.setAttribute('aria-label', zh ? `${baseLabel}，可横向滚动` : `${baseLabel}, horizontally scrollable`);
             } else {
               el.removeAttribute('role');
               el.removeAttribute('aria-label');

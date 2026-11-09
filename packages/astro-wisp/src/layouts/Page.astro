@@ -1,8 +1,11 @@
 ---
 /**
  * 独立页面布局（关于页等）：标题 + 可选描述 + prose 正文。
+ * hasMath 为真时按需引入 KaTeX 样式（与 Post 布局一致）。
  */
 import Base from 'virtual:wisp/components/Base';
+import config from 'virtual:wisp/config';
+import katexCssUrl from '../styles/katex.css?url';
 
 export interface Props {
   title: string;
@@ -10,12 +13,17 @@ export interface Props {
   lang?: string;
   /** 是否把默认插槽包在 .prose 中，默认 true；列表类页面可关闭 */
   prose?: boolean;
+  /** remarkPluginFrontmatter.hasMath */
+  hasMath?: boolean;
 }
 
-const { title, description, lang, prose = true } = Astro.props;
+const { title, description, lang, prose = true, hasMath = false } = Astro.props;
 ---
 
 <Base title={title} description={description} lang={lang}>
+  <Fragment slot="head">
+    {hasMath && config.features.math && <link rel="stylesheet" href={katexCssUrl} />}
+  </Fragment>
   <div class="wisp-container wisp-page">
     <header class="wisp-page-header">
       <h1>{title}</h1>

@@ -80,8 +80,10 @@ export function parseFoldMeta(raw: string | undefined): { fold: false } | { fold
   return r;
 }
 
-/** 给 pre 加语言信息，并包一层 div.wisp-code（语言标签 + 复制按钮的定位容器） */
-export function wispFrameTransformer(lineNumbers: boolean, fold?: CodeFoldOptions): ShikiTransformer {
+/** 给 pre 加语言信息，并包一层 div.wisp-code（语言标签 + 复制按钮的定位容器）。
+ *  codeCopy 为真时给容器加 wisp-code--copy 修饰类，让 CSS 无需等客户端脚本
+ *  插入按钮后再用 :has() 探测，避免语言标签位置跳变（CLS）。 */
+export function wispFrameTransformer(lineNumbers: boolean, fold?: CodeFoldOptions, codeCopy?: boolean): ShikiTransformer {
   return {
     name: 'wisp:frame',
     pre(node) {
@@ -113,7 +115,7 @@ export function wispFrameTransformer(lineNumbers: boolean, fold?: CodeFoldOption
         {
           type: 'element',
           tagName: 'div',
-          properties: { class: 'wisp-code', 'data-language': lang, ...extra },
+          properties: { class: codeCopy ? 'wisp-code wisp-code--copy' : 'wisp-code', 'data-language': lang, ...extra },
           children: [
             {
               type: 'element',
@@ -138,6 +140,6 @@ export function wispShikiConfig(config: WispConfig) {
     themes: { light: 'github-light', dark: 'github-dark' },
     defaultColor: false as const,
     wrap: false as const,
-    transformers: [wispDiffTransformer(), wispContrastTransformer(), wispFrameTransformer(config.features.lineNumbers, config.features.codeFold)],
+    transformers: [wispDiffTransformer(), wispContrastTransformer(), wispFrameTransformer(config.features.lineNumbers, config.features.codeFold, config.features.codeCopy)],
   };
 }

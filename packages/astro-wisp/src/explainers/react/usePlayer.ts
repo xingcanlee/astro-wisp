@@ -12,6 +12,7 @@ export interface PlayerApi {
   index: number;
   playing: boolean;
   speed: Speed;
+  /** 系统是否启用减少动态效果。只影响视觉过渡，不限制手动播放。 */
   reducedMotion: boolean;
   next: () => void;
   prev: () => void;
@@ -27,7 +28,7 @@ export interface PlayerApi {
  * matchMedia 只在 effect 中读取，避免服务端访问 window。
  *
  * 这里不用 Motion 的 useReducedMotion：它在客户端首帧就返回真实值，而 reducedMotion 会写进按钮的
- * disabled / aria-label，首帧与 SSR 不一致会造成 hydration 不匹配。纯视觉过渡（Cell）仍使用 Motion 的 hook。
+ * aria-description，首帧与 SSR 不一致会造成 hydration 不匹配。纯视觉过渡（Cell）仍使用 Motion 的 hook。
  */
 export function usePlayer(length: number): PlayerApi {
   const [index, setIndex] = useState(0);
@@ -37,10 +38,7 @@ export function usePlayer(length: number): PlayerApi {
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const sync = () => {
-      setReducedMotion(mq.matches);
-      if (mq.matches) setPlaying(false);
-    };
+    const sync = () => setReducedMotion(mq.matches);
     sync();
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
@@ -77,7 +75,6 @@ export function usePlayer(length: number): PlayerApi {
     last: () => { pause(); setIndex(lastIndex); },
     seek: (i) => { pause(); seek(i); },
     toggle: () => {
-      if (reducedMotion) return;
       if (playing) return setPlaying(false);
       if (index >= lastIndex) setIndex(0);
       setPlaying(true);

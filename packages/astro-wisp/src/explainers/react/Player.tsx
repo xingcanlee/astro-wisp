@@ -29,6 +29,7 @@ export default function Player<S>({ steps, label, children, lang, labels }: Play
   const step = steps[p.index];
   const atFirst = p.index <= 0;
   const atLast = p.index >= steps.length - 1;
+  const playLabel = p.playing ? t.pause : atLast ? t.replay : t.play;
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
@@ -74,10 +75,10 @@ export default function Player<S>({ steps, label, children, lang, labels }: Play
           <button
             type="button"
             className="wisp-player__play"
-            aria-label={p.reducedMotion ? t.reducedMotion : p.playing ? t.pause : t.play}
-            title={`${p.playing ? t.pause : t.play} (${t.keys.toggle})`}
+            aria-label={playLabel}
+            aria-description={p.reducedMotion ? t.reducedMotion : undefined}
+            title={`${playLabel} (${t.keys.toggle})`}
             onClick={p.toggle}
-            disabled={p.reducedMotion}
           >
             {p.playing ? '⏸' : '▶'}
           </button>

@@ -39,7 +39,7 @@ packages/astro-wisp/src/explainers/
 
 | 操作 | 鼠标 | 键盘（Player 获得焦点时） |
 |---|---|---|
-| 播放 / 暂停 | ▶ 按钮 | Space |
+| 播放 / 暂停 / 重新播放 | ▶ 按钮 | Space |
 | 上一步 / 下一步 | ◀ ▶ 按钮 | ← / → |
 | 第一步 / 最后一步 | | Home / End |
 | 拖动进度 | range 滑块 | |
@@ -47,8 +47,8 @@ packages/astro-wisp/src/explainers/
 
 - caption 区域设置 `aria-live="polite"`。
 - 界面文字（按钮名、进度朗读）随站点语言（`site.lang`，zh* → 中文，其余 → 英文），`lang` / `labels` 属性可覆盖。
-- reduced-motion 的检测放在 effect 中（首帧与 SSR 一致），不用 Motion 的 `useReducedMotion`：它在客户端首帧就返回真实值，会写进按钮的 `disabled` / `aria-label`，导致 hydration 不匹配。纯视觉过渡（Cell）仍用 Motion 的 hook。
-- 在 `prefers-reduced-motion` 下，不自动播放、不做插值，直接切换到下一步的状态。
+- reduced-motion 的检测放在 effect 中（首帧与 SSR 一致），不用 Motion 的 `useReducedMotion`：它在客户端首帧就返回真实值，会写进 `aria-description`，导致 hydration 不匹配。纯视觉过渡（Cell）仍用 Motion 的 hook。
+- 在 `prefers-reduced-motion` 下，不做插值，直接切换到下一步的状态；播放按钮仍可点击，手动播放和单步操作都不受限制。
 - **SSR**：Astro 会把第一步渲染成静态 HTML（React 服务端渲染），没有 JS 时显示第一步加上 caption。
 - 使用 `client:visible` 进行 hydration。
 

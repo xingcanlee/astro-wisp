@@ -11,7 +11,8 @@
 
 .wisp-pre {
   margin: 0;
-  padding: 1.75rem 0 1rem;
+  /* 顶部预留语言标签/复制按钮条（0.4rem + 1.75rem + 0.1rem 呼吸） */
+  padding: 2.25rem 0 1rem;
   background: transparent;
   border-radius: inherit;
   overflow-x: auto; /* 长行横向滚动，不折行 */
@@ -73,19 +74,25 @@
   background: color-mix(in srgb, var(--wisp-sem-error) 10%, transparent);
 }
 
-/* 语言标签 */
+/* 语言标签：chip 样式，底色遮住横滚代码，避免文字相互叠印 */
 .wisp-lang {
   position: absolute;
   top: 0.4rem;
   right: 0.85rem;
+  padding: 0.25rem 0.5rem;
   font-family: var(--wisp-font-sans);
-  font-size: 0.75rem;
-  line-height: 1.5rem;
+  font-size: 0.6875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--wisp-muted);
+  background: var(--wisp-surface);
+  border: 1px solid var(--wisp-border);
+  border-radius: 6px;
   pointer-events: none;
   user-select: none;
 }
-/* 复制按钮（Lucide 图标）：hover / 焦点时出现；触屏设备常显 */
+/* 复制按钮（Lucide 图标）：常显半透明保证可发现性，hover / 焦点时全亮；触屏设备常显 */
 .wisp-copy {
   position: absolute;
   top: 0.4rem;
@@ -103,13 +110,20 @@
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
-  opacity: 0;
+  opacity: 0.45;
   transition: opacity 150ms, color 150ms, border-color 150ms;
 }
 @media (max-width: 64rem) {
+  /* 触屏点击目标放大后，顶部预留空间与标签尺寸同步加大，避免压住首行代码 */
   .wisp-copy {
     width: 2.75rem;
     height: 2.75rem;
+  }
+  .wisp-lang {
+    padding: 0.75rem 0.5rem;
+  }
+  .wisp-pre {
+    padding-top: 3.35rem;
   }
 }
 .wisp-code:hover .wisp-copy,
@@ -136,15 +150,27 @@
     opacity: 1;
   }
 }
-.wisp-code:has(.wisp-copy) .wisp-lang {
+/* 复制按钮存在时标签避让。用 transformer 生成的 --copy 修饰类而非 :has()，
+   避免按钮由客户端脚本插入后标签位置跳变（CLS） */
+.wisp-code--copy .wisp-lang {
   right: 2.75rem;
+}
+@media (max-width: 64rem) {
+  .wisp-code--copy .wisp-lang {
+    right: 3.75rem;
+  }
 }
 
 /* 长代码折叠：无 JS 时完整显示；脚本给外层加 data-folded 后才限制高度 */
 .wisp-code[data-folded] .wisp-pre {
-  /* 上内边距 + N 行 + 半行余量，让最后一行之后露出渐变 */
-  max-height: calc(1.75rem + var(--fold, 12) * 1.7 * 0.875rem + 0.5rem);
+  /* 上内边距 + N 行 + 半行余量，让最后一行之后露出渐变（上内边距与 .wisp-pre 一致） */
+  max-height: calc(2.25rem + var(--fold, 12) * 1.7 * 0.875rem + 0.5rem);
   overflow-y: hidden;
+}
+@media (max-width: 64rem) {
+  .wisp-code[data-folded] .wisp-pre {
+    max-height: calc(3.35rem + var(--fold, 12) * 1.7 * 0.875rem + 0.5rem);
+  }
 }
 .wisp-fold {
   position: relative;

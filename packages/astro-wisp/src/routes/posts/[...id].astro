@@ -36,11 +36,15 @@ interface Props {
 
 const { post, prev, next, series } = Astro.props;
 const { Content, headings, remarkPluginFrontmatter } = await render(post);
+// render() 的 headings[].text 取自 rehype-katex 渲染后的 hast，行内公式会被搅乱（如 $w$ → "www"）。
+// 用 remark-heading-text 在渲染前收集的原始文本按序号覆盖，供 Toc 构建时自行用 KaTeX 渲染。
+const tocTexts = remarkPluginFrontmatter.tocHeadingTexts as string[] | undefined;
+const headingsFixed = tocTexts ? headings.map((h, i) => ({ ...h, text: tocTexts[i] ?? h.text })) : headings;
 ---
 
 <Post
   post={post}
-  headings={headings}
+  headings={headingsFixed}
   readingTime={remarkPluginFrontmatter.readingTime}
   hasMath={Boolean(remarkPluginFrontmatter.hasMath)}
   hasDiagram={Boolean(remarkPluginFrontmatter.hasDiagram)}

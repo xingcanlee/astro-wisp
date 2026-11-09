@@ -45,7 +45,8 @@
     color: var(--wisp-fg);
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    scroll-padding-top: 1.5rem;
+    /* 顶栏高 64px：锚点跳转后标题不会被吸顶顶栏遮挡 */
+    scroll-padding-top: 4rem;
   }
   @media (min-width: 48rem) {
     html {
@@ -181,7 +182,8 @@ html {
 .prose table,
 .prose .wisp-table,
 .wisp-pre,
-.wisp-post-aside-inner {
+.wisp-post-aside-inner,
+.wisp-post-series-aside-inner {
   scrollbar-width: thin;
   scrollbar-color: var(--wisp-scroll-thumb) transparent;
 }
@@ -193,7 +195,8 @@ html {
   .prose table::-webkit-scrollbar,
   .prose .wisp-table::-webkit-scrollbar,
   .wisp-pre::-webkit-scrollbar,
-  .wisp-post-aside-inner::-webkit-scrollbar {
+  .wisp-post-aside-inner::-webkit-scrollbar,
+  .wisp-post-series-aside-inner::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
@@ -203,7 +206,8 @@ html {
   .prose table::-webkit-scrollbar-track,
   .prose .wisp-table::-webkit-scrollbar-track,
   .wisp-pre::-webkit-scrollbar-track,
-  .wisp-post-aside-inner::-webkit-scrollbar-track {
+  .wisp-post-aside-inner::-webkit-scrollbar-track,
+  .wisp-post-series-aside-inner::-webkit-scrollbar-track {
     background: transparent;
   }
   .wisp-scroll::-webkit-scrollbar-thumb,
@@ -212,7 +216,8 @@ html {
   .prose table::-webkit-scrollbar-thumb,
   .prose .wisp-table::-webkit-scrollbar-thumb,
   .wisp-pre::-webkit-scrollbar-thumb,
-  .wisp-post-aside-inner::-webkit-scrollbar-thumb {
+  .wisp-post-aside-inner::-webkit-scrollbar-thumb,
+  .wisp-post-series-aside-inner::-webkit-scrollbar-thumb {
     background: var(--wisp-scroll-thumb);
     border-radius: 999px;
     border: 2px solid transparent;
@@ -224,16 +229,19 @@ html {
   .prose table::-webkit-scrollbar-thumb:hover,
   .prose .wisp-table::-webkit-scrollbar-thumb:hover,
   .wisp-pre::-webkit-scrollbar-thumb:hover,
-  .wisp-post-aside-inner::-webkit-scrollbar-thumb:hover {
+  .wisp-post-aside-inner::-webkit-scrollbar-thumb:hover,
+  .wisp-post-series-aside-inner::-webkit-scrollbar-thumb:hover {
     background: var(--wisp-scroll-thumb-hover);
     background-clip: content-box;
   }
 }
 
-@media (max-width: 40rem) {
-  .wisp-pre[data-wisp-overflow],
-  .prose .wisp-table[data-wisp-overflow] {
-    box-shadow: inset -0.9rem 0 0.9rem -0.9rem var(--wisp-muted);
-  }
+/* 横向滚动提示：右缘内阴影表示内容未显示完（不限于窄屏，桌面长代码同样需要）。
+ * data-wisp-overflow 由 Base.astro 的内联脚本在内容确实溢出时才打上。 */
+.wisp-pre[data-wisp-overflow],
+.prose .wisp-table[data-wisp-overflow],
+.prose .katex-display[data-wisp-overflow],
+.wisp-explainer__scroll[data-wisp-overflow] {
+  box-shadow: inset -0.9rem 0 0.9rem -0.9rem var(--wisp-muted);
 }
 }

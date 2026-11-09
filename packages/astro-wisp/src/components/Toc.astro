@@ -8,6 +8,7 @@
  * 无 JS 时：目录完整展开，收起和折叠按钮不显示（`html[data-toc]` 由 Post 的内联脚本写入，作为 JS 可用的标记）。
  */
 import type { MarkdownHeading } from 'astro';
+import katex from 'katex';
 import Icon from 'virtual:wisp/components/Icon';
 import config from 'virtual:wisp/config';
 
@@ -34,6 +35,26 @@ for (const h of list) {
   if (h.level > 0 && last) last.kids.push(h);
   else groups.push({ head: h, kids: [] });
 }
+
+// 标题中的 $...$ 行内公式：正文已由 rehype-katex 渲染，目录链接需在构建时同样渲染，
+// 否则侧边栏/折叠目录里显示原始 $...$ 源码。非公式段做 HTML 转义后经 set:html 输出。
+function renderHeadingText(text: string): string {
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  if (!config.features.math || !text.includes('$')) return esc(text);
+  return text
+    .split(/(\$[^$]+\$)/g)
+    .map((seg) => {
+      if (seg.length > 2 && seg.startsWith('$') && seg.endsWith('$')) {
+        try {
+          return katex.renderToString(seg.slice(1, -1), { throwOnError: false });
+        } catch {
+          return esc(seg);
+        }
+      }
+      return esc(seg);
+    })
+    .join('');
+}
 ---
 
 {
@@ -47,9 +68,7 @@ for (const h of list) {
         <ol>
           {list.map((h) => (
             <li data-level={h.level}>
-              <a href={`#${h.slug}`} data-toc-link={h.slug}>
-                {h.text}
-              </a>
+              <a href={`#${h.slug}`} data-toc-link={h.slug} set:html={renderHeadingText(h.text)} />
             </li>
           ))}
         </ol>
@@ -77,9 +96,7 @@ for (const h of list) {
             ) : (
               <li data-group>
                 <div class="wisp-toc-row">
-                  <a href={`#${head.slug}`} data-toc-link={head.slug}>
-                    {head.text}
-                  </a>
+                  <a href={`#${head.slug}`} data-toc-link={head.slug} set:html={renderHeadingText(head.text)} />
                   <button type="button" class="wisp-toc-sub-toggle" aria-expanded="false" aria-controls={`wisp-toc-sub-${i}`}>
                     <Icon name="chevron-right" class="wisp-toc-chev" />
                     <span class="sr-only">{head.text}</span>
@@ -88,9 +105,7 @@ for (const h of list) {
                 <ol id={`wisp-toc-sub-${i}`}>
                   {kids.map((k) => (
                     <li>
-                      <a href={`#${k.slug}`} data-toc-link={k.slug}>
-                        {k.text}
-                      </a>
+                      <a href={`#${k.slug}`} data-toc-link={k.slug} set:html={renderHeadingText(k.text)} />
                     </li>
                   ))}
                 </ol>
@@ -215,9 +230,11 @@ for (const h of list) {
   .wisp-toc-row {
     display: flex;
     align-items: center;
+    gap: 0.125rem;
   }
+  /* chevron 紧跟文字，而不是被 flex:1 顶到侧栏最右缘 */
   .wisp-toc-row a {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
   }
   .wisp-toc-aside li ol {
@@ -243,6 +260,10 @@ for (const h of list) {
   :global(html[data-toc='collapsed']) .wisp-toc-head {
     justify-content: flex-start;
     margin-bottom: 0;
+  }
+  /* 收起时保留栏宽，避免展开/收起引起正文栅格抖动 */
+  :global(html[data-toc='collapsed']) .wisp-toc-aside {
+    min-width: 9rem;
   }
   :global(html[data-toc='collapsed']) .wisp-toc-toggle :global(.wisp-toc-ico-close) {
     display: none;

@@ -8,8 +8,11 @@ import config from 'virtual:wisp/config';
 
 const all = await getPosts();
 const featured = all.filter((p) => p.data.featured).slice(0, config.home.featuredCount);
-const posts = all.slice(0, config.home.pageSize);
-const totalPages = Math.max(1, Math.ceil(all.length / config.home.pageSize));
+const featuredIds = new Set(featured.map((p) => p.id));
+// “最新文章”不再重复展示精选区的文章（第 1 页补足 pageSize 篇）
+const latest = all.filter((p) => !featuredIds.has(p.id));
+const posts = latest.slice(0, config.home.pageSize);
+const totalPages = Math.max(1, Math.ceil(latest.length / config.home.pageSize));
 const [featuredTimes, times] = await Promise.all([getReadingTimes(featured), getReadingTimes(posts)]);
 ---
 
@@ -53,34 +56,42 @@ const [featuredTimes, times] = await Promise.all([getReadingTimes(featured), get
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
   .home {
-    padding-top: 4rem;
+    padding-top: 3.5rem;
   }
   .home-intro {
-    margin-bottom: 3.5rem;
+    max-width: 50rem;
+    margin-bottom: 3rem;
   }
   .home-intro h1 {
     margin: 0;
-    font-size: 2rem;
+    font-size: 2.5rem;
+    letter-spacing: -0.02em;
   }
   .home-intro p {
-    margin: 0.5rem 0 0;
+    max-width: 36rem;
+    margin: 0.75rem 0 0;
     color: var(--wisp-muted);
+    font-size: 1.0625rem;
+    line-height: 1.65;
   }
   .home-label {
-    margin: 0 0 1.5rem;
+    margin: 0 0 1.25rem;
     font-size: 0.875rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    color: var(--wisp-muted);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--wisp-fg);
   }
   .home-featured {
-    margin-bottom: 3.5rem;
-    padding-bottom: 3rem;
-    border-bottom: 1px solid var(--wisp-border);
+    margin-bottom: 3rem;
+    padding: 1.5rem;
+    background: var(--wisp-surface);
+    border: 1px solid var(--wisp-border);
+    border-radius: 12px;
   }
   .home-featured .home-list {
-    padding-inline-start: 1rem;
-    border-inline-start: 2px solid var(--wisp-accent);
+    gap: 1.5rem;
+    padding-inline-start: 0;
+    border-inline-start: 0;
   }
   .home-list {
     display: flex;

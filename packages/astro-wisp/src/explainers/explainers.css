@@ -85,11 +85,14 @@
 .wisp-player button:hover:not(:disabled) {
   border-color: var(--wisp-accent);
 }
+.wisp-player .wisp-player__play:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--wisp-accent) 88%, var(--wisp-fg));
+}
 .wisp-player button:disabled {
   color: var(--wisp-subtle);
   cursor: not-allowed;
 }
-.wisp-player__play {
+.wisp-player .wisp-player__play {
   background: var(--wisp-accent);
   border-color: var(--wisp-accent);
   color: var(--wisp-accent-fg);

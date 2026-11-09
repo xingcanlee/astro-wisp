@@ -12,6 +12,7 @@ import remarkPele from './plugins/remark-pele';
 import remarkDiagram from './plugins/remark-diagram';
 import remarkReadingTime from './plugins/remark-reading-time';
 import remarkHasMath from './plugins/remark-has-math';
+import remarkHeadingText from './plugins/remark-heading-text';
 import rehypeA11y from './plugins/rehype-a11y';
 import { copyDiagramSources, diagramDevMiddleware } from './lib/diagram-assets';
 import { wispShikiConfig } from './shiki';
@@ -140,7 +141,7 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
           remarkDiagram,
           { dev, downloads: config.features.diagramDownload, siteUrl: String(site), base: astroConfig.base, root },
         ]);
-        remarkPlugins.push(remarkReadingTime, remarkHasMath);
+        remarkPlugins.push(remarkReadingTime, remarkHasMath, remarkHeadingText);
         if (config.features.math) rehypePlugins.push(rehypeKatex);
         rehypePlugins.push(rehypeA11y);
 

@@ -97,8 +97,9 @@ const inlineTitle = position ? `${title} · ${position}` : title;
   .wisp-series a[aria-current='page'] {
     color: var(--wisp-accent);
   }
+  /* 左栏竖线朝内（贴正文一侧），与右栏 TOC 的 border-inline-start 对称 */
   .wisp-series-aside {
-    border-inline-start: 1px solid var(--wisp-border);
+    border-inline-end: 1px solid var(--wisp-border);
   }
   .wisp-series-title {
     margin: 0 0 0.5rem;
@@ -108,12 +109,12 @@ const inlineTitle = position ? `${title} · ${position}` : title;
     letter-spacing: 0.02em;
   }
   .wisp-series-aside a {
-    margin-inline-start: -1px;
+    margin-inline-end: -1px;
     padding-inline: 0.9rem;
-    border-inline-start: 1px solid transparent;
+    border-inline-end: 1px solid transparent;
   }
   .wisp-series-aside a[aria-current='page'] {
-    border-inline-start-color: var(--wisp-accent);
+    border-inline-end-color: var(--wisp-accent);
   }
   .wisp-series-inline {
     margin: 0 0 2.5rem;
@@ -142,6 +143,9 @@ const inlineTitle = position ? `${title} · ${position}` : title;
     transform: rotate(90deg);
   }
   .wisp-series-inline ol {
+    /* 长系列（几十篇）展开时限制高度，避免把正文推出一屏 */
+    max-height: 60vh;
+    overflow-y: auto;
     margin-top: 0.5rem;
   }
   .wisp-series :global(.wisp-series-chev) {

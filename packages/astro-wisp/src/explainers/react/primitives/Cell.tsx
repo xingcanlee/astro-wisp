@@ -13,15 +13,25 @@ export interface CellProps {
   state?: CellState;
   /** 值尚未产生（如未写回的结果） */
   empty?: boolean;
+  /** 覆盖文字字号。默认走 .wisp-explainer__cell-text（16px，不随格子缩放）；
+   * 格子较小或内容较长（如 '0.33'）时应显式传小一号，避免文字溢出互叠。 */
+  fontSize?: number;
+  /** 底色填充强度（0–1），用于热力图；默认 1。 */
+  fillOpacity?: number;
+  /** 热力强度（0–1）：在底色上叠加同色调的亮色层，用于表达数值高低。 */
+  heat?: number;
 }
 
 /** 单个格子。高亮用叠加层的透明度做 150ms 过渡（Motion）；reduced-motion 下直接切换。 */
-export default function Cell({ x, y, size, text, tone, state = 'none', empty = false }: CellProps) {
+export default function Cell({ x, y, size, text, tone, state = 'none', empty = false, fontSize, fillOpacity = 1, heat }: CellProps) {
   const reduce = useReducedMotion();
   const transition = { duration: reduce ? 0 : 0.15, ease: 'easeOut' as const };
   return (
     <g>
-      <rect x={x} y={y} width={size} height={size} rx={4} style={{ fill: toneFill(tone), stroke: toneStroke(tone), strokeWidth: 1.25 }} />
+      <rect x={x} y={y} width={size} height={size} rx={4} style={{ fill: toneFill(tone), fillOpacity, stroke: toneStroke(tone), strokeWidth: 1.25 }} />
+      {heat !== undefined && (
+        <rect x={x} y={y} width={size} height={size} rx={4} style={{ fill: toneStroke(tone), fillOpacity: 0.04 + 0.4 * heat }} />
+      )}
       <motion.rect
         x={x} y={y} width={size} height={size} rx={4}
         initial={false}
@@ -40,7 +50,7 @@ export default function Cell({ x, y, size, text, tone, state = 'none', empty = f
         x={x + size / 2} y={y + size / 2}
         textAnchor="middle" dominantBaseline="central"
         className="wisp-explainer__cell-text"
-        style={{ fill: empty ? 'var(--wisp-muted)' : 'var(--wisp-fg)' }}
+        style={{ fill: empty ? 'var(--wisp-muted)' : 'var(--wisp-fg)', fontSize }}
       >
         {text}
       </text>
