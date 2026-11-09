@@ -20,7 +20,7 @@ describe('remarkPele fixtures', () => {
       const tree = run(fence(readFileSync(join(dir, f), 'utf8').trimEnd()));
       const html = tree.children[1];
       expect(html.type).toBe('html');
-      expect(html.value).toMatch(/^<figure class="wisp-figure wisp-pele"><div class="wisp-pele-body" tabindex="0" role="img" aria-label="[^"]+">/);
+      expect(html.value).toMatch(/^<figure class="wisp-figure wisp-pele"><div class="wisp-pele-body" tabindex="0" role="img" aria-label="[^"]+" style="--pele-w:\d+px">/);
       expect(html.value).toContain('<svg');
       await expect(html.value).toMatchFileSnapshot(`./__snapshots__/${f.replace('.mmd', '')}.svg.html`);
     });

@@ -32,7 +32,7 @@ const times = await getReadingTimes(posts);
       {
         posts.map((post, i) => (
           <li>
-            <PostCard post={post} readingTime={times[i]} headingLevel={2} />
+            <PostCard post={post} readingTime={times[i]} headingLevel={2} showTags={false} />
           </li>
         ))
       }
@@ -50,14 +50,22 @@ const times = await getReadingTimes(posts);
   .list-title {
     margin: 0 0 2.5rem;
     font-size: 2rem;
+    font-weight: 700;
   }
   .list {
     display: flex;
     flex-direction: column;
-    gap: 2.75rem;
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+  .list > li {
+    padding-block: 1.5rem;
+    border-top: 1px solid var(--wisp-border);
+  }
+  .list > li:first-child {
+    padding-top: 0;
+    border-top: 0;
   }
   }
 </style>

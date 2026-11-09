@@ -46,6 +46,12 @@ function textOf(svg: string, tag: 'title' | 'desc'): string {
   return m ? m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
 }
 
+/** SVG 的原始宽度写成 --pele-w，CSS 据此限制最小缩放比例（见 figure.css）。 */
+function widthStyle(svg: string): string {
+  const w = Number(svg.match(/<svg\b[^>]*?\swidth="([\d.]+)"/)?.[1]);
+  return Number.isFinite(w) && w > 0 ? ` style="--pele-w:${Math.round(w)}px"` : '';
+}
+
 export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[], Root>> {
   const { strict = false, dev = false } = options;
   return (tree: Root, file: VFile) => {
@@ -67,7 +73,7 @@ export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[
             // 可横向滚动的容器需要能被键盘聚焦（WCAG scrollable-region-focusable），
             // 所以 role=img + aria-label 放在可聚焦的滚动容器上，而不是 figure 上
             `<figure class="wisp-figure wisp-pele">` +
-            `<div class="wisp-pele-body" tabindex="0" role="img" aria-label="${escAttr(label)}">${r.svg}</div></figure>`,
+            `<div class="wisp-pele-body" tabindex="0" role="img" aria-label="${escAttr(label)}"${widthStyle(r.svg)}>${r.svg}</div></figure>`,
         };
         parent.children[index] = html;
       } catch (err) {
