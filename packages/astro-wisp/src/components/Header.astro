@@ -1,6 +1,7 @@
 ---
 /**
- * 顶栏：高 64px，吸顶。左侧站点名，右侧导航与主题切换。
+ * 顶栏：高 56px，吸顶，实色底 + 发丝线。左侧站点名，右侧导航与主题切换。
+ * 文章页传入 running（书眉）：站点名之后跟「系列 · 05/23」，正文标题滚出视口后再接上章节标题。
  */
 import config from 'virtual:wisp/config';
 import ThemeToggle from 'virtual:wisp/components/ThemeToggle';
@@ -9,9 +10,11 @@ import { sitePath } from '../utils/paths';
 export interface Props {
   /** 当前路径，用于给导航项加 aria-current；默认取 Astro.url.pathname */
   currentPath?: string;
+  /** 书眉：系列名（或分类）、位置、章节标题 */
+  running?: { label: string; href?: string; position?: string; title?: string };
 }
 
-const { currentPath = Astro.url.pathname } = Astro.props;
+const { currentPath = Astro.url.pathname, running } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const routePath = currentPath.startsWith(base) ? `/${currentPath.slice(base.length).replace(/^\/+/, '')}` : currentPath;
 const norm = (p: string) => (p.endsWith('/') ? p : `${p}/`);
@@ -24,6 +27,14 @@ const isCurrent = (href: string) => href !== '/' && norm(decodeURI(routePath)).s
       <span class="wisp-brand-mark" aria-hidden="true"></span>
       <span class="wisp-brand-name">{config.site.title}</span>
     </a>
+    {running && (
+      <p class="wisp-running" data-wisp-running>
+        <span class="wisp-running-sep" aria-hidden="true">/</span>
+        {running.href ? <a href={running.href} class="wisp-running-label">{running.label}</a> : <span class="wisp-running-label">{running.label}</span>}
+        {running.position && <span class="wisp-running-pos">{running.position}</span>}
+        {running.title && <span class="wisp-running-title" aria-hidden="true">{running.title}</span>}
+      </p>
+    )}
     <nav aria-label="主导航" class="wisp-nav">
       <ul>
         {
@@ -41,10 +52,25 @@ const isCurrent = (href: string) => href !== '/' && norm(decodeURI(routePath)).s
   </div>
 </header>
 
+{running?.title && (
+  <script is:inline>
+    // 页眉先于 <main> 解析，等文档解析完再找正文标题
+    addEventListener('DOMContentLoaded', () => {
+      const head = document.querySelector('[data-wisp-running]');
+      const h1 = document.querySelector('main h1');
+      if (!head || !h1 || !('IntersectionObserver' in window)) return;
+      new IntersectionObserver(([e]) => {
+        head.toggleAttribute('data-past-title', !e.isIntersecting && e.boundingClientRect.top < 0);
+      }, { rootMargin: '-56px 0px 0px 0px' }).observe(h1);
+    });
+  </script>
+)}
+
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
   /* 吸顶顶栏：半透明底 + 背景模糊，滚动时正文从下方淡淡透出；不支持时回落为实色 */
+  /* 实色底 + 一条发丝线：手册的书眉，不做毛玻璃 */
   .wisp-header {
     position: sticky;
     top: 0;
@@ -52,18 +78,62 @@ const isCurrent = (href: string) => href !== '/' && norm(decodeURI(routePath)).s
     background-color: var(--wisp-bg);
     border-bottom: 1px solid var(--wisp-border);
   }
-  @supports (backdrop-filter: blur(1px)) {
-    .wisp-header {
-      background-color: color-mix(in srgb, var(--wisp-bg) 82%, transparent);
-      backdrop-filter: saturate(1.4) blur(12px);
-    }
-  }
   .wisp-header-inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 1rem;
-    height: 64px;
+    height: var(--wisp-header-h);
+  }
+  .wisp-header-inner > .wisp-nav {
+    margin-inline-start: auto;
+  }
+
+  /* 书眉：站点名 / 系列 · 05/23 · 章节标题（标题滚出视口后淡入） */
+  .wisp-running {
+    display: none;
+    align-items: baseline;
+    gap: 0.625rem;
+    min-width: 0;
+    margin: 0;
+    color: var(--wisp-muted);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  @media (min-width: 60rem) {
+    .wisp-running {
+      display: flex;
+    }
+  }
+  .wisp-running-sep {
+    color: var(--wisp-subtle);
+  }
+  .wisp-running-label {
+    color: var(--wisp-fg);
+    font-weight: 500;
+    transition: color 150ms;
+  }
+  a.wisp-running-label:hover {
+    color: var(--wisp-accent);
+  }
+  .wisp-running-pos {
+    color: var(--wisp-accent);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+  .wisp-running-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transform: translateY(0.25rem);
+    transition:
+      opacity 200ms var(--wisp-ease),
+      transform 200ms var(--wisp-ease);
+  }
+  .wisp-running[data-past-title] .wisp-running-title {
+    opacity: 1;
+    transform: none;
   }
   .wisp-brand {
     display: inline-flex;
@@ -73,7 +143,7 @@ const isCurrent = (href: string) => href !== '/' && norm(decodeURI(routePath)).s
     min-height: 2.75rem;
     color: var(--wisp-fg);
     font-weight: 650;
-    font-size: 1.0625rem;
+    font-size: 1rem;
     letter-spacing: 0.01em;
     white-space: nowrap;
   }
@@ -83,7 +153,7 @@ const isCurrent = (href: string) => href !== '/' && norm(decodeURI(routePath)).s
     flex: none;
     width: 1.125rem;
     height: 1.125rem;
-    border-radius: 4px;
+    border-radius: 3px;
     background: var(--wisp-accent);
     transition: transform 220ms var(--wisp-ease);
   }
@@ -131,7 +201,7 @@ const isCurrent = (href: string) => href !== '/' && norm(decodeURI(routePath)).s
     min-height: 2.75rem;
     padding-inline: 0.75rem;
     color: var(--wisp-muted);
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     transition: color 150ms;
     white-space: nowrap;
   }
@@ -147,7 +217,7 @@ const isCurrent = (href: string) => href !== '/' && norm(decodeURI(routePath)).s
   }
   .wisp-nav a[aria-current='page'] .wisp-draw {
     background-image: linear-gradient(var(--wisp-accent), var(--wisp-accent));
-    background-size: 100% 2px;
+    background-size: 100% 1px;
   }
   @media (max-width: 23.99rem) {
     .wisp-header-inner {

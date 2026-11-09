@@ -36,6 +36,26 @@ for (const h of list) {
   else groups.push({ head: h, kids: [] });
 }
 
+// 章节编号：h2 为 1、2、3…，h3 为 1.1、1.2…；与正文 .prose h2/h3 的 CSS 计数器一致。
+// 只在顶层是 h2 时编号（正文计数器同样只数 h2 及其下的 h3）。
+const numberOn = minDepth === 2;
+const numbers = new Map<string, string>();
+{
+  let a = 0;
+  let b = 0;
+  for (const h of list) {
+    if (h.level === 0) {
+      a += 1;
+      b = 0;
+      numbers.set(h.slug, String(a));
+    } else if (a > 0) {
+      b += 1;
+      numbers.set(h.slug, `${a}.${b}`);
+    }
+  }
+}
+const no = (slug: string) => (numberOn ? numbers.get(slug) : undefined);
+
 // 标题中的 $...$ 行内公式：正文已由 rehype-katex 渲染，目录链接需在构建时同样渲染，
 // 否则侧边栏/折叠目录里显示原始 $...$ 源码。非公式段做 HTML 转义后经 set:html 输出。
 function renderHeadingText(text: string): string {
@@ -68,7 +88,10 @@ function renderHeadingText(text: string): string {
         <ol>
           {list.map((h) => (
             <li data-level={h.level}>
-              <a href={`#${h.slug}`} data-toc-link={h.slug} set:html={renderHeadingText(h.text)} />
+              <a href={`#${h.slug}`} data-toc-link={h.slug}>
+                {no(h.slug) && <span class="wisp-toc-no">{no(h.slug)}</span>}
+                <span set:html={renderHeadingText(h.text)} />
+              </a>
             </li>
           ))}
         </ol>
@@ -90,13 +113,17 @@ function renderHeadingText(text: string): string {
             kids.length === 0 ? (
               <li>
                 <a href={`#${head.slug}`} data-toc-link={head.slug}>
-                  {head.text}
+                  {no(head.slug) && <span class="wisp-toc-no">{no(head.slug)}</span>}
+                  <span set:html={renderHeadingText(head.text)} />
                 </a>
               </li>
             ) : (
               <li data-group>
                 <div class="wisp-toc-row">
-                  <a href={`#${head.slug}`} data-toc-link={head.slug} set:html={renderHeadingText(head.text)} />
+                  <a href={`#${head.slug}`} data-toc-link={head.slug}>
+                    {no(head.slug) && <span class="wisp-toc-no">{no(head.slug)}</span>}
+                    <span set:html={renderHeadingText(head.text)} />
+                  </a>
                   <button type="button" class="wisp-toc-sub-toggle" aria-expanded="false" aria-controls={`wisp-toc-sub-${i}`}>
                     <Icon name="chevron-right" class="wisp-toc-chev" />
                     <span class="sr-only">{head.text}</span>
@@ -105,7 +132,10 @@ function renderHeadingText(text: string): string {
                 <ol id={`wisp-toc-sub-${i}`}>
                   {kids.map((k) => (
                     <li>
-                      <a href={`#${k.slug}`} data-toc-link={k.slug} set:html={renderHeadingText(k.text)} />
+                      <a href={`#${k.slug}`} data-toc-link={k.slug}>
+                        {no(k.slug) && <span class="wisp-toc-no">{no(k.slug)}</span>}
+                        <span set:html={renderHeadingText(k.text)} />
+                      </a>
                     </li>
                   ))}
                 </ol>
@@ -138,16 +168,33 @@ function renderHeadingText(text: string): string {
   .wisp-toc li[data-level='2'] {
     padding-inline-start: 1.8rem;
   }
+  /* 编号 + 标题两列：编号等宽数字、subtle 色，换行后标题悬挂对齐 */
   .wisp-toc a {
-    display: block;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
     padding-block: 0.3rem;
     color: var(--wisp-muted);
     transition: color 150ms;
+  }
+  .wisp-toc-no {
+    flex: none;
+    min-width: 1.25rem;
+    color: var(--wisp-subtle);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    transition: color 150ms;
+  }
+  li ol .wisp-toc-no {
+    min-width: 1.75rem;
   }
   .wisp-toc a:hover {
     color: var(--wisp-fg);
   }
   .wisp-toc a[aria-current='true'] {
+    color: var(--wisp-fg);
+  }
+  .wisp-toc a[aria-current='true'] .wisp-toc-no {
     color: var(--wisp-accent);
   }
   .wisp-toc :global(.wisp-toc-chev) {
@@ -173,7 +220,6 @@ function renderHeadingText(text: string): string {
     color: var(--wisp-fg);
     font-weight: 600;
     font-size: 0.875rem;
-    letter-spacing: 0.01em;
   }
   .wisp-toc-toggle,
   .wisp-toc-sub-toggle {
@@ -185,7 +231,7 @@ function renderHeadingText(text: string): string {
     height: 1.75rem;
     padding: 0;
     border: 0;
-    border-radius: 6px;
+    border-radius: 4px;
     background: none;
     color: var(--wisp-muted);
     font-size: 1rem;
@@ -218,22 +264,16 @@ function renderHeadingText(text: string): string {
   }
   .wisp-toc-aside a {
     margin-inline-start: -1px;
-    padding: 0.3rem 0.5rem 0.3rem 0.875rem;
-    border-inline-start: 2px solid transparent;
-    border-radius: 0 6px 6px 0;
+    padding: 0.3rem 0.25rem 0.3rem 0.875rem;
+    border-inline-start: 1px solid transparent;
     font-size: 0.8125rem;
+    line-height: 1.5;
     transition:
       color 150ms,
-      background-color 150ms,
       border-color 150ms;
-  }
-  .wisp-toc-aside a:hover {
-    background-color: var(--wisp-surface);
   }
   .wisp-toc-aside a[aria-current='true'] {
     border-inline-start-color: var(--wisp-accent);
-    background-color: var(--wisp-surface);
-    color: var(--wisp-fg);
     font-weight: 500;
   }
   .wisp-toc-row {
@@ -250,7 +290,7 @@ function renderHeadingText(text: string): string {
     border-inline-start: 0;
   }
   .wisp-toc-aside li ol a {
-    padding-inline-start: 1.75rem;
+    padding-inline-start: 1.625rem;
     font-size: 0.78125rem;
   }
 
@@ -288,8 +328,7 @@ function renderHeadingText(text: string): string {
 
   .wisp-toc-inline {
     margin: 0 0 2.5rem;
-    padding-block: 0.75rem;
-    border-block: 1px solid var(--wisp-border);
+    border-bottom: 1px solid var(--wisp-border);
   }
   .wisp-toc-inline summary {
     display: flex;
@@ -298,7 +337,8 @@ function renderHeadingText(text: string): string {
     gap: 0.35rem;
     cursor: pointer;
     color: var(--wisp-muted);
-    font-weight: 600;
+    font-size: 0.875rem;
+    font-weight: 500;
     list-style: none;
     transition: color 150ms;
   }
@@ -313,7 +353,7 @@ function renderHeadingText(text: string): string {
     transform: rotate(90deg);
   }
   .wisp-toc-inline ol {
-    margin-top: 0.5rem;
+    padding-bottom: 0.75rem;
   }
   }
 </style>

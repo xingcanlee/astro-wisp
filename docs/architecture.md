@@ -36,7 +36,7 @@ astro-wisp/
 │     ├─ fonts.ts                    # Astro Fonts API 字体族（Inter、JetBrains Mono、Excalifont）
 │     ├─ content.ts                  # postsLoader/postsSchema、pagesLoader/pagesSchema（astro-wisp/content）
 │     ├─ routes/                     # 注入的页面（index、page/[page]、posts/[...id]、tags、categories、archive、about、rss、404）
-│     ├─ layouts/{Base,Post,Page}.astro        # 可覆盖
+│     ├─ layouts/{Base,Post,Page}.astro        # 可覆盖；Base 与 Header 接收可选的 running prop（书眉）
 │     ├─ components/*.astro          # 可覆盖
 │     ├─ plugins/                    # remark-pele、remark-diagram、remark-reading-time、remark-has-math、rehype-a11y
 │     ├─ lib/                        # render-diagram（图表渲染与 manifest 只读校验）、diagram-assets、icons

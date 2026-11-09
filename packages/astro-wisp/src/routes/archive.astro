@@ -1,6 +1,6 @@
 ---
 import Page from 'virtual:wisp/components/Page';
-import { getPosts, groupByYear } from '../utils/posts';
+import { getPosts, groupByYear, summarizeSeries } from '../utils/posts';
 import { formatDate } from '../utils/date';
 import { toISODate } from '../utils/date';
 import config from 'virtual:wisp/config';
@@ -8,6 +8,7 @@ import { sitePath } from '../utils/paths';
 
 const posts = await getPosts();
 const groups = groupByYear(posts);
+const seriesName = new Map(summarizeSeries(posts).map((s) => [s.id, s.title.split(/[：:]/)[0]!.trim()]));
 const short = (d: Date) => `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 ---
 
@@ -25,6 +26,7 @@ const short = (d: Date) => `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${St
                 {short(p.data.pubDate)}
               </time>
               <a href={sitePath(import.meta.env.BASE_URL, `/posts/${p.id}/`)} lang={p.data.lang}>{p.data.title}</a>
+              <span class="part">{p.data.series ? seriesName.get(p.data.series.id) : ''}</span>
             </li>
           ))}
         </ul>
@@ -36,36 +38,45 @@ const short = (d: Date) => `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${St
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
+  /* 每年一张三线表：日期 | 标题 | 所属系列 */
   .year + .year {
-    margin-top: 2.5rem;
+    margin-top: 3rem;
   }
   h2 {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
     margin: 0 0 0.75rem;
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
   .count {
-    margin-inline-start: 0.4em;
-    font-size: 0.875rem;
+    color: var(--wisp-muted);
+    font-size: 0.8125rem;
     font-weight: 400;
-    color: var(--wisp-subtle);
   }
   ul {
     margin: 0;
     padding: 0;
     list-style: none;
+    border-top: 1px solid var(--wisp-fg);
+    border-bottom: 1px solid var(--wisp-fg);
   }
   li {
-    display: flex;
-    gap: 1.25rem;
+    display: grid;
+    grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+    gap: 1rem;
     align-items: baseline;
-    padding-block: 0.35rem;
+    padding-block: 0.5rem;
   }
-  time {
-    flex: none;
+  li + li {
+    border-top: 1px solid var(--wisp-border);
+  }
+  time,
+  .part {
     color: var(--wisp-muted);
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     font-variant-numeric: tabular-nums;
   }
   a {
@@ -74,6 +85,14 @@ const short = (d: Date) => `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${St
   }
   a:hover {
     color: var(--wisp-accent);
+  }
+  @media (max-width: 39.99rem) {
+    li {
+      grid-template-columns: 3.25rem minmax(0, 1fr);
+    }
+    .part {
+      display: none;
+    }
   }
   }
 </style>

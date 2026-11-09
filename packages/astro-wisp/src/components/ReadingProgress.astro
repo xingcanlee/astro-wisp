@@ -11,10 +11,11 @@
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
   .wisp-progress {
+    /* 压在页眉底部的发丝线上：阅读进度就是书眉下沿的一条强调色线 */
     position: fixed;
-    inset: 0 0 auto 0;
-    z-index: 50;
-    height: 2px;
+    inset: calc(var(--wisp-header-h) - 1px) 0 auto 0;
+    z-index: 21;
+    height: 1px;
     background: var(--wisp-accent);
     transform: scaleX(0);
     transform-origin: left;

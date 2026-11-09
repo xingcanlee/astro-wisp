@@ -5,7 +5,6 @@
  */
 import config from 'virtual:wisp/config';
 import { formatDate, toISODate } from '../utils/date';
-import Icon from 'virtual:wisp/components/Icon';
 import { sitePath } from '../utils/paths';
 import { slugify } from '../utils/taxonomy';
 
@@ -33,7 +32,6 @@ const slugMap = config.taxonomy.slugMap;
 
 <div class:list={['wisp-meta', className]}>
   <span class="wisp-meta-item">
-    <Icon name="calendar" size="0.95em" />
     <time datetime={toISODate(pubDate)}>{formatDate(pubDate, lang)}</time>
   </span>
   {
@@ -47,16 +45,14 @@ const slugMap = config.taxonomy.slugMap;
   {
     readingTime != null && (
       <span class="wisp-meta-item">
-        <Icon name="clock" size="0.95em" />
-        {zh ? `${readingTime} 分钟` : `${readingTime} min read`}
+            {zh ? `${readingTime} 分钟` : `${readingTime} min read`}
       </span>
     )
   }
   {
     category && (
       <span class="wisp-meta-item">
-        <Icon name="folder" size="0.95em" />
-        <a href={sitePath(import.meta.env.BASE_URL, `/categories/${slugify(category, slugMap)}/`)}>{category}</a>
+            <a href={sitePath(import.meta.env.BASE_URL, `/categories/${slugify(category, slugMap)}/`)}>{category}</a>
       </span>
     )
   }
@@ -81,7 +77,7 @@ const slugMap = config.taxonomy.slugMap;
     column-gap: 0;
     row-gap: 0.25em;
     color: var(--wisp-muted);
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     line-height: 1.6;
     font-variant-numeric: tabular-nums;
   }
@@ -94,11 +90,6 @@ const slugMap = config.taxonomy.slugMap;
     display: inline-flex;
     align-items: baseline;
     gap: 0.35em;
-  }
-  .wisp-meta-item :global(.wisp-icon) {
-    color: var(--wisp-subtle);
-    align-self: center;
-    vertical-align: baseline;
   }
   .wisp-meta a {
     color: var(--wisp-muted);

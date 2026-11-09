@@ -2,6 +2,7 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import type { Step } from '../core/timeline';
 import { labelsFor, type PlayerLabels } from './labels';
 import { SPEEDS, usePlayer } from './usePlayer';
+import PlayerIcon from './PlayerIcon';
 import '../explainers.css';
 
 export interface PlayerProps<S> {
@@ -70,8 +71,8 @@ export default function Player<S>({ steps, label, children, lang, labels }: Play
 
       <div className="wisp-player__controls">
         <div className="wisp-player__buttons">
-          <button type="button" aria-label={t.first} title={`${t.first} (${t.keys.first})`} onClick={p.first} disabled={atFirst}>⏮</button>
-          <button type="button" aria-label={t.prev} title={`${t.prev} (${t.keys.prev})`} onClick={p.prev} disabled={atFirst}>◀</button>
+          <button type="button" aria-label={t.first} title={`${t.first} (${t.keys.first})`} onClick={p.first} disabled={atFirst}><PlayerIcon name="first" /></button>
+          <button type="button" aria-label={t.prev} title={`${t.prev} (${t.keys.prev})`} onClick={p.prev} disabled={atFirst}><PlayerIcon name="prev" /></button>
           <button
             type="button"
             className="wisp-player__play"
@@ -80,10 +81,10 @@ export default function Player<S>({ steps, label, children, lang, labels }: Play
             title={`${playLabel} (${t.keys.toggle})`}
             onClick={p.toggle}
           >
-            {p.playing ? '⏸' : '▶'}
+            <PlayerIcon name={p.playing ? 'pause' : 'play'} />
           </button>
-          <button type="button" aria-label={t.next} title={`${t.next} (${t.keys.next})`} onClick={p.next} disabled={atLast}>▶</button>
-          <button type="button" aria-label={t.last} title={`${t.last} (${t.keys.last})`} onClick={p.last} disabled={atLast}>⏭</button>
+          <button type="button" aria-label={t.next} title={`${t.next} (${t.keys.next})`} onClick={p.next} disabled={atLast}><PlayerIcon name="next" /></button>
+          <button type="button" aria-label={t.last} title={`${t.last} (${t.keys.last})`} onClick={p.last} disabled={atLast}><PlayerIcon name="last" /></button>
         </div>
 
         <input

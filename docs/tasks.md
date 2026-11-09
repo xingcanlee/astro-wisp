@@ -7,7 +7,7 @@
 1. **开工前阅读**：`CLAUDE.md`、`docs/README.md`，以及任务卡中“必读”列出的文档章节。
 2. **文件所有权**：每个任务只能创建或修改自己“拥有文件”列出的路径。需要改动别的文件时，**不要改**，在最终报告的“跨任务请求”一节中写明。
 3. **依赖**：不要修改 `package.json`，不要安装依赖。依赖由编排者在 T0 统一安装；缺少依赖时在报告里提出。
-4. **颜色**：禁止硬编码颜色，一律通过令牌引用（见 design-system.md）。
+4. **颜色**：禁止硬编码颜色，一律通过令牌引用（见 design-system.md，外观规范见 ../DESIGN.md）。
 5. **自测**：每个任务结束前必须通过 `pnpm exec tsc --noEmit -p .`，以及本任务相关的 `pnpm exec vitest run <path>`。
 6. **报告格式**（最终回复）：已完成 / 拥有文件清单 / 测试结果（贴出命令和输出摘要）/ 偏离设计之处及理由 / 跨任务请求 / 遗留问题。
 7. **不提交 git**，由编排者统一提交。
@@ -50,7 +50,7 @@ W4  ├─ T15 质量：a11y、对比度、视觉回归、Lighthouse (sonnet)
 - 验收：`pnpm dev` 能启动，`pnpm build` 能通过（空站点）。
 
 ### T1 令牌生成（sonnet）
-- 必读：design-system.md §1、§6；diagrams.md §3.2–3.3、§7。
+- 必读：design-system.md §1，../DESIGN.md（Colors、Do's and Don'ts）；diagrams.md §3.2–3.3、§7。
 - 拥有：`scripts/gen-tokens.ts`、`scripts/check-contrast.ts`、`src/wisp/styles/{tokens.css,pele.css,diagram.css}`（生成文件）、`skills/wisp-diagram/palette.json`（同步副本）、`scripts/__tests__/tokens.test.ts`。
 - 产出：
   - `tokens.css`：基础色、hue、语义色、字体变量，包含 light 和 dark 两套；
@@ -89,7 +89,7 @@ W4  ├─ T15 质量：a11y、对比度、视觉回归、Lighthouse (sonnet)
 - 验收：`tests/fixtures/diagrams/` 中的 hand 和 clean 样例都能生成 `.wisp.svg`；生成的 SVG 作为 `<img>` 打开时随系统主题切换；内联到 `data-theme=dark` 的页面时跟随站点主题（用 Playwright 截图验证，截图附在报告中）。draw.io 导出方式全部不可用时，给出清晰的报错。
 
 ### T6 示例内容（haiku）
-- 必读：architecture.md §3，design-system.md §2。
+- 必读：architecture.md §3，../DESIGN.md（Typography）。
 - 拥有：`src/content/posts/**`（示例文章）、`src/content/pages/about.md`。
 - 产出：至少 6 篇文章，覆盖：中英混排长文、代码块（多种语言、长行）、行内和块级公式、每种类型的 Mermaid 各一个、表格、引用、脚注、草稿一篇、featured 两篇、多个标签和分类（含中文标签）；一篇 `kitchen-sink.mdx` 汇总全部元素（图表引用暂时写成注释形式，T11 完成后启用）。
 
@@ -99,9 +99,9 @@ W4  ├─ T15 质量：a11y、对比度、视觉回归、Lighthouse (sonnet)
 - 验收：`matmul(A, B)` 的步骤数为 m·n·k（再加上起止帧）；caption 正确；非法尺寸会抛错；在 node 环境下运行，不依赖 DOM。
 
 ### T8 布局、全局样式、字体、基础组件（opus）
-- 必读：design-system.md 全文，architecture.md §6、§8。
+- 必读：design-system.md 全文，../DESIGN.md 全文，architecture.md §6、§8。
 - 拥有：`src/layouts/**`、`src/wisp/styles/{global,prose,katex}.css`、`src/wisp/components/{Header,Footer,ThemeToggle,PostCard,PostMeta,TagList,Toc,SkipLink,Pagination,Figure}.astro`。
-- 产出：Base 布局（head 中的主题脚本、字体导入、meta/OG 标签、`lang` 属性）；Post 布局（TOC 的两种形态、上一篇/下一篇、按需引入 katex.css）；design-system.md §2 的全部中文排版规则；组件的 props 接口写在文件顶部，并带 JSDoc。
+- 产出：Base 布局（head 中的主题脚本、字体导入、meta/OG 标签、`lang` 属性）；Post 布局（TOC 的两种形态、上一篇/下一篇、按需引入 katex.css）；DESIGN.md Typography 的全部中文排版规则；组件的 props 接口写在文件顶部，并带 JSDoc。
 - 验收：在 light、dark、system 三种主题下首屏无闪烁（Playwright 测试：禁用 JS 缓存后读取首帧的背景色）；375px、768px、1280px 三个宽度的截图附在报告中；键盘能完成整页导航。
 
 ### T9 页面路由、RSS、Sitemap、404（sonnet）
@@ -110,7 +110,7 @@ W4  ├─ T15 质量：a11y、对比度、视觉回归、Lighthouse (sonnet)
 - 验收：architecture.md §5 中的所有路由都能构建出来；rss.xml 能通过校验（使用 W3C feed validator 的离线规则或 `fast-xml-parser` 检查结构）；中文标签页面能访问。
 
 ### T10 Shiki、代码块、复制按钮（sonnet）
-- 必读：design-system.md §1.3、§4。
+- 必读：design-system.md §1.3，../DESIGN.md（Components）。
 - 拥有：`src/wisp/shiki.ts`、`src/wisp/styles/code.css`、`src/wisp/components/CopyButton.astro`（或内联脚本）。
 - 验收：双主题切换不需要重新渲染；行号不会被选中或复制；复制按钮有键盘焦点和 aria-live 反馈；`features.lineNumbers` 和 `features.codeCopy` 开关生效；注释颜色对比度 ≥ 4.5:1。
 
@@ -121,7 +121,7 @@ W4  ├─ T15 质量：a11y、对比度、视觉回归、Lighthouse (sonnet)
 - 验收：标准图片语法和 MDX 组件两种写法渲染结果一致；SVG 中的 id 在页面内唯一；下载链接在 dev 和 build 中都可用；缺少 `.wisp.svg` 时，dev 显示占位块，build 报错；`#page=` 能选择 draw.io 页面。
 
 ### T12 Player + MatMul React 组件（sonnet）
-- 必读：explainers.md 全文，design-system.md §5。
+- 必读：explainers.md 全文，../DESIGN.md（Components、Do's and Don'ts）。
 - 拥有：`src/explainers/react/**`、`src/explainers/explainers.css`。
 - 验收：SSR 输出第一帧；键盘操作完整；reduced-motion 下不自动播放；只使用令牌颜色；375px 宽度下可用。
 

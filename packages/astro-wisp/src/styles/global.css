@@ -46,7 +46,7 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     /* 顶栏高 64px：锚点跳转后标题不会被吸顶顶栏遮挡 */
-    scroll-padding-top: 4rem;
+    scroll-padding-top: calc(var(--wisp-header-h) + 1.5rem);
   }
   @media (min-width: 48rem) {
     html {
@@ -140,6 +140,7 @@
   --wisp-shell: calc(var(--wisp-measure) + 2 * var(--wisp-side) + 2 * var(--wisp-gutter));
   --wisp-pad: 20px;
   --wisp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --wisp-header-h: 56px;
 }
 @media (min-width: 48rem) {
   :root {
@@ -175,17 +176,6 @@
     text-decoration-thickness: 2px;
   }
 
-  /* 小标签：区块名、侧栏标题、卡片眉题 */
-  .wisp-eyebrow {
-    margin: 0;
-    color: var(--wisp-muted);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    line-height: 1.5;
-    text-transform: uppercase;
-  }
-
   /* 按钮：一套主按钮 + 一套次按钮；悬停上移 1px，按下回落 */
   .wisp-btn {
     display: inline-flex;
@@ -194,7 +184,7 @@
     min-height: 2.75rem;
     padding: 0 1.125rem;
     border: 1px solid var(--wisp-border);
-    border-radius: 8px;
+    border-radius: 4px;
     background: var(--wisp-bg);
     color: var(--wisp-fg);
     font-size: 0.9375rem;

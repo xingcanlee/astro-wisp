@@ -10,7 +10,7 @@
   --pele-border: var(--wisp-border);
   --pele-accent: var(--wisp-accent);
   --pele-font: var(--wisp-font-sans);
-  --pele-radius: 8px;
+  --pele-radius: 4px;
   --pele-series-1: var(--wisp-hue-blue);
   --pele-series-2: var(--wisp-hue-amber);
   --pele-series-3: var(--wisp-hue-green);
