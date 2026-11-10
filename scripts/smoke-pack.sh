@@ -20,7 +20,7 @@ node -e '
 ' "$WORK/site" "$TARBALL"
 
 cd "$WORK/site"
-pnpm install --ignore-workspace --no-frozen-lockfile
+pnpm install --no-frozen-lockfile
 pnpm build
 pnpm exec astro check
 echo "smoke-pack: OK ($(basename "$TARBALL"))"
