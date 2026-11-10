@@ -3,6 +3,7 @@
 页面挂在虚拟源 http://wisp.local/ 下：
 - `/` 为页面 HTML；`files` / `mounts` 提供内存内容或本地目录；
 - `/npm/...` 映射到 jsDelivr（https://cdn.jsdelivr.net/npm/...），经本地缓存（cdn.py）提供；
+- `proxies` 把指定路径前缀映射到远端目录（同样经本地缓存），用于 draw.io 的 MathJax；
 - 其余网络请求一律拦截，保证导出离线、可复现。
 """
 from __future__ import annotations
@@ -183,6 +184,7 @@ class BrowserSession:
         html: str | None = None,
         files: dict[str, bytes | str] | None = None,
         mounts: dict[str, str | Path] | None = None,
+        proxies: dict[str, str] | None = None,
         color_scheme: str = "light",
         device_scale_factor: float = 1,
         viewport: dict | None = None,
@@ -240,6 +242,20 @@ class BrowserSession:
                     body = dedupe_js(body)
                 route.fulfill(body=body, content_type=_mime(p))
                 return
+            for prefix, remote in (proxies or {}).items():
+                if p.startswith(prefix):
+                    full = remote.rstrip("/") + "/" + parts.path[len(prefix):].lstrip("/")
+                    try:
+                        if not cdn.is_cached(full):
+                            session.downloads += 1
+                        route.fulfill(body=cdn.fetch(full, quiet=True), content_type=_mime(p))
+                    except cdn.OfflineMiss:
+                        missing.append(full)
+                        route.fulfill(status=503, body="offline cache miss")
+                    except WispError as e:
+                        errors.append(str(e))
+                        route.fulfill(status=503, body=str(e))
+                    return
             for prefix, d in mts:
                 if p.startswith(prefix):
                     rel = p[len(prefix):]

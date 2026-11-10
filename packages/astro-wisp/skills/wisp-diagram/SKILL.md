@@ -37,6 +37,7 @@ $W probe                                                       # 查看 Chromium
 | svgo 4.1.0 浏览器构建（SVG 精简，在 Chromium 中运行） | jsDelivr | 0.8 MB |
 | 字体：Excalifont、Inter 5.3.0、Noto Sans SC 5.3.1（按 unicode-range 分片，用到哪片下哪片） | jsDelivr | 全部 ≈ 4.5 MB |
 | draw.io viewer（只在 browser 导出方式下） | viewer.diagrams.net | ≈ 4.7 MB |
+| draw.io 的 MathJax 构建（只在 browser 导出方式下、图里有公式时） | viewer.diagrams.net | ≈ 2 MB |
 
 除 Python 依赖与 Chromium 外，缓存都在 `~/.cache/wisp-diagram/`（可用 `WISP_DIAGRAM_CACHE` 改位置）。`$W cache status` 查看，`$W cache clear` 清空。
 
@@ -54,6 +55,8 @@ draw.io 导出按 cli → docker → browser 顺序自动回退。`new`、`build
 | 逐步演示、可交互 | 不属于本 skill（React 组件） | — |
 
 原则：能用 Mermaid 讲清楚就别画图；手绘风格不超过约 12 个节点；同一篇文章里风格统一。
+
+**先定画布再动笔：宽 640px。** Wisp 的正文栏约 650px，图比它宽就会被等比缩小、字跟着变小。所以主流向从上到下，并列的分支排成 2–3 列（每列约 190–300px），长流程往下长而不是往右长。lint 会对超过 720px 的图给出 `width` 警告。
 
 ## 2. 工作流（5 步）
 
@@ -139,6 +142,9 @@ $W export diagrams/attention.wisp.svg --theme dark  -o /tmp/attention.dark.png
 | 圆角 | 矩形/容器圆角：Excalidraw `round`，draw.io `rounded=1;arcSize=8` |
 | 填充 | 纯色填充，使用 hue 的 fill；**禁止渐变** |
 | 阴影 | **禁止** |
+| 宽度 | 自然宽度 **640–680px**（正文栏宽）；超过 720px lint 警告，超过 1000px 字已看不清 |
+| 流向 | 从上到下；连线横平竖直，拐弯走直角（骨架用 `via`，draw.io 用 `edgeStyle=orthogonalEdgeStyle`） |
+| 公式 | 只在 draw.io 里用：页面 `math="1"`，标签写 `\(...\)`（见 drawio-cheatsheet「公式」）；Excalidraw 用 Unicode（Kᵀ、√d、Σ） |
 | 字体 | Excalidraw 用 Excalifont（中文回落 Noto Sans SC，**不用小赖体**）；draw.io 用 `Inter` |
 | 手绘 | `roughness: 1`；draw.io 不用 `sketch=1` |
 | 背景 | 不画背景矩形，保持透明 |
@@ -146,13 +152,14 @@ $W export diagrams/attention.wisp.svg --theme dark  -o /tmp/attention.dark.png
 
 ## 5. 自检清单
 
-- [ ] lint `--strict` 通过：无非调色板颜色、无阴影/渐变、字号合规、元素在 8px 网格上
+- [ ] lint `--strict` 通过：无非调色板颜色、无阴影/渐变、字号合规、元素在 8px 网格上、宽度不超过 720px
+- [ ] 流程从上到下，连线横平竖直；没有一字排开被缩小的长流程
 - [ ] 语义色用对：Q 蓝、K 琥珀、V 绿、权重紫、激活青、梯度/损失玫红、偏置橙、掩码/输入灰
 - [ ] 一张图只讲一件事，节点 ≤ 12（手绘）
 - [ ] 连线不穿过节点、不交叉；短连线（间距 < 96px）上没有标签
 - [ ] 中文标签每行 ≤ 8–10 个汉字，没有被截断
-- [ ] 有标题（`size: "title"` 的文本 / draw.io 页面名）和一句注释
-- [ ] light 和 dark 的预览 PNG 都用 Read 看过
+- [ ] 放进文章的图不在图里写标题（题注承担）；draw.io 页面名有意义；需要时在最下方加一两句注释
+- [ ] light 和 dark 的预览 PNG 都用 Read 看过：公式排成了公式（不是 `\(...\)` 原文），标签没有溢出节点
 - [ ] 已生成 `.wisp.svg`，且源文件修改后重新 build 过
 - [ ] alt 文本有意义
 
@@ -191,8 +198,13 @@ alt 写入 SVG 的 `<title>`，引号中的说明成为图注；`#page=<页面�
 | 手写完整 Excalidraw 元素 | 只写骨架，用 `$W new` 转换 |
 | 在编辑器里用了调色板外的颜色（吸管、默认色） | 用素材库；lint `--fix` 吸附；仍报错就改源文件 |
 | 手选暗色值作画 | 只用浅色值，暗色靠 SVG 自动切换 |
-| 骨架箭头穿过第三个节点 | 箭头是中心连线上的直线；调整布局，或改用 draw.io 折线 |
-| 短连线加标签，标签压住箭头头部 | 节点间距 ≥ 96 再加标签，否则去掉标签 |
+| 图画成横向一长条，放进文章被缩到看不清 | 画布宽 640px，流程从上到下，分支并排成列 |
+| 图里的标题和题注重复 | 文章里的图不写标题 |
+| 骨架箭头穿过第三个节点 | 调整布局让节点正对，或用 `via` 给拐点；复杂走线改用 draw.io 折线 |
+| 一堆斜线箭头，看着乱 | 节点摆在行、列上（投影重叠即可），箭头自动横平竖直 |
+| draw.io 标签里的 `\(...\)` 原样显示 | 页面要写 `math="1"`（lint 的 `math` 规则会报错） |
+| 公式把节点撑破 | 公式不换行：加宽节点或拆成两行，写完看预览 |
+| 短连线加标签，标签压住箭头头部 | 节点间距 ≥ 96 再加标签，否则去掉标签，把说明写进最下方的注释 |
 | 坐标不在 8px 网格上 | 所有数值取 8 的倍数 |
 | `.drawio` 提交了压缩格式 | `$W normalize` 解压；File → Properties 取消 Compressed |
 | draw.io 标签里的 `&` 没转义 | `html=1` 时写成 `&amp;amp;`，换行写 `&lt;br&gt;` |

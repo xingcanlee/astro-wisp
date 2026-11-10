@@ -3,21 +3,21 @@
   "generator": "wisp-diagram@1",
   "entries": {
     "src/content/posts/attention-explained/diagrams/attention-flow.excalidraw": {
-      "source": "sha256-f9e2cc215976f1d915702be45fadb53cd4e75cad2c1c9145aa7600bbb7f97bf3",
+      "source": "sha256-e2e74a76b4b36e0a74467f07ee3208e99a16383ee00a955ee3bdb14220438fb9",
       "style": "hand",
       "exporter": "excalidraw-playwright",
       "embedFonts": false,
       "outputs": {
-        "src/content/posts/attention-explained/diagrams/attention-flow.wisp.svg": "sha256-57fff418f131eaa503e71b51c022f3a80825bded4d7abb761787f01bfc82e57d"
+        "src/content/posts/attention-explained/diagrams/attention-flow.wisp.svg": "sha256-ddb504d8efaaa2d1d4a981035cd4097d800fe29aac630291122ddaf3e723cf67"
       }
     },
     "src/content/posts/kitchen-sink/diagrams/attention-flow.excalidraw": {
-      "source": "sha256-f9e2cc215976f1d915702be45fadb53cd4e75cad2c1c9145aa7600bbb7f97bf3",
+      "source": "sha256-e2e74a76b4b36e0a74467f07ee3208e99a16383ee00a955ee3bdb14220438fb9",
       "style": "hand",
       "exporter": "excalidraw-playwright",
       "embedFonts": false,
       "outputs": {
-        "src/content/posts/kitchen-sink/diagrams/attention-flow.wisp.svg": "sha256-57fff418f131eaa503e71b51c022f3a80825bded4d7abb761787f01bfc82e57d"
+        "src/content/posts/kitchen-sink/diagrams/attention-flow.wisp.svg": "sha256-ddb504d8efaaa2d1d4a981035cd4097d800fe29aac630291122ddaf3e723cf67"
       }
     },
     "src/content/shared/diagrams/transformer-block.drawio": {

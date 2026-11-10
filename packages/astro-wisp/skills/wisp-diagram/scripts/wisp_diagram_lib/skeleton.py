@@ -57,20 +57,75 @@ def _round2(v: float) -> float:
     return math.floor(v * 100 + 0.5) / 100
 
 
-def edge_geometry(a: dict, b: dict) -> dict[str, float]:
-    """两节点之间直线箭头的几何：起点在 a 的边缘外 ARROW_GAP，终点在 b 的边缘外 ARROW_GAP。"""
-    ax, ay = a["x"] + a["w"] / 2, a["y"] + a["h"] / 2
-    bx, by = b["x"] + b["w"] / 2, b["y"] + b["h"] / 2
-    ln = math.hypot(bx - ax, by - ay)
+#: 两个节点在某一轴上的投影至少重叠这么多（px）时，箭头画成正对的水平 / 竖直线，而不是中心连线上的斜线
+AXIS_SNAP_OVERLAP = 16
+
+
+def _anchor(n: dict, tx: float, ty: float) -> tuple[float, float]:
+    """节点 n 朝向点 (tx, ty) 的出线点：中心连线与形状边缘的交点再向外 ARROW_GAP。"""
+    cx, cy = n["x"] + n["w"] / 2, n["y"] + n["h"] / 2
+    ln = math.hypot(tx - cx, ty - cy)
     if ln < 1e-6:
-        raise WispError(f"[wisp-diagram] 连线 {a['id']} → {b['id']} 的两个节点中心重合")
-    ux, uy = (bx - ax) / ln, (by - ay) / ln
-    s = distance_to_edge(a, ux, uy) + ARROW_GAP
-    t = distance_to_edge(b, -ux, -uy) + ARROW_GAP
-    if s + t >= ln:
-        raise WispError(f"[wisp-diagram] 节点 {a['id']} 与 {b['id']} 距离太近，放不下箭头")
-    x, y = ax + ux * s, ay + uy * s
-    return {"x": _round2(x), "y": _round2(y), "dx": _round2(bx - ux * t - x), "dy": _round2(by - uy * t - y)}
+        raise WispError(f"[wisp-diagram] 连线的拐点落在节点 {n['id']} 的中心")
+    ux, uy = (tx - cx) / ln, (ty - cy) / ln
+    s = distance_to_edge(n, ux, uy) + ARROW_GAP
+    if s >= ln:
+        raise WispError(f"[wisp-diagram] 连线的拐点离节点 {n['id']} 太近，放不下箭头")
+    return cx + ux * s, cy + uy * s
+
+
+def _axis_aligned(a: dict, b: dict) -> tuple[float, float, float, float] | None:
+    """两节点正对（一条轴上投影重叠、另一条轴上分开）时，返回一条水平或竖直的线段。"""
+    lo, hi = max(a["x"], b["x"]), min(a["x"] + a["w"], b["x"] + b["w"])
+    if hi - lo >= AXIS_SNAP_OVERLAP:  # 上下排列：竖直线，落在重叠区间的中点
+        x = (lo + hi) / 2
+        if a["y"] + a["h"] + 2 * ARROW_GAP < b["y"]:
+            return x, a["y"] + a["h"] + ARROW_GAP, x, b["y"] - ARROW_GAP
+        if b["y"] + b["h"] + 2 * ARROW_GAP < a["y"]:
+            return x, a["y"] - ARROW_GAP, x, b["y"] + b["h"] + ARROW_GAP
+    lo, hi = max(a["y"], b["y"]), min(a["y"] + a["h"], b["y"] + b["h"])
+    if hi - lo >= AXIS_SNAP_OVERLAP:  # 左右排列：水平线
+        y = (lo + hi) / 2
+        if a["x"] + a["w"] + 2 * ARROW_GAP < b["x"]:
+            return a["x"] + a["w"] + ARROW_GAP, y, b["x"] - ARROW_GAP, y
+        if b["x"] + b["w"] + 2 * ARROW_GAP < a["x"]:
+            return a["x"] - ARROW_GAP, y, b["x"] + b["w"] + ARROW_GAP, y
+    return None
+
+
+def edge_geometry(a: dict, b: dict, via: list | None = None) -> dict[str, Any]:
+    """两节点之间箭头的几何，端点都在形状边缘外 ARROW_GAP 处。
+
+    - 给了 via（绝对坐标的拐点列表）：折线 a → 拐点… → b；
+    - 两节点正对（矩形，投影重叠）：水平或竖直的直线；
+    - 否则：中心连线上的斜线。
+    返回 x / y（起点）、dx / dy（终点相对起点）和 points（相对起点的全部顶点）。"""
+    if via:
+        pts = [(float(p[0]), float(p[1])) for p in via]
+        sx, sy = _anchor(a, *pts[0])
+        ex, ey = _anchor(b, *pts[-1])
+        chain = [(sx, sy), *pts, (ex, ey)]
+    else:
+        ax, ay = a["x"] + a["w"] / 2, a["y"] + a["h"] / 2
+        bx, by = b["x"] + b["w"] / 2, b["y"] + b["h"] / 2
+        ln = math.hypot(bx - ax, by - ay)
+        if ln < 1e-6:
+            raise WispError(f"[wisp-diagram] 连线 {a['id']} → {b['id']} 的两个节点中心重合")
+        rect = (a.get("shape") or "rect") == "rect" and (b.get("shape") or "rect") == "rect"
+        snapped = _axis_aligned(a, b) if rect else None
+        if snapped:
+            chain = [(snapped[0], snapped[1]), (snapped[2], snapped[3])]
+        else:
+            ux, uy = (bx - ax) / ln, (by - ay) / ln
+            s = distance_to_edge(a, ux, uy) + ARROW_GAP
+            t = distance_to_edge(b, -ux, -uy) + ARROW_GAP
+            if s + t >= ln:
+                raise WispError(f"[wisp-diagram] 节点 {a['id']} 与 {b['id']} 距离太近，放不下箭头")
+            chain = [(ax + ux * s, ay + uy * s), (bx - ux * t, by - uy * t)]
+    x, y = _round2(chain[0][0]), _round2(chain[0][1])
+    points = [[_round2(px - x), _round2(py - y)] for px, py in chain]
+    points[0] = [0, 0]
+    return {"x": x, "y": y, "dx": points[-1][0], "dy": points[-1][1], "points": points}
 
 
 def _is_num(v: Any) -> bool:
@@ -125,10 +180,16 @@ def skeleton_to_element_skeletons(sk: dict) -> tuple[list[dict], list[str]]:
         if not a or not b:
             raise WispError(f"[wisp-diagram] 连线 {e.get('from')} → {e.get('to')} 引用了不存在的节点")
         c = resolve_skeleton_color(e.get("color") or "fg")
-        g = edge_geometry(a, b)
+        via = e.get("via")
+        if via is not None and not (isinstance(via, list) and via and all(
+                isinstance(p, list) and len(p) == 2 and _is_num(p[0]) and _is_num(p[1]) for p in via)):
+            raise WispError(f"[wisp-diagram] 连线 {e['from']} → {e['to']} 的 via 应为 [[x, y], …]")
+        g = edge_geometry(a, b, via)
+        xs = [p[0] for p in g["points"]]
+        ys = [p[1] for p in g["points"]]
         el = {
             "type": "arrow", "id": e.get("id") or f"edge-{i + 1}-{e['from']}-{e['to']}",
-            "x": g["x"], "y": g["y"], "width": abs(g["dx"]), "height": abs(g["dy"]), "points": [[0, 0], [g["dx"], g["dy"]]],
+            "x": g["x"], "y": g["y"], "width": max(xs) - min(xs), "height": max(ys) - min(ys), "points": g["points"],
             "strokeColor": c["stroke"], "backgroundColor": "transparent", "strokeWidth": sw(e.get("emphasis")),
             "strokeStyle": "dashed" if e.get("dashed") else d["excalidraw"]["strokeStyle"], **common,
             "roundness": None,

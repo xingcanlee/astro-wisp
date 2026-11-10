@@ -69,6 +69,23 @@ class TestGeometry:
         assert g["x"] + g["dx"] == pytest.approx(200 - ARROW_GAP)
         assert g["dy"] == pytest.approx(0)
 
+    def test_axis_snap_vertical(self):
+        # 上下排列、x 投影重叠但中心不对齐：竖直线落在重叠区间的中点，而不是斜线
+        g = edge_geometry(RECT, {"id": "b", "x": 40, "y": 120, "w": 200, "h": 40})
+        assert g["x"] == pytest.approx(70)
+        assert g["dx"] == pytest.approx(0)
+        assert g["y"] == pytest.approx(40 + ARROW_GAP)
+        assert g["y"] + g["dy"] == pytest.approx(120 - ARROW_GAP)
+
+    def test_diagonal_when_not_facing(self):
+        g = edge_geometry(RECT, {"id": "b", "x": 200, "y": 120, "w": 100, "h": 40})
+        assert g["dx"] > 0 and g["dy"] > 0
+
+    def test_via(self):
+        g = edge_geometry(RECT, {"id": "b", "x": 200, "y": 120, "w": 100, "h": 40}, [[250, 20]])
+        assert g["points"] == [[0, 0], [150 - ARROW_GAP, 0], [150 - ARROW_GAP, 100 - ARROW_GAP]]
+        assert g["y"] == pytest.approx(20)
+
     def test_too_close(self):
         with pytest.raises(WispError, match="太近"):
             edge_geometry(RECT, {"id": "c", "x": 104, "y": 0, "w": 100, "h": 40})

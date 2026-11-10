@@ -261,9 +261,7 @@ html {
 .prose pre,
 .prose table,
 .prose .wisp-table,
-.wisp-pre,
-.wisp-post-aside-inner,
-.wisp-post-series-aside-inner {
+.wisp-pre {
   scrollbar-width: thin;
   scrollbar-color: var(--wisp-scroll-thumb) transparent;
 }

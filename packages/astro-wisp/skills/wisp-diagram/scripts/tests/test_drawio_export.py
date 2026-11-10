@@ -72,3 +72,15 @@ class TestProbe:
         assert "drawio-desktop" in msg
         assert "docker pull rlespinasse/drawio-export" in msg
         assert "WISP_DRAWIO_VIEWER" in msg
+
+
+def test_clean_inlines_math_layout():
+    from wisp_diagram_lib.drawio_export import clean_drawio_svg
+    raw = ('<svg xmlns="http://www.w3.org/2000/svg"><defs><style id="MJX-SVG-styles">mjx-container::before{content:""}</style></defs>'
+           '<foreignObject><div>a<mjx-container class="MathJax" jax="SVG"><svg style="vertical-align:-0.6ex" width="1ex"></svg></mjx-container>'
+           '<mjx-container class="MathJax" jax="SVG" display="true"><svg width="2ex"></svg></mjx-container></div></foreignObject></svg>')
+    out = clean_drawio_svg(raw)
+    assert "MJX-SVG-styles" not in out
+    assert '<mjx-container class="MathJax" jax="SVG" style="display:inline-block;margin:0 0.2em;line-height:0"><svg style="display:inline;overflow:visible;vertical-align:-0.6ex" width="1ex">' in out
+    assert 'display="true" style="display:block;' in out
+    assert clean_drawio_svg(out) == out  # 幂等

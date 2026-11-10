@@ -372,7 +372,7 @@ def cmd_cache(action: str) -> int:
 
 
 def _cache_warm() -> int:
-    """预热离线所需的全部资源：Excalidraw 模块图、svgo、全部字体分片、draw.io viewer。"""
+    """预热离线所需的全部资源：Excalidraw 模块图、svgo、全部字体分片、draw.io viewer 与 MathJax。"""
     from . import cdn
     from .browser import BrowserSession
     from .drawio_export import ensure_viewer
@@ -393,6 +393,9 @@ def _cache_warm() -> int:
         raise WispError(f"[wisp-diagram] 有 {len(missing)} 个字体分片下载失败（如 {missing[0]}），请重试")
     _out(f"✓ 字体分片（本次新下载 {n} 个）")
     _out(f"✓ draw.io viewer：{ensure_viewer()}")
+    from .versions import DRAWIO_MATH_URL
+    cdn.fetch(f"{DRAWIO_MATH_URL}/drawio-mathjax.min.js", quiet=True)
+    _out("✓ draw.io MathJax")
     return cmd_cache("status")
 
 
