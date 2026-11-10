@@ -13,4 +13,5 @@ skills/wisp-diagram/scripts/node_modules/
 __pycache__/
 *.pyc
 .pytest_cache/
+pytest-of-*/
 .venv/
