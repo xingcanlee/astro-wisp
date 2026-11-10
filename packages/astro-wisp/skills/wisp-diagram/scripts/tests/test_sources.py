@@ -115,3 +115,18 @@ class TestCli:
         assert cmd_normalize([str(f)], check=True, log=logs.append) == 1
         assert cmd_normalize([str(f)], log=logs.append) == 0
         assert cmd_normalize([str(f)], check=True, log=logs.append) == 0
+
+
+def test_lint_width_and_math():
+    node = lambda x, v: (f'<mxCell id="n{x}" value="{v}" style="rounded=1;fillColor=#e2e8f0;strokeColor=#475569;" vertex="1" parent="1">'
+                         f'<mxGeometry x="{x}" y="0" width="160" height="40" as="geometry"/></mxCell>')
+    page = lambda math, body: (f'<mxfile><diagram id="a" name="A"><mxGraphModel math="{math}"><root><mxCell id="0"/><mxCell id="1" parent="0"/>'
+                               f'{body}</root></mxGraphModel></diagram></mxfile>')
+    rules = lambda xml: [(i.level, i.rule) for i in lint_drawio(xml)]
+    assert rules(page("1", node(0, "a") + node(480, r"\\(x_t\\)"))) == []
+    assert rules(page("1", node(0, "a") + node(960, "b"))) == [("warn", "width")]
+    assert rules(page("0", node(0, r"\\(x_t\\)"))) == [("error", "math")]
+    assert rules(page("1", node(0, "$$x$$"))) == [("warn", "math")]
+    wide = {"elements": [{"id": "a", "type": "rectangle", "x": 0, "y": 0, "width": 96, "height": 48},
+                         {"id": "b", "type": "arrow", "x": 96, "y": 24, "width": 704, "height": 0, "points": [[0, 0], [704, 0]]}]}
+    assert [(i.level, i.rule) for i in lint_excalidraw(wide)] == [("warn", "width")]

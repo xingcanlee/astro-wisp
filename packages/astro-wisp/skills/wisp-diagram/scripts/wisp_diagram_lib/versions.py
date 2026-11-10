@@ -80,3 +80,5 @@ EXCALIFONT_SHARDS = [
 
 #: draw.io 官方 viewer（无版本号的 URL；首次下载后缓存，可用 WISP_DRAWIO_VIEWER 指定本地文件）
 DRAWIO_VIEWER_URL = "https://viewer.diagrams.net/js/viewer-static.min.js"
+#: draw.io 的 MathJax 构建（标签里有公式、且页面 math="1" 时由 browser 导出方式加载；按文件缓存）
+DRAWIO_MATH_URL = "https://viewer.diagrams.net/math4/es5"

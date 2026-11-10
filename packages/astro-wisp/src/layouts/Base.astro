@@ -140,17 +140,6 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
               el.removeAttribute('aria-label');
             }
           });
-          // 图表缩印比例：自然宽度放不进正文栏、被缩到 60% 以下时，在题注行标出比例，提示可点击放大
-          document.querySelectorAll('.wisp-diagram').forEach((fig) => {
-            const body = fig.querySelector(':scope > .wisp-diagram-body');
-            const svg = body?.querySelector(':scope > svg');
-            const natural = body ? parseFloat(getComputedStyle(body).getPropertyValue('--wd-w')) : 0;
-            if (!natural || !svg) return;
-            const scale = svg.getBoundingClientRect().width / natural;
-            const pct = `${Math.round(scale * 100)}%`;
-            if (scale < 0.6) fig.setAttribute('data-wisp-scale', zh ? `${pct} · 点击放大` : `${pct} · click to enlarge`);
-            else fig.removeAttribute('data-wisp-scale');
-          });
         };
         update();
         addEventListener('resize', update, { passive: true });

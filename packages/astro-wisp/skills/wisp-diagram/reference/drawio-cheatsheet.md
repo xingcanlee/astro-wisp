@@ -67,6 +67,19 @@ rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#e2e2dd
 
 `<title>` 取自页面名（页面名是默认的 `Page-1` 时取文件名），`<desc>` 由图中所有文字标签拼成；可用 `wisp_diagram.py build <文件> --title ... --desc ...` 覆盖（仅单文件构建时可用）。所以**给页面起一个有意义的名字**。
 
+## 公式
+
+把 `<mxGraphModel … math="0">` 改成 `math="1"`，标签里用 `\(...\)` 写行内公式（MathJax / LaTeX 语法）：
+
+```
+value="内容 query \(\mathbf q_t^{C,h}\)&lt;br&gt;\(d_r=64\)"
+```
+
+- 只用行内的 `\(...\)`；需要大号求和号时写 `\(\displaystyle \sum_j …\)`，公式要单独占一行就在前后加 `&lt;br&gt;`。不要用 `$$...$$`。
+- 公式和相邻文字之间不用手动加空格：导出时会在行内公式两侧留出 0.2em 的间距。
+- 公式宽度不会自动换行，写之前估一下：14px 字号下每个符号约 8–10px，节点宽度要留够。
+- cli / docker / browser 三种导出方式都支持公式；browser 方式首次使用时会下载并缓存 draw.io 的 MathJax 构建。
+
 ## 最小可用模板
 
 ```xml

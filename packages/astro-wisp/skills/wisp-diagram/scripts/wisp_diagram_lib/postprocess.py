@@ -148,6 +148,24 @@ def protect_masks(svg: str):
     return out, restore
 
 
+#: 箭头标签的遮罩（Excalidraw 导出时按文字的精确外框挖空线条）四周多留的空隙，px
+LABEL_MASK_PAD = 4
+_NUM = r"(-?\d*\.?\d+)"
+_MASK_RECT_RE = re.compile(rf'(<path fill="#000" d=")M{_NUM}[ ,]?{_NUM}h{_NUM}v{_NUM}h-{_NUM}z(")')
+
+
+def pad_label_masks(svg: str, pad: float = LABEL_MASK_PAD) -> str:
+    """把连线标签遮罩的黑色矩形向四周各扩 pad：线条在文字前后留出空隙，而不是贴着字的边。"""
+    def num(v: float) -> str:
+        return f"{v:.2f}".rstrip("0").rstrip(".")
+
+    def rect(m: re.Match) -> str:
+        x, y, w, h = (float(m.group(i)) for i in (2, 3, 4, 5))
+        return f"{m.group(1)}M{num(x - pad)} {num(y - pad)}h{num(w + 2 * pad)}v{num(h + 2 * pad)}h-{num(w + 2 * pad)}z{m.group(7)}"
+
+    return re.sub(r"<mask\b[^>]*>[\s\S]*?</mask>", lambda m: _MASK_RECT_RE.sub(rect, m.group(0)), svg)
+
+
 @dataclass
 class PostprocessResult:
     svg: str
@@ -163,6 +181,7 @@ def postprocess(session: BrowserSession, raw: str, *, style: str, source: str, i
     portable = to_portable_svg(masked, style=style, fix=fix)
     svg = restore(portable.svg)
     svg = svgo_optimize(session, svg, id_prefix)
+    svg = pad_label_masks(svg)
     svg = inject_a11y(svg, style=style, source=source, id_prefix=id_prefix, title=title, desc=desc, page=page)
     font_bytes = 0
     if embed_fonts:

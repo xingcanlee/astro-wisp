@@ -89,3 +89,12 @@ def test_postprocess_unknown_and_fix(session):
     r2 = postprocess(session, bad, style="clean", source="b.drawio", id_prefix="b", title="b", fix=True)
     assert r2.unknown_colors == []
     assert re.search(r'fill="var\(--wd-[a-z-]+, #[0-9a-f]{6}\)"', r2.svg)
+
+
+def test_pad_label_masks():
+    from wisp_diagram_lib.postprocess import pad_label_masks
+    svg = '<svg><mask id="m"><path fill="#fff" d="M0 0h438v540H0z"/><path fill="#000" d="M182 432.5h60v15h-60z" opacity="1"/></mask><path fill="#000" d="M1 2h3v4h-3z"/></svg>'
+    out = pad_label_masks(svg)
+    assert 'd="M178 428.5h68v23h-68z"' in out
+    assert 'd="M0 0h438v540H0z"' in out  # 白色底不动
+    assert out.endswith('<path fill="#000" d="M1 2h3v4h-3z"/></svg>')  # 遮罩外的图形不动

@@ -6,39 +6,41 @@
 通用约定：
 - 语义色固定：Q = 蓝（`q`）、K = 琥珀（`k`）、V = 绿（`v`）、权重 = 紫（`weight`）、激活/softmax = 青（`activation`）、梯度/损失 = 玫红（`grad`/`error`）、偏置 = 橙（`bias`）、掩码/输入 = 灰（`mask`）。
 - 最终输出节点用 `"emphasis": true`（线宽 2.5），可选/未选中的路径用 `"dashed": true`。
-- 箭头是两节点中心连线上的**直线**，不会绕开其他节点，所以布局时要保证连线不穿过第三个节点。
+- **总宽不超过 680px**（正文栏约 650px），节点摆在行、列上：正对的矩形之间箭头是水平 / 竖直的直线，错开时是中心连线上的斜线，需要拐弯用 `via`。箭头不会自动绕开其他节点，布局时要保证连线不穿过第三个节点。
 - 连线标签放在线段中点，**线段太短（节点间距小于约 96px）时不要加标签**，否则标签会压住箭头头部。
 - 节点文字用 `\n` 换行；每行中文不超过 8–10 个字。
 
 ## 1. 自注意力（Self-Attention）
 
-X 经 Wq/Wk/Wv 投影成 Q、K、V；Q·Kᵀ/√d 打分，softmax 归一化，再对 V 加权求和。
+Q 与 K 做缩放点积，softmax 归一化成注意力权重，再对 V 加权求和。**纵向排布，总宽 640px**：三路输入在第一行并排，
+正对的节点之间自动画成竖直 / 水平箭头；softmax → 输出要拐弯，用 `via` 给一个拐点；拐弯的线不放标签，说明文字写成旁边的独立 `texts`。
+正文里的图不写标题（题注承担），alt 文本在引用处给出。
 
 ```json
 {
   "style": "hand",
   "nodes": [
-    {"id": "x", "shape": "rect", "x": 0, "y": 128, "w": 96, "h": 56, "label": "输入 X", "color": "mask"},
-    {"id": "q", "shape": "rect", "x": 192, "y": 32, "w": 96, "h": 56, "label": "查询 Q", "color": "q"},
-    {"id": "k", "shape": "rect", "x": 192, "y": 128, "w": 96, "h": 56, "label": "键 K", "color": "k"},
-    {"id": "v", "shape": "rect", "x": 192, "y": 232, "w": 96, "h": 56, "label": "值 V", "color": "v"},
-    {"id": "score", "shape": "rect", "x": 376, "y": 80, "w": 144, "h": 56, "label": "Q·Kᵀ/√d", "color": "weight"},
-    {"id": "softmax", "shape": "ellipse", "x": 584, "y": 80, "w": 128, "h": 56, "label": "softmax", "color": "activation"},
-    {"id": "out", "shape": "rect", "x": 584, "y": 232, "w": 128, "h": 56, "label": "输出 O", "color": "rose", "emphasis": true}
+    {"id": "q", "shape": "rect", "x": 0, "y": 0, "w": 176, "h": 56, "label": "查询 Q", "color": "q"},
+    {"id": "k", "shape": "rect", "x": 232, "y": 0, "w": 176, "h": 56, "label": "键 Kᵀ", "color": "k"},
+    {"id": "v", "shape": "rect", "x": 464, "y": 0, "w": 176, "h": 56, "label": "值 V", "color": "v"},
+    {"id": "score", "shape": "rect", "x": 96, "y": 128, "w": 216, "h": 64, "label": "缩放点积\nQ·Kᵀ/√d", "color": "weight"},
+    {"id": "softmax", "shape": "ellipse", "x": 96, "y": 264, "w": 216, "h": 64, "label": "softmax", "color": "activation"},
+    {"id": "mask", "shape": "rect", "x": 368, "y": 272, "w": 128, "h": 48, "label": "掩码 mask", "color": "mask", "dashed": true},
+    {"id": "out", "shape": "rect", "x": 336, "y": 400, "w": 304, "h": 64, "label": "输出 O", "color": "rose", "emphasis": true},
+    {"id": "bias", "shape": "diamond", "x": 416, "y": 528, "w": 144, "h": 72, "label": "偏置 b", "color": "bias", "dashed": true}
   ],
   "edges": [
-    {"from": "x", "to": "q", "label": "Wq"},
-    {"from": "x", "to": "k", "label": "Wk"},
-    {"from": "x", "to": "v", "label": "Wv"},
     {"from": "q", "to": "score"},
     {"from": "k", "to": "score"},
     {"from": "score", "to": "softmax"},
-    {"from": "softmax", "to": "out", "label": "权重"},
-    {"from": "v", "to": "out", "label": "加权求和", "color": "v"}
+    {"from": "mask", "to": "softmax", "color": "muted", "dashed": true},
+    {"from": "softmax", "to": "out", "via": [[204, 432]]},
+    {"from": "v", "to": "out", "color": "v", "label": "加权求和"},
+    {"from": "bias", "to": "out", "color": "muted", "dashed": true}
   ],
   "texts": [
-    {"x": 0, "y": 0, "text": "自注意力", "size": "title"},
-    {"x": 0, "y": 328, "text": "注：每个词元的 Q 与所有 K 打分，再对 V 加权求和", "size": "note"}
+    {"x": 216, "y": 352, "text": "注意力权重", "size": "note", "color": "fg"},
+    {"x": 0, "y": 568, "text": "注：虚线是可选步骤（掩码、偏置）", "size": "note"}
   ]
 }
 ```
@@ -165,9 +167,9 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
     {"id": "qt", "shape": "rect", "x": 192, "y": 32, "w": 96, "h": 48, "label": "Qₜ", "color": "q"},
     {"id": "kt", "shape": "rect", "x": 192, "y": 168, "w": 96, "h": 48, "label": "Kₜ", "color": "k"},
     {"id": "vt", "shape": "rect", "x": 192, "y": 248, "w": 96, "h": 48, "label": "Vₜ", "color": "v"},
-    {"id": "cache", "shape": "rect", "x": 416, "y": 160, "w": 160, "h": 136, "label": "KV 缓存\nK₁..Kₜ\nV₁..Vₜ", "color": "slate"},
-    {"id": "attn", "shape": "rect", "x": 416, "y": 32, "w": 160, "h": 56, "label": "注意力", "color": "weight"},
-    {"id": "out", "shape": "rect", "x": 656, "y": 32, "w": 112, "h": 56, "label": "输出 oₜ", "color": "rose", "emphasis": true}
+    {"id": "cache", "shape": "rect", "x": 376, "y": 160, "w": 160, "h": 136, "label": "KV 缓存\nK₁..Kₜ\nV₁..Vₜ", "color": "slate"},
+    {"id": "attn", "shape": "rect", "x": 376, "y": 32, "w": 160, "h": 56, "label": "注意力", "color": "weight"},
+    {"id": "out", "shape": "rect", "x": 568, "y": 32, "w": 112, "h": 56, "label": "输出 oₜ", "color": "rose", "emphasis": true}
   ],
   "edges": [
     {"from": "tok", "to": "qt"},
@@ -196,11 +198,11 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
   "nodes": [
     {"id": "tok", "shape": "rect", "x": 0, "y": 136, "w": 96, "h": 56, "label": "词元 x", "color": "mask"},
     {"id": "router", "shape": "diamond", "x": 160, "y": 120, "w": 144, "h": 88, "label": "路由器", "color": "activation"},
-    {"id": "e1", "shape": "rect", "x": 424, "y": 0, "w": 128, "h": 56, "label": "专家 1", "color": "weight", "emphasis": true},
-    {"id": "e2", "shape": "rect", "x": 424, "y": 88, "w": 128, "h": 56, "label": "专家 2", "color": "weight", "dashed": true},
-    {"id": "e3", "shape": "rect", "x": 424, "y": 176, "w": 128, "h": 56, "label": "专家 3", "color": "weight", "emphasis": true},
-    {"id": "e4", "shape": "rect", "x": 424, "y": 264, "w": 128, "h": 56, "label": "专家 4", "color": "weight", "dashed": true},
-    {"id": "sum", "shape": "ellipse", "x": 640, "y": 128, "w": 128, "h": 72, "label": "加权求和", "color": "rose"}
+    {"id": "e1", "shape": "rect", "x": 384, "y": 0, "w": 128, "h": 56, "label": "专家 1", "color": "weight", "emphasis": true},
+    {"id": "e2", "shape": "rect", "x": 384, "y": 88, "w": 128, "h": 56, "label": "专家 2", "color": "weight", "dashed": true},
+    {"id": "e3", "shape": "rect", "x": 384, "y": 176, "w": 128, "h": 56, "label": "专家 3", "color": "weight", "emphasis": true},
+    {"id": "e4", "shape": "rect", "x": 384, "y": 264, "w": 128, "h": 56, "label": "专家 4", "color": "weight", "dashed": true},
+    {"id": "sum", "shape": "ellipse", "x": 560, "y": 128, "w": 120, "h": 72, "label": "加权求和", "color": "rose"}
   ],
   "edges": [
     {"from": "tok", "to": "router"},

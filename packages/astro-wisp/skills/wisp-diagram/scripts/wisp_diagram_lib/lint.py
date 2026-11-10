@@ -13,6 +13,9 @@ from .jsjson import js_number, js_string, stringify
 from .xmlfmt import Node, parse as parse_xml
 
 MAX_SOURCE_BYTES = 2 * 1024 * 1024
+#: 正文栏约 650px：图比这宽就会被等比缩小。超过 WIDE 提醒，超过 TOO_WIDE 时 14px 的字已不到 9px
+WIDE_PX = 720
+TOO_WIDE_PX = 1000
 FONT_TOLERANCE = 1
 
 
@@ -27,7 +30,7 @@ class LintFix:
 @dataclass
 class LintIssue:
     level: str  # error | warn
-    rule: str  # palette-color | font-size | grid | shadow | gradient | file-size | compressed
+    rule: str  # palette-color | font-size | grid | shadow | gradient | file-size | compressed | width | math
     message: str
     element_id: str | None = None
     fix: LintFix | None = None
@@ -78,6 +81,15 @@ def _is_num(v: Any) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
+def _width_issue(width: float, where: str = "") -> LintIssue | None:
+    if width <= WIDE_PX:
+        return None
+    pct = _js_round(650 / width * 100)
+    tail = ("; text will be unreadable — lay it out top-to-bottom or split it" if width > TOO_WIDE_PX
+            else "; aim for 640–680px so it renders at natural size")
+    return LintIssue("warn", "width", f"{where}content is {js_number(_js_round(width))}px wide; the ~650px text column scales it to {js_number(pct)}%{tail}")
+
+
 def _truthy(v: Any) -> bool:
     return not (v is None or v is False or v == 0 and _is_num(v) or v == "")
 
@@ -94,9 +106,17 @@ def lint_excalidraw(src: str | dict) -> list[LintIssue]:
     if size > MAX_SOURCE_BYTES:
         issues.append(LintIssue("warn", "file-size", f'source is {_mb(size)} MB (> 2 MB); embedded images in "files" bloat it'))
     doc = json.loads(src) if isinstance(src, str) else src
+    lo = hi = None
     for el in doc.get("elements") or []:
         if not isinstance(el, dict) or _truthy(el.get("isDeleted")):
             continue
+        if _is_num(el.get("x")):
+            pts = el.get("points") if isinstance(el.get("points"), list) else None
+            xs = ([el["x"] + p[0] for p in pts if isinstance(p, list) and p and _is_num(p[0])] if pts
+                  else [el["x"], el["x"] + (el["width"] if _is_num(el.get("width")) else 0)])
+            if xs:
+                lo = min(xs) if lo is None else min(lo, *xs)
+                hi = max(xs) if hi is None else max(hi, *xs)
         el_id = el.get("id")
         typ = js_string(el.get("type")) if "type" in el else "undefined"
         for fld in ("strokeColor", "backgroundColor"):
@@ -118,6 +138,9 @@ def lint_excalidraw(src: str | dict) -> list[LintIssue]:
                 issues.append(LintIssue("error", "shadow", f"{typ} uses shadow ({k})", el_id))
             if isinstance(v, str) and re.search(r"gradient\(", v, re.I):
                 issues.append(LintIssue("error", "gradient", f"{typ} {k} uses a gradient", el_id))
+    w = _width_issue(hi - lo) if lo is not None and hi is not None else None
+    if w:
+        issues.append(w)
     return issues
 
 
@@ -181,6 +204,9 @@ def lint_drawio(xml: str) -> list[LintIssue]:
     for pi, page in enumerate(_drawio_pages(parse_xml(plain))):
         cells: list[Node] = []
         _collect_cells(page, cells)
+        models = page.elements("mxGraphModel")
+        math_on = bool(models) and (models[0].attrs or {}).get("math") == "1"
+        lo = hi = None
         for cell in cells:
             a = cell.attrs or {}
             el_id = a.get("id")
@@ -206,6 +232,15 @@ def lint_drawio(xml: str) -> list[LintIssue]:
                 if num is not None and not _font_size_ok(num):
                     issues.append(LintIssue("warn", "font-size", f"fontSize={fs} is not one of {_sizes_text()} (±{FONT_TOLERANCE})", el_id))
             value = a.get("value")
+            if isinstance(value, str) and "$$" in value:
+                issues.append(LintIssue("warn", "math", "label uses $$...$$; write \\(\\displaystyle ...\\) and break lines with <br>", el_id))
+            if isinstance(value, str) and not math_on and re.search(r"\\\(.+?\\\)", value):
+                issues.append(LintIssue("error", "math", 'label contains \\(...\\) but the page has math="0"; set math="1" on <mxGraphModel>', el_id))
+            if a.get("vertex") == "1" and geom is not None:
+                gx, gw = _js_to_number((geom.attrs or {}).get("x", "0")), _js_to_number((geom.attrs or {}).get("width", "0"))
+                if gx is not None and gw is not None:
+                    lo = gx if lo is None else min(lo, gx)
+                    hi = gx + gw if hi is None else max(hi, gx + gw)
             if isinstance(value, str):
                 for m in _VALUE_COLOR_RE.finditer(value):
                     i = _color_issue("value html color", m.group(1), el_id, "value")
@@ -223,6 +258,9 @@ def lint_drawio(xml: str) -> list[LintIssue]:
                 if off:
                     pos = ", ".join(f"{k}={ga[k]}" for k in off)
                     issues.append(LintIssue("warn", "grid", f"{pos} not aligned to {js_number(P.grid())}px grid", el_id))
+        w = _width_issue(hi - lo, f"page {pi + 1}: " if pi else "") if lo is not None and hi is not None else None
+        if w:
+            issues.append(w)
     return issues
 
 
