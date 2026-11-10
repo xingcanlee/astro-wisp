@@ -23,32 +23,67 @@ export interface CellProps {
 }
 
 /** 单个格子。高亮用叠加层的透明度做 150ms 过渡（Motion）；reduced-motion 下直接切换。 */
-export default function Cell({ x, y, size, text, tone, state = 'none', empty = false, fontSize, fillOpacity = 1, heat }: CellProps) {
+export default function Cell({
+  x,
+  y,
+  size,
+  text,
+  tone,
+  state = 'none',
+  empty = false,
+  fontSize,
+  fillOpacity = 1,
+  heat,
+}: CellProps) {
   const reduce = useReducedMotion();
   const transition = { duration: reduce ? 0 : 0.15, ease: 'easeOut' as const };
   return (
     <g>
-      <rect x={x} y={y} width={size} height={size} rx={4} style={{ fill: toneFill(tone), fillOpacity, stroke: toneStroke(tone), strokeWidth: 1.25 }} />
+      <rect
+        x={x}
+        y={y}
+        width={size}
+        height={size}
+        rx={4}
+        style={{ fill: toneFill(tone), fillOpacity, stroke: toneStroke(tone), strokeWidth: 1.25 }}
+      />
       {heat !== undefined && (
-        <rect x={x} y={y} width={size} height={size} rx={4} style={{ fill: toneStroke(tone), fillOpacity: 0.04 + 0.4 * heat }} />
+        <rect
+          x={x}
+          y={y}
+          width={size}
+          height={size}
+          rx={4}
+          style={{ fill: toneStroke(tone), fillOpacity: 0.04 + 0.4 * heat }}
+        />
       )}
       <motion.rect
-        x={x} y={y} width={size} height={size} rx={4}
+        x={x}
+        y={y}
+        width={size}
+        height={size}
+        rx={4}
         initial={false}
         animate={{ opacity: state === 'soft' ? 1 : 0 }}
         transition={transition}
         style={{ fill: toneStroke(tone), fillOpacity: 0.2 }}
       />
       <motion.rect
-        x={x} y={y} width={size} height={size} rx={4}
+        x={x}
+        y={y}
+        width={size}
+        height={size}
+        rx={4}
         initial={false}
         animate={{ opacity: state === 'strong' ? 1 : 0 }}
         transition={transition}
         style={{ fill: toneFill('highlight'), stroke: toneStroke('highlight'), strokeWidth: 2.5 }}
       />
       <text
-        x={x + size / 2} y={y + size / 2}
-        textAnchor="middle" dominantBaseline="central"
+        x={x + size / 2}
+        y={y + size / 2}
+        textAnchor="middle"
+        dominantBaseline="central"
         className="wisp-explainer__cell-text"
         style={{ fill: empty ? 'var(--wisp-muted)' : 'var(--wisp-fg)', fontSize }}
       >

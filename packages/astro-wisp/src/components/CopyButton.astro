@@ -5,8 +5,11 @@ import { iconSvg } from '../lib/icons';
 const copy = wisp.features.codeCopy;
 const fold = wisp.features.codeFold.enabled;
 const ic = (n: string) => `<span data-i="${n}">${iconSvg(n)}</span>`;
-const icons = [...(copy ? ['copy', 'check'] : []), ...(fold ? ['chevron-down', 'chevron-up'] : [])].map(ic).join('');
+const icons = [...(copy ? ['copy', 'check'] : []), ...(fold ? ['chevron-down', 'chevron-up'] : [])]
+  .map(ic)
+  .join('');
 ---
+
 {(copy || fold) && (
   <>
     <template id="wisp-ic" set:html={icons} />
@@ -23,7 +26,10 @@ const icons = [...(copy ? ['copy', 'check'] : []), ...(fold ? ['chevron-down', '
             const s = el('span', 'wisp-sr');
             b.type = 'button';
             b.innerHTML = I('copy');
-            b.setAttribute('aria-label', document.documentElement.lang.startsWith('zh') ? '复制代码' : 'Copy code');
+            b.setAttribute(
+              'aria-label',
+              document.documentElement.lang.startsWith('zh') ? '复制代码' : 'Copy code',
+            );
             s.setAttribute('role', 'status');
             s.setAttribute('aria-live', 'polite');
             b.onclick = async () => {
@@ -51,7 +57,9 @@ const icons = [...(copy ? ['copy', 'check'] : []), ...(fold ? ['chevron-down', '
                 fallback.remove();
               }
               if (!copied) {
-                s.textContent = document.documentElement.lang.startsWith('zh') ? '复制失败' : 'Copy failed';
+                s.textContent = document.documentElement.lang.startsWith('zh')
+                  ? '复制失败'
+                  : 'Copy failed';
                 return;
               }
               b.innerHTML = I('check');
@@ -72,7 +80,17 @@ const icons = [...(copy ? ['copy', 'check'] : []), ...(fold ? ['chevron-down', '
               box.toggleAttribute('data-folded', !open);
               f.setAttribute('aria-expanded', open);
               const zh = document.documentElement.lang.startsWith('zh');
-              f.innerHTML = I(open ? 'chevron-up' : 'chevron-down') + '<span>' + (open ? (zh ? '收起' : 'Collapse') : (zh ? '展开全部 ' + box.dataset.lines + ' 行' : 'Show all ' + box.dataset.lines + ' lines')) + '</span>';
+              f.innerHTML =
+                I(open ? 'chevron-up' : 'chevron-down') +
+                '<span>' +
+                (open
+                  ? zh
+                    ? '收起'
+                    : 'Collapse'
+                  : zh
+                    ? '展开全部 ' + box.dataset.lines + ' 行'
+                    : 'Show all ' + box.dataset.lines + ' lines') +
+                '</span>';
             };
             f.type = 'button';
             f.setAttribute('aria-controls', pre.id);
@@ -82,7 +100,8 @@ const icons = [...(copy ? ['copy', 'check'] : []), ...(fold ? ['chevron-down', '
               const open = box.hasAttribute('data-folded');
               set(open);
               const r = f.getBoundingClientRect();
-              if (!open && (r.top < 0 || r.bottom > innerHeight)) f.scrollIntoView({ block: 'center' });
+              if (!open && (r.top < 0 || r.bottom > innerHeight))
+                f.scrollIntoView({ block: 'center' });
             };
             box.append(f);
           }

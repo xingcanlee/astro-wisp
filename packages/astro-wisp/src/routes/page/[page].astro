@@ -13,7 +13,10 @@ export const getStaticPaths = (async ({ paginate }) => {
   const featured = all.filter((p) => p.data.featured).slice(0, config.home.featuredCount);
   const featuredIds = new Set(featured.map((p) => p.id));
   // Astro 内置分页；第 1 页就是首页（/，带精选区），这里只生成第 2 页起。
-  return paginate(all.filter((p) => !featuredIds.has(p.id)), { pageSize: config.home.pageSize }).slice(1);
+  return paginate(
+    all.filter((p) => !featuredIds.has(p.id)),
+    { pageSize: config.home.pageSize },
+  ).slice(1);
 }) satisfies GetStaticPaths;
 
 interface Props {
@@ -29,13 +32,11 @@ const times = await getReadingTimes(posts);
   <div class="wisp-container list-page">
     <h1 class="list-title">最新文章</h1>
     <ul class="list">
-      {
-        posts.map((post, i) => (
-          <li>
-            <PostCard post={post} readingTime={times[i]} headingLevel={2} showTags={false} />
-          </li>
-        ))
-      }
+      {posts.map((post, i) => (
+        <li>
+          <PostCard post={post} readingTime={times[i]} headingLevel={2} showTags={false} />
+        </li>
+      ))}
     </ul>
     <Pagination current={current} total={page.lastPage} />
   </div>
@@ -44,28 +45,28 @@ const times = await getReadingTimes(posts);
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
-  .list-page {
-    padding-top: 3.5rem;
-  }
-  .list-title {
-    margin: 0 0 2.5rem;
-    font-size: 2rem;
-    font-weight: 700;
-  }
-  .list {
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .list > li {
-    padding-block: 1.5rem;
-    border-top: 1px solid var(--wisp-border);
-  }
-  .list > li:first-child {
-    padding-top: 0;
-    border-top: 0;
-  }
+    .list-page {
+      padding-top: 3.5rem;
+    }
+    .list-title {
+      margin: 0 0 2.5rem;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .list {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .list > li {
+      padding-block: 1.5rem;
+      border-top: 1px solid var(--wisp-border);
+    }
+    .list > li:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
   }
 </style>

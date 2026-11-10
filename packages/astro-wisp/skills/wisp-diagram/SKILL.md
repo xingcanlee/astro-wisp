@@ -29,15 +29,15 @@ $W probe                                                       # 查看 Chromium
 
 **首次运行会下载并缓存**（之后离线可用）：
 
-| 内容 | 来源 | 大小 |
-|---|---|---|
-| Python 依赖 playwright 1.64.1、fonttools | PyPI（uv 管理，放在 uv 自己的缓存） | ≈ 55 MB |
-| Chromium（只在没装过时） | `playwright install chromium`，放在 `~/.cache/ms-playwright/` | 数百 MB |
-| @excalidraw/excalidraw 0.18.1 及其依赖（≈110 个 ES 模块） | jsDelivr，按锁定版本 | ≈ 1.6 MB |
-| svgo 4.1.0 浏览器构建（SVG 精简，在 Chromium 中运行） | jsDelivr | 0.8 MB |
-| 字体：Excalifont、Inter 5.3.0、Noto Sans SC 5.3.1（按 unicode-range 分片，用到哪片下哪片） | jsDelivr | 全部 ≈ 4.5 MB |
-| draw.io viewer（只在 browser 导出方式下） | viewer.diagrams.net | ≈ 4.7 MB |
-| draw.io 的 MathJax 构建（只在 browser 导出方式下、图里有公式时） | viewer.diagrams.net | ≈ 2 MB |
+| 内容                                                                                       | 来源                                                          | 大小          |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ------------- |
+| Python 依赖 playwright 1.64.1、fonttools                                                   | PyPI（uv 管理，放在 uv 自己的缓存）                           | ≈ 55 MB       |
+| Chromium（只在没装过时）                                                                   | `playwright install chromium`，放在 `~/.cache/ms-playwright/` | 数百 MB       |
+| @excalidraw/excalidraw 0.18.1 及其依赖（≈110 个 ES 模块）                                  | jsDelivr，按锁定版本                                          | ≈ 1.6 MB      |
+| svgo 4.1.0 浏览器构建（SVG 精简，在 Chromium 中运行）                                      | jsDelivr                                                      | 0.8 MB        |
+| 字体：Excalifont、Inter 5.3.0、Noto Sans SC 5.3.1（按 unicode-range 分片，用到哪片下哪片） | jsDelivr                                                      | 全部 ≈ 4.5 MB |
+| draw.io viewer（只在 browser 导出方式下）                                                  | viewer.diagrams.net                                           | ≈ 4.7 MB      |
+| draw.io 的 MathJax 构建（只在 browser 导出方式下、图里有公式时）                           | viewer.diagrams.net                                           | ≈ 2 MB        |
 
 除 Python 依赖与 Chromium 外，缓存都在 `~/.cache/wisp-diagram/`（可用 `WISP_DIAGRAM_CACHE` 改位置）。`$W cache status` 查看，`$W cache clear` 清空。
 
@@ -47,12 +47,12 @@ draw.io 导出按 cli → docker → browser 顺序自动回退。`new`、`build
 
 ## 1. 先选工具
 
-| 场景 | 选择 | 源文件 |
-|---|---|---|
-| 流程图、时序图、状态图、类图等**结构化**图，节点关系为主 | **Mermaid**（最省事，直接写进正文的 ` ```mermaid ` 代码块；Wisp 站点构建期渲染） | 无独立文件 |
-| 概念图、直觉示意、手绘风格、ML 算子数据流 | **Excalidraw** | `name.excalidraw`（JSON） |
-| 精确对齐的模型结构图、分层架构图、需要直角折线和多页 | **draw.io** | `name.drawio`（**未压缩** XML） |
-| 逐步演示、可交互 | 不属于本 skill（React 组件） | — |
+| 场景                                                     | 选择                                                                             | 源文件                          |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------- |
+| 流程图、时序图、状态图、类图等**结构化**图，节点关系为主 | **Mermaid**（最省事，直接写进正文的 ` ```mermaid ` 代码块；Wisp 站点构建期渲染） | 无独立文件                      |
+| 概念图、直觉示意、手绘风格、ML 算子数据流                | **Excalidraw**                                                                   | `name.excalidraw`（JSON）       |
+| 精确对齐的模型结构图、分层架构图、需要直角折线和多页     | **draw.io**                                                                      | `name.drawio`（**未压缩** XML） |
+| 逐步演示、可交互                                         | 不属于本 skill（React 组件）                                                     | —                               |
 
 原则：能用 Mermaid 讲清楚就别画图；手绘风格不超过约 12 个节点；同一篇文章里风格统一。
 
@@ -99,56 +99,56 @@ $W export diagrams/attention.wisp.svg --theme dark  -o /tmp/attention.dark.png
 
 颜色只能来自 `palette.json`。作画时**只用浅色值**（下表左值）；build 会把它们映射成 `var(--wd-*)`（暗色值由 SVG 自动切换）。不要手选暗色值，不要用调色板之外的任何颜色（lint 报错，`--fix` 吸附到最近的令牌）。
 
-| hue | stroke（线条、文字）light / dark | fill（填充）light / dark | 语义名 |
-|---|---|---|---|
-| `blue` | `#1d4ed8` / `#60a5fa` | `#dbeafe` / `#1b2740` | `q`、`active` |
-| `amber` | `#b45309` / `#fbbf24` | `#fef3c7` / `#38290c` | `k`、`highlight` |
-| `green` | `#15803d` / `#4ade80` | `#dcfce7` / `#122d1c` | `v`、`done` |
-| `rose` | `#be123c` / `#fb7185` | `#ffe4e6` / `#3a1620` | `grad`、`error` |
-| `violet` | `#7c3aed` / `#a78bfa` | `#ede9fe` / `#272040` | `weight` |
-| `teal` | `#0f766e` / `#2dd4bf` | `#ccfbf1` / `#0f2c29` | `activation` |
-| `orange` | `#c2410c` / `#fb923c` | `#ffedd5` / `#3a2010` | `bias` |
-| `slate` | `#475569` / `#94a3b8` | `#e2e8f0` / `#222831` | `mask`、`visited` |
+| hue      | stroke（线条、文字）light / dark | fill（填充）light / dark | 语义名            |
+| -------- | -------------------------------- | ------------------------ | ----------------- |
+| `blue`   | `#1d4ed8` / `#60a5fa`            | `#dbeafe` / `#1b2740`    | `q`、`active`     |
+| `amber`  | `#b45309` / `#fbbf24`            | `#fef3c7` / `#38290c`    | `k`、`highlight`  |
+| `green`  | `#15803d` / `#4ade80`            | `#dcfce7` / `#122d1c`    | `v`、`done`       |
+| `rose`   | `#be123c` / `#fb7185`            | `#ffe4e6` / `#3a1620`    | `grad`、`error`   |
+| `violet` | `#7c3aed` / `#a78bfa`            | `#ede9fe` / `#272040`    | `weight`          |
+| `teal`   | `#0f766e` / `#2dd4bf`            | `#ccfbf1` / `#0f2c29`    | `activation`      |
+| `orange` | `#c2410c` / `#fb923c`            | `#ffedd5` / `#3a2010`    | `bias`            |
+| `slate`  | `#475569` / `#94a3b8`            | `#e2e8f0` / `#222831`    | `mask`、`visited` |
 
 基础色：正文 `fg` `#1d1d1f`（Excalidraw 默认黑 `#000000`/`#1e1e1e` 也会被视为 fg），次要 `muted` `#5c6067`，面 `surface` `#f4f4f2`，边框 `border` `#e2e2dd`，画布白 `#ffffff`（build 会去掉背景）。
 
 ### 语义色（所有文章、图表一致）
 
-| 语义名 | 含义 | hue |
-|---|---|---|
-| `q` | 查询 Query | `blue` |
-| `k` | 键 Key | `amber` |
-| `v` | 值 Value | `green` |
-| `weight` | 权重、参数 | `violet` |
-| `activation` | 激活、softmax | `teal` |
-| `grad` | 梯度 | `rose` |
-| `bias` | 偏置 | `orange` |
-| `mask` | 掩码、输入 | `slate` |
-| `highlight` | 高亮 | `amber` |
-| `visited` | 已访问 | `slate` |
-| `active` | 当前/进行中 | `blue` |
-| `done` | 完成 | `green` |
-| `error` | 错误、损失 | `rose` |
+| 语义名       | 含义          | hue      |
+| ------------ | ------------- | -------- |
+| `q`          | 查询 Query    | `blue`   |
+| `k`          | 键 Key        | `amber`  |
+| `v`          | 值 Value      | `green`  |
+| `weight`     | 权重、参数    | `violet` |
+| `activation` | 激活、softmax | `teal`   |
+| `grad`       | 梯度          | `rose`   |
+| `bias`       | 偏置          | `orange` |
+| `mask`       | 掩码、输入    | `slate`  |
+| `highlight`  | 高亮          | `amber`  |
+| `visited`    | 已访问        | `slate`  |
+| `active`     | 当前/进行中   | `blue`   |
+| `done`       | 完成          | `green`  |
+| `error`      | 错误、损失    | `rose`   |
 
 骨架的 `color` 字段可直接写语义名（`"color": "q"`）或 hue 名；draw.io 中查表取 hue 对应的 fill/stroke。
 
 ## 4. 风格硬规则
 
-| 项目 | 规则 |
-|---|---|
-| 网格 | 所有元素 x/y/宽/高取 **8px** 的倍数 |
-| 字号 | 只用 **12**（注释）/ **14**（标签）/ **18**（标题）；lint 容差 ±1 |
-| 线宽 | **1.5**（常规），**2.5**（强调，一张图一两处）；细线 1 仅用于分隔 |
-| 圆角 | 矩形/容器圆角：Excalidraw `round`，draw.io `rounded=1;arcSize=8` |
-| 填充 | 纯色填充，使用 hue 的 fill；**禁止渐变** |
-| 阴影 | **禁止** |
-| 宽度 | 自然宽度 **640–700px**（正文栏宽）；超过 720px lint 警告，超过 1000px 字已看不清 |
-| 流向 | 从上到下；连线横平竖直，拐弯走直角（骨架用 `via`，draw.io 用 `edgeStyle=orthogonalEdgeStyle`） |
-| 公式 | 只在 draw.io 里用：页面 `math="1"`，标签写 `\(...\)`（见 drawio-cheatsheet「公式」）；Excalidraw 用 Unicode（Kᵀ、√d、Σ） |
-| 字体 | Excalidraw 用 Excalifont（中文回落 Noto Sans SC，**不用小赖体**）；draw.io 用 `Inter` |
-| 手绘 | `roughness: 1`；draw.io 不用 `sketch=1` |
-| 背景 | 不画背景矩形，保持透明 |
-| 源文件 | `.excalidraw` 为 JSON；`.drawio` 为**未压缩** XML；嵌入图片会使文件膨胀（>2MB 警告） |
+| 项目   | 规则                                                                                                                     |
+| ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| 网格   | 所有元素 x/y/宽/高取 **8px** 的倍数                                                                                      |
+| 字号   | 只用 **12**（注释）/ **14**（标签）/ **18**（标题）；lint 容差 ±1                                                        |
+| 线宽   | **1.5**（常规），**2.5**（强调，一张图一两处）；细线 1 仅用于分隔                                                        |
+| 圆角   | 矩形/容器圆角：Excalidraw `round`，draw.io `rounded=1;arcSize=8`                                                         |
+| 填充   | 纯色填充，使用 hue 的 fill；**禁止渐变**                                                                                 |
+| 阴影   | **禁止**                                                                                                                 |
+| 宽度   | 自然宽度 **640–700px**（正文栏宽）；超过 720px lint 警告，超过 1000px 字已看不清                                         |
+| 流向   | 从上到下；连线横平竖直，拐弯走直角（骨架用 `via`，draw.io 用 `edgeStyle=orthogonalEdgeStyle`）                           |
+| 公式   | 只在 draw.io 里用：页面 `math="1"`，标签写 `\(...\)`（见 drawio-cheatsheet「公式」）；Excalidraw 用 Unicode（Kᵀ、√d、Σ） |
+| 字体   | Excalidraw 用 Excalifont（中文回落 Noto Sans SC，**不用小赖体**）；draw.io 用 `Inter`                                    |
+| 手绘   | `roughness: 1`；draw.io 不用 `sketch=1`                                                                                  |
+| 背景   | 不画背景矩形，保持透明                                                                                                   |
+| 源文件 | `.excalidraw` 为 JSON；`.drawio` 为**未压缩** XML；嵌入图片会使文件膨胀（>2MB 警告）                                     |
 
 ## 5. 自检清单
 
@@ -171,7 +171,7 @@ $W export diagrams/attention.wisp.svg --theme dark  -o /tmp/attention.dark.png
 源文件与文章放在一起（`diagrams/` 目录），`.wisp.svg` 也要提交。在 MDX/Markdown 中用标准图片语法引用**源文件**（站点会内联同名 `.wisp.svg`，并附源文件下载链接）：
 
 ```md
-![自注意力：Q 与 K 打分后对 V 加权求和](./diagrams/attention.excalidraw "图 1：自注意力计算流程")
+![自注意力：Q 与 K 打分后对 V 加权求和](./diagrams/attention.excalidraw '图 1：自注意力计算流程')
 ![Transformer Block 的残差结构](./diagrams/transformer-block.drawio#page=encoder)
 ```
 
@@ -193,26 +193,26 @@ alt 写入 SVG 的 `<title>`，引号中的说明成为图注；`#page=<页面�
 
 ## 7. 常见错误
 
-| 错误 | 怎么避免 |
-|---|---|
-| 手写完整 Excalidraw 元素 | 只写骨架，用 `$W new` 转换 |
-| 在编辑器里用了调色板外的颜色（吸管、默认色） | 用素材库；lint `--fix` 吸附；仍报错就改源文件 |
-| 手选暗色值作画 | 只用浅色值，暗色靠 SVG 自动切换 |
-| 图画成横向一长条，放进文章被缩到看不清 | 画布宽 640px，流程从上到下，分支并排成列 |
-| 图里的标题和题注重复 | 文章里的图不写标题 |
-| 骨架箭头穿过第三个节点 | 调整布局让节点正对，或用 `via` 给拐点；复杂走线改用 draw.io 折线 |
-| 一堆斜线箭头，看着乱 | 节点摆在行、列上（投影重叠即可），箭头自动横平竖直 |
-| draw.io 标签里的 `\(...\)` 原样显示 | 页面要写 `math="1"`（lint 的 `math` 规则会报错） |
-| 公式把节点撑破 | 公式不换行：加宽节点或拆成两行，写完看预览 |
-| 短连线加标签，标签压住箭头头部 | 节点间距 ≥ 96 再加标签，否则去掉标签，把说明写进最下方的注释 |
-| 坐标不在 8px 网格上 | 所有数值取 8 的倍数 |
-| `.drawio` 提交了压缩格式 | `$W normalize` 解压；File → Properties 取消 Compressed |
-| draw.io 标签里的 `&` 没转义 | `html=1` 时写成 `&amp;amp;`，换行写 `&lt;br&gt;` |
-| 中文标签过长被截断 | 每行 ≤ 8–10 个汉字，用 `\n` / `<br>` 换行，加宽节点 |
-| 改了源文件忘记重新 build | 修改后重跑 `$W build`（站点里 `pnpm diagram check` 会发现哈希不一致） |
-| 没看暗色预览就交付 | 步骤 ④ 的 dark 预览必须看 |
-| 空洞的 alt（“图 1”“diagram”） | alt 写图要说明的结论 |
-| 用图表工具画数据图 | 折线/柱状等数据图不属于本 skill |
+| 错误                                         | 怎么避免                                                              |
+| -------------------------------------------- | --------------------------------------------------------------------- |
+| 手写完整 Excalidraw 元素                     | 只写骨架，用 `$W new` 转换                                            |
+| 在编辑器里用了调色板外的颜色（吸管、默认色） | 用素材库；lint `--fix` 吸附；仍报错就改源文件                         |
+| 手选暗色值作画                               | 只用浅色值，暗色靠 SVG 自动切换                                       |
+| 图画成横向一长条，放进文章被缩到看不清       | 画布宽 640px，流程从上到下，分支并排成列                              |
+| 图里的标题和题注重复                         | 文章里的图不写标题                                                    |
+| 骨架箭头穿过第三个节点                       | 调整布局让节点正对，或用 `via` 给拐点；复杂走线改用 draw.io 折线      |
+| 一堆斜线箭头，看着乱                         | 节点摆在行、列上（投影重叠即可），箭头自动横平竖直                    |
+| draw.io 标签里的 `\(...\)` 原样显示          | 页面要写 `math="1"`（lint 的 `math` 规则会报错）                      |
+| 公式把节点撑破                               | 公式不换行：加宽节点或拆成两行，写完看预览                            |
+| 短连线加标签，标签压住箭头头部               | 节点间距 ≥ 96 再加标签，否则去掉标签，把说明写进最下方的注释          |
+| 坐标不在 8px 网格上                          | 所有数值取 8 的倍数                                                   |
+| `.drawio` 提交了压缩格式                     | `$W normalize` 解压；File → Properties 取消 Compressed                |
+| draw.io 标签里的 `&` 没转义                  | `html=1` 时写成 `&amp;amp;`，换行写 `&lt;br&gt;`                      |
+| 中文标签过长被截断                           | 每行 ≤ 8–10 个汉字，用 `\n` / `<br>` 换行，加宽节点                   |
+| 改了源文件忘记重新 build                     | 修改后重跑 `$W build`（站点里 `pnpm diagram check` 会发现哈希不一致） |
+| 没看暗色预览就交付                           | 步骤 ④ 的 dark 预览必须看                                             |
+| 空洞的 alt（“图 1”“diagram”）                | alt 写图要说明的结论                                                  |
+| 用图表工具画数据图                           | 折线/柱状等数据图不属于本 skill                                       |
 
 ## 8. 排错
 

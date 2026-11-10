@@ -11,7 +11,12 @@ describe('format', () => {
     expect(formatNumber(-0.001)).toBe('0');
   });
   it('matrix', () => {
-    expect(formatMatrix([[1, null], [-2, 0.5]])).toBe('1 ·\n−2 0.5');
+    expect(
+      formatMatrix([
+        [1, null],
+        [-2, 0.5],
+      ]),
+    ).toBe('1 ·\n−2 0.5');
   });
   it('clampIndex', () => {
     expect(clampIndex(-1, 5)).toBe(0);

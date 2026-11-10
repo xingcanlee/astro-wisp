@@ -99,7 +99,7 @@
   content: counter(wisp-h2);
 }
 .wisp-post-body > h2 ~ h3::before {
-  content: counter(wisp-h2) "." counter(wisp-h3);
+  content: counter(wisp-h2) '.' counter(wisp-h3);
   color: var(--wisp-muted);
   font-size: 0.875em;
 }
@@ -203,7 +203,7 @@
 .prose li.task-list-item::marker {
   content: none;
 }
-.prose li.task-list-item > input[type="checkbox"] {
+.prose li.task-list-item > input[type='checkbox'] {
   /* 自绘复选框：UA 的 disabled 样式对比度过低 */
   appearance: none;
   -webkit-appearance: none;
@@ -217,7 +217,7 @@
   background-color: transparent;
   opacity: 1;
 }
-.prose li.task-list-item > input[type="checkbox"]:checked {
+.prose li.task-list-item > input[type='checkbox']:checked {
   border-color: var(--wisp-accent);
   background-color: var(--wisp-accent);
   box-shadow: inset 0 0 0 2px var(--wisp-bg);
@@ -408,10 +408,10 @@
   font-variant-numeric: tabular-nums;
 }
 .prose sup a[data-footnote-ref]::before {
-  content: "[";
+  content: '[';
 }
 .prose sup a[data-footnote-ref]::after {
-  content: "]";
+  content: ']';
 }
 .prose section[data-footnotes],
 .prose .footnotes {

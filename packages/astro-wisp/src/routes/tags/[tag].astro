@@ -19,7 +19,12 @@ const times = await getReadingTimes(term.posts);
   <div class="wisp-container tax">
     <header class="tax-header">
       <h1>#{term.name}</h1>
-      <p>{term.count} 篇文章 · <a class="wisp-link" href={sitePath(import.meta.env.BASE_URL, '/tags/')}>全部标签</a></p>
+      <p>
+        {term.count} 篇文章 ·{' '}
+        <a class="wisp-link" href={sitePath(import.meta.env.BASE_URL, '/tags/')}>
+          全部标签
+        </a>
+      </p>
     </header>
     <ul class="tax-list">
       {term.posts.map((post, i) => (
@@ -34,27 +39,27 @@ const times = await getReadingTimes(term.posts);
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
-  .tax {
-    padding-top: 3.5rem;
-  }
-  .tax-header {
-    margin-bottom: 2.5rem;
-  }
-  .tax-header h1 {
-    margin: 0;
-    font-size: 2rem;
-  }
-  .tax-header p {
-    margin: 0.5rem 0 0;
-    color: var(--wisp-muted);
-  }
-  .tax-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2.75rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
+    .tax {
+      padding-top: 3.5rem;
+    }
+    .tax-header {
+      margin-bottom: 2.5rem;
+    }
+    .tax-header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+    .tax-header p {
+      margin: 0.5rem 0 0;
+      color: var(--wisp-muted);
+    }
+    .tax-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2.75rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
   }
 </style>

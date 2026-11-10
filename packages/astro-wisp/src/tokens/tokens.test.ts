@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { genAll } from "../../scripts/gen-tokens";
-import { genTokens, genPele, genDiagram } from "./generate";
-import { checkContrast } from "./contrast";
-import { mergePalette, palette, resolveColor, nearestToken } from "./palette";
+import { genAll } from '../../scripts/gen-tokens';
+import { genTokens, genPele, genDiagram } from './generate';
+import { checkContrast } from './contrast';
+import { mergePalette, palette, resolveColor, nearestToken } from './palette';
 
 describe('palette', () => {
   it('跳过 $ 注释键', () => {
@@ -53,7 +53,9 @@ describe('生成', () => {
     expect(css).toContain('--wd-font-hand: var(--wisp-font-hand);');
   });
   it('skills 副本与源一致', () => {
-    expect(readFileSync(new URL('../../skills/wisp-diagram/palette.json', import.meta.url), 'utf8')).toBe(readFileSync(new URL('../../design/palette.json', import.meta.url), 'utf8'));
+    expect(
+      readFileSync(new URL('../../skills/wisp-diagram/palette.json', import.meta.url), 'utf8'),
+    ).toBe(readFileSync(new URL('../../design/palette.json', import.meta.url), 'utf8'));
   });
 });
 
@@ -72,7 +74,10 @@ describe('覆盖调色板', () => {
   });
   it('提交的生成文件与默认调色板一致（忘了跑 pnpm tokens 时失败）', () => {
     for (const [rel, content] of Object.entries(genAll())) {
-      const actual = readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+      const actual = readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8').replace(
+        /\r\n/g,
+        '\n',
+      );
       expect(actual, rel).toBe(content.replace(/\r\n/g, '\n'));
     }
   });

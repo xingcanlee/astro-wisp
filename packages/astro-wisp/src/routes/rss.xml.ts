@@ -29,7 +29,10 @@ export async function GET(context: APIContext) {
           const { Content } = await render(post);
           content = await container.renderToString(Content);
           // 正文中的站内相对链接改写为绝对地址，RSS 阅读器里才能打开
-          content = content.replace(/(\s(?:href|src)=")\/(?!\/)/g, `$1${new URL(sitePath(base, '/'), site.origin).href}`);
+          content = content.replace(
+            /(\s(?:href|src)=")\/(?!\/)/g,
+            `$1${new URL(sitePath(base, '/'), site.origin).href}`,
+          );
         } catch {
           // 含交互组件（React island 等）的文章无法在 RSS 中渲染：降级为摘要 + 原文链接
           content = `<p>${post.data.description}</p><p>本文包含交互内容，请<a href="${absoluteLink}">阅读原文</a>。</p>`;

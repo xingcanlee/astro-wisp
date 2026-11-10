@@ -15,17 +15,17 @@ pnpm add motion        # 格子高亮的过渡动画
 
 ## 二、积木
 
-| 导出 | 层 | 用途 |
-|---|---|---|
-| `Step<S>`、`Timeline<S>` | core | 一帧 = `{ state, caption, focus? }`。渲染器只依赖 state |
-| `record(initial, (state, emit) => …)` | core | 把**命令式**算法录成时间线：直接修改 state，在需要停顿处 `emit(caption, focus)`，每次保存深拷贝 |
-| `cellId(m, r, c)`、`itemId(m, i)`、`focusOf(focus, m)` | core | 高亮 id 约定（`'a:1,0'`、`'arr:3'`）与按前缀取出 |
-| `formatNumber`、`formatMatrix` | core | 数字格式化（真正的减号、去掉多余的 0） |
-| `Tone`、`toneStroke`、`toneFill` | core | 色调：调色板中的语义色（`q`、`k`、`v`、`visited`、`done`……）或 hue（`blue`、`amber`……） |
-| `Explainer` | react | 外壳：`<figure>` + 标题 + `Player` |
-| `Player`、`usePlayer` | react | 播放 / 暂停 / 单步 / 进度 / 速度 / 键盘 / `aria-live`；界面文字随站点语言（中文 / 英文），可用 `labels` 覆盖 |
-| `Stage` | react | SVG 舞台：viewBox 自适应宽度、窄屏横向滚动、四周留白 |
-| `Matrix`、`Cell`、`Label` | react | 二维格子（矩阵、DP 表、注意力权重；1 行即数组）、单个格子、文字 |
+| 导出                                                   | 层    | 用途                                                                                                         |
+| ------------------------------------------------------ | ----- | ------------------------------------------------------------------------------------------------------------ |
+| `Step<S>`、`Timeline<S>`                               | core  | 一帧 = `{ state, caption, focus? }`。渲染器只依赖 state                                                      |
+| `record(initial, (state, emit) => …)`                  | core  | 把**命令式**算法录成时间线：直接修改 state，在需要停顿处 `emit(caption, focus)`，每次保存深拷贝              |
+| `cellId(m, r, c)`、`itemId(m, i)`、`focusOf(focus, m)` | core  | 高亮 id 约定（`'a:1,0'`、`'arr:3'`）与按前缀取出                                                             |
+| `formatNumber`、`formatMatrix`                         | core  | 数字格式化（真正的减号、去掉多余的 0）                                                                       |
+| `Tone`、`toneStroke`、`toneFill`                       | core  | 色调：调色板中的语义色（`q`、`k`、`v`、`visited`、`done`……）或 hue（`blue`、`amber`……）                      |
+| `Explainer`                                            | react | 外壳：`<figure>` + 标题 + `Player`                                                                           |
+| `Player`、`usePlayer`                                  | react | 播放 / 暂停 / 单步 / 进度 / 速度 / 键盘 / `aria-live`；界面文字随站点语言（中文 / 英文），可用 `labels` 覆盖 |
+| `Stage`                                                | react | SVG 舞台：viewBox 自适应宽度、窄屏横向滚动、四周留白                                                         |
+| `Matrix`、`Cell`、`Label`                              | react | 二维格子（矩阵、DP 表、注意力权重；1 行即数组）、单个格子、文字                                              |
 
 core 是纯 TypeScript（`astro-wisp/explainers/core`），不依赖 React / DOM，可以在 vitest 中直接测试。
 
@@ -39,7 +39,10 @@ core 是纯 TypeScript（`astro-wisp/explainers/core`），不依赖 React / DOM
 // bubble-sort.ts
 import { itemId, record } from 'astro-wisp/explainers/core';
 
-export interface SortState { arr: number[]; sorted: number }
+export interface SortState {
+  arr: number[];
+  sorted: number;
+}
 
 export const bubbleSort = (input: number[]) =>
   record<SortState>({ arr: input, sorted: 0 }, (s, emit) => {
@@ -74,9 +77,16 @@ export default function BubbleSort({ input }: { input: number[] }) {
   return (
     <Explainer steps={steps} title="冒泡排序">
       {({ state, focus }) => (
-        <Stage width={state.arr.length * CELL} height={CELL} label={`数组：${state.arr.join(', ')}`}>
+        <Stage
+          width={state.arr.length * CELL}
+          height={CELL}
+          label={`数组：${state.arr.join(', ')}`}
+        >
           <Matrix
-            x={0} y={0} values={[state.arr]} tone="visited"
+            x={0}
+            y={0}
+            values={[state.arr]}
+            tone="visited"
             highlight={new Set([...focusOf(focus, 'arr')].map((i) => `0,${i}`))}
           />
         </Stage>
@@ -98,13 +108,13 @@ import BubbleSort from './BubbleSort';
 
 ## 四、操作方式
 
-| 操作 | 鼠标 | 键盘（播放器获得焦点时） |
-|---|---|---|
-| 播放 / 暂停 | ▶ 按钮 | Space |
-| 上一步 / 下一步 | ◀ ▶ 按钮 | ← / → |
-| 第一步 / 最后一步 | — | Home / End |
-| 拖动进度 | 进度条 | — |
-| 速度 | 0.5× / 1× / 2× | — |
+| 操作              | 鼠标           | 键盘（播放器获得焦点时） |
+| ----------------- | -------------- | ------------------------ |
+| 播放 / 暂停       | ▶ 按钮         | Space                    |
+| 上一步 / 下一步   | ◀ ▶ 按钮       | ← / →                    |
+| 第一步 / 最后一步 | —              | Home / End               |
+| 拖动进度          | 进度条         | —                        |
+| 速度              | 0.5× / 1× / 2× | —                        |
 
 - 每一步的说明位于 `aria-live="polite"` 区域，屏幕阅读器会读出。
 - 开启系统的“减少动态效果”（`prefers-reduced-motion`）后，不会自动播放，也不做过渡动画。
@@ -112,11 +122,11 @@ import BubbleSort from './BubbleSort';
 
 ## 五、约定
 
-| 层 | 允许 | 禁止 |
-|---|---|---|
-| 算法（core） | 纯 TS、类型、算术 | React、DOM、颜色、Motion |
+| 层            | 允许                                                | 禁止                                                        |
+| ------------- | --------------------------------------------------- | ----------------------------------------------------------- |
+| 算法（core）  | 纯 TS、类型、算术                                   | React、DOM、颜色、Motion                                    |
 | 画面（React） | 积木、Motion、SVG、令牌（`Tone` / `var(--wisp-*)`） | 业务算法、十六进制颜色、Tailwind 原始色阶、`dark:` 颜色变体 |
-| 文章 | `client:visible` 导入组件 | 在 `.md` 中使用组件 |
+| 文章          | `client:visible` 导入组件                           | 在 `.md` 中使用组件                                         |
 
 - SVG 一律通过 `Stage` 输出（viewBox、宽度 100%）；移动端每个格子至少 28px。
 - 讲解私有的样式写在组件旁的 `.css` 中，并包在 `@layer utilities { … }` 里（正文内容样式与 `.prose` 同层，见[配置参考](./configuration.md#customcss)）。

@@ -34,12 +34,12 @@ npm 只能给**已存在**的包配置 Trusted Publisher，所以 0.2.0 是用�
 
 1. npmjs.com → astro-wisp → **Settings** → **Trusted Publisher** → **GitHub Actions**：
 
-   | 字段 | 值 |
-   |---|---|
-   | Organization or user | `xingcanlee` |
-   | Repository | `astro-wisp` |
-   | Workflow filename | `release.yml` |
-   | Environment name | `npm` |
+   | 字段                 | 值            |
+   | -------------------- | ------------- |
+   | Organization or user | `xingcanlee`  |
+   | Repository           | `astro-wisp`  |
+   | Workflow filename    | `release.yml` |
+   | Environment name     | `npm`         |
 
 2. 删除 GitHub 环境中的 `NPM_TOKEN` secret，并在 npmjs.com 撤销那个 token。
 3. 同一页 **Publishing access** → **Require two-factor authentication and disallow tokens**。

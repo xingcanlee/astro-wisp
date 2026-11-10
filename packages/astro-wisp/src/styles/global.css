@@ -7,14 +7,14 @@
  * 正文内容样式（prose、代码块、图、公式、讲解组件）→ utilities，与 typography 插件同层。
  * 站点的 customCss 不分层，因此总能覆盖主题。
  */
-@import "tailwindcss";
+@import 'tailwindcss';
 /* 主题自身的模板在 node_modules 中，Tailwind 默认不扫描，这里显式加入 */
 @source "..";
 /* 正文内容样式与 typography 插件的 .prose 同层（utilities），保持“主题内容样式覆盖插件默认值”的既有层叠关系 */
-@import "./figure.css" layer(utilities);
-@import "./code.css" layer(utilities);
-@import "./lightbox.css" layer(utilities);
-@import "./prose.css" layer(utilities);
+@import './figure.css' layer(utilities);
+@import './code.css' layer(utilities);
+@import './lightbox.css' layer(utilities);
+@import './prose.css' layer(utilities);
 
 @plugin "@tailwindcss/typography";
 
@@ -61,7 +61,7 @@
     color: var(--wisp-fg);
     font-family: var(--wisp-font-sans);
     /* Inter：单层 a、开口数字；全站统一 */
-    font-feature-settings: "cv11", "ss01";
+    font-feature-settings: 'cv11', 'ss01';
     font-synthesis-weight: none;
     line-height: 1.8;
     letter-spacing: 0;
@@ -237,89 +237,89 @@
 }
 
 @layer components {
-/* Lucide 图标：与文字基线对齐 */
-.wisp-icon {
-  display: inline-block;
-  flex-shrink: 0;
-  vertical-align: -0.125em;
-}
+  /* Lucide 图标：与文字基线对齐 */
+  .wisp-icon {
+    display: inline-block;
+    flex-shrink: 0;
+    vertical-align: -0.125em;
+  }
 
-/*
+  /*
  * 滚动条：颜色只来自令牌（fg 与 bg 混合），轨道透明。
  * 页面主滚动条保持系统宽度，只改颜色；内部滚动区（.wisp-scroll 及下列既有容器）使用细滚动条。
  * color-scheme 由 tokens.css 在 :root / [data-theme=dark] 上设置，原生滚动条随主题切换。
  */
-:root {
-  --wisp-scroll-thumb: color-mix(in srgb, var(--wisp-fg) 30%, var(--wisp-bg));
-  --wisp-scroll-thumb-hover: color-mix(in srgb, var(--wisp-fg) 48%, var(--wisp-bg));
-}
-html {
-  scrollbar-color: var(--wisp-scroll-thumb) transparent;
-}
-.wisp-scroll,
-.katex-display,
-.prose pre,
-.prose table,
-.prose .wisp-table,
-.wisp-pre {
-  scrollbar-width: thin;
-  scrollbar-color: var(--wisp-scroll-thumb) transparent;
-}
-/* 回落：仅支持 ::-webkit-scrollbar 而不支持 scrollbar-color 的浏览器 */
-@supports not (scrollbar-color: auto) {
-  .wisp-scroll::-webkit-scrollbar,
-  .katex-display::-webkit-scrollbar,
-  .prose pre::-webkit-scrollbar,
-  .prose table::-webkit-scrollbar,
-  .prose .wisp-table::-webkit-scrollbar,
-  .wisp-pre::-webkit-scrollbar,
-  .wisp-post-aside-inner::-webkit-scrollbar,
-  .wisp-post-series-aside-inner::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  :root {
+    --wisp-scroll-thumb: color-mix(in srgb, var(--wisp-fg) 30%, var(--wisp-bg));
+    --wisp-scroll-thumb-hover: color-mix(in srgb, var(--wisp-fg) 48%, var(--wisp-bg));
   }
-  .wisp-scroll::-webkit-scrollbar-track,
-  .katex-display::-webkit-scrollbar-track,
-  .prose pre::-webkit-scrollbar-track,
-  .prose table::-webkit-scrollbar-track,
-  .prose .wisp-table::-webkit-scrollbar-track,
-  .wisp-pre::-webkit-scrollbar-track,
-  .wisp-post-aside-inner::-webkit-scrollbar-track,
-  .wisp-post-series-aside-inner::-webkit-scrollbar-track {
-    background: transparent;
+  html {
+    scrollbar-color: var(--wisp-scroll-thumb) transparent;
   }
-  .wisp-scroll::-webkit-scrollbar-thumb,
-  .katex-display::-webkit-scrollbar-thumb,
-  .prose pre::-webkit-scrollbar-thumb,
-  .prose table::-webkit-scrollbar-thumb,
-  .prose .wisp-table::-webkit-scrollbar-thumb,
-  .wisp-pre::-webkit-scrollbar-thumb,
-  .wisp-post-aside-inner::-webkit-scrollbar-thumb,
-  .wisp-post-series-aside-inner::-webkit-scrollbar-thumb {
-    background: var(--wisp-scroll-thumb);
-    border-radius: 999px;
-    border: 2px solid transparent;
-    background-clip: content-box;
+  .wisp-scroll,
+  .katex-display,
+  .prose pre,
+  .prose table,
+  .prose .wisp-table,
+  .wisp-pre {
+    scrollbar-width: thin;
+    scrollbar-color: var(--wisp-scroll-thumb) transparent;
   }
-  .wisp-scroll::-webkit-scrollbar-thumb:hover,
-  .katex-display::-webkit-scrollbar-thumb:hover,
-  .prose pre::-webkit-scrollbar-thumb:hover,
-  .prose table::-webkit-scrollbar-thumb:hover,
-  .prose .wisp-table::-webkit-scrollbar-thumb:hover,
-  .wisp-pre::-webkit-scrollbar-thumb:hover,
-  .wisp-post-aside-inner::-webkit-scrollbar-thumb:hover,
-  .wisp-post-series-aside-inner::-webkit-scrollbar-thumb:hover {
-    background: var(--wisp-scroll-thumb-hover);
-    background-clip: content-box;
+  /* 回落：仅支持 ::-webkit-scrollbar 而不支持 scrollbar-color 的浏览器 */
+  @supports not (scrollbar-color: auto) {
+    .wisp-scroll::-webkit-scrollbar,
+    .katex-display::-webkit-scrollbar,
+    .prose pre::-webkit-scrollbar,
+    .prose table::-webkit-scrollbar,
+    .prose .wisp-table::-webkit-scrollbar,
+    .wisp-pre::-webkit-scrollbar,
+    .wisp-post-aside-inner::-webkit-scrollbar,
+    .wisp-post-series-aside-inner::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    .wisp-scroll::-webkit-scrollbar-track,
+    .katex-display::-webkit-scrollbar-track,
+    .prose pre::-webkit-scrollbar-track,
+    .prose table::-webkit-scrollbar-track,
+    .prose .wisp-table::-webkit-scrollbar-track,
+    .wisp-pre::-webkit-scrollbar-track,
+    .wisp-post-aside-inner::-webkit-scrollbar-track,
+    .wisp-post-series-aside-inner::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .wisp-scroll::-webkit-scrollbar-thumb,
+    .katex-display::-webkit-scrollbar-thumb,
+    .prose pre::-webkit-scrollbar-thumb,
+    .prose table::-webkit-scrollbar-thumb,
+    .prose .wisp-table::-webkit-scrollbar-thumb,
+    .wisp-pre::-webkit-scrollbar-thumb,
+    .wisp-post-aside-inner::-webkit-scrollbar-thumb,
+    .wisp-post-series-aside-inner::-webkit-scrollbar-thumb {
+      background: var(--wisp-scroll-thumb);
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: content-box;
+    }
+    .wisp-scroll::-webkit-scrollbar-thumb:hover,
+    .katex-display::-webkit-scrollbar-thumb:hover,
+    .prose pre::-webkit-scrollbar-thumb:hover,
+    .prose table::-webkit-scrollbar-thumb:hover,
+    .prose .wisp-table::-webkit-scrollbar-thumb:hover,
+    .wisp-pre::-webkit-scrollbar-thumb:hover,
+    .wisp-post-aside-inner::-webkit-scrollbar-thumb:hover,
+    .wisp-post-series-aside-inner::-webkit-scrollbar-thumb:hover {
+      background: var(--wisp-scroll-thumb-hover);
+      background-clip: content-box;
+    }
   }
-}
 
-/* 横向滚动提示：右缘内阴影表示内容未显示完（不限于窄屏，桌面长代码同样需要）。
+  /* 横向滚动提示：右缘内阴影表示内容未显示完（不限于窄屏，桌面长代码同样需要）。
  * data-wisp-overflow 由 Base.astro 的内联脚本在内容确实溢出时才打上。 */
-.wisp-pre[data-wisp-overflow],
-.prose .wisp-table[data-wisp-overflow],
-.prose .katex-display[data-wisp-overflow],
-.wisp-explainer__scroll[data-wisp-overflow] {
-  box-shadow: inset -1.25rem 0 1rem -1rem color-mix(in srgb, var(--wisp-fg) 10%, transparent);
-}
+  .wisp-pre[data-wisp-overflow],
+  .prose .wisp-table[data-wisp-overflow],
+  .prose .katex-display[data-wisp-overflow],
+  .wisp-explainer__scroll[data-wisp-overflow] {
+    box-shadow: inset -1.25rem 0 1rem -1rem color-mix(in srgb, var(--wisp-fg) 10%, transparent);
+  }
 }

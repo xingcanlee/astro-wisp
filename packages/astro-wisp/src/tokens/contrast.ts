@@ -1,7 +1,12 @@
 import { wcagContrast } from 'culori';
 import { hueNamesOf, palette as defaultPalette, type Mode, type Palette } from './palette';
 
-export interface Row { mode: Mode; pair: string; ratio: number; pass: boolean }
+export interface Row {
+  mode: Mode;
+  pair: string;
+  ratio: number;
+  pass: boolean;
+}
 export const MIN_CONTRAST = 4.5;
 
 /** fg / muted / accent 与 8 个 hue stroke 在两种主题下与背景（及各自 fill）的对比度。 */

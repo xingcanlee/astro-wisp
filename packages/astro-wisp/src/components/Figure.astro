@@ -27,35 +27,31 @@ const hasCaptionSlot = Astro.slots.has('caption');
 ---
 
 <figure class:list={['wisp-figure', { 'wisp-wide': wide }, className]}>
-  {
-    src ? (
-      typeof src === 'string' ? (
-        <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async" />
-      ) : (
-        <Image src={src} alt={alt} />
-      )
+  {src ? (
+    typeof src === 'string' ? (
+      <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async" />
     ) : (
-      <slot />
+      <Image src={src} alt={alt} />
     )
-  }
-  {
-    (caption || hasCaptionSlot) && (
-      <figcaption>
-        <slot name="caption">{caption}</slot>
-      </figcaption>
-    )
-  }
+  ) : (
+    <slot />
+  )}
+  {(caption || hasCaptionSlot) && (
+    <figcaption>
+      <slot name="caption">{caption}</slot>
+    </figcaption>
+  )}
 </figure>
 
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
-  .wisp-figure :global(img) {
-    display: block;
-    max-width: 100%;
-    height: auto;
-    margin-inline: auto;
-    border-radius: 4px;
-  }
+    .wisp-figure :global(img) {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin-inline: auto;
+      border-radius: 4px;
+    }
   }
 </style>

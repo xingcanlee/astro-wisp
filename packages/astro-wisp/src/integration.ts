@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
 import { unified } from '@astrojs/markdown-remark';
+import type { RehypePlugins, RemarkPlugins } from '@astrojs/markdown-remark';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
@@ -17,7 +18,12 @@ import remarkHeadingText from './plugins/remark-heading-text';
 import rehypeA11y from './plugins/rehype-a11y';
 import { copyDiagramSources, diagramDevMiddleware } from './lib/diagram-assets';
 import { wispShikiConfig } from './shiki';
-import { defineWispConfig, type WispConfig, type WispConfigInput, type WispRuntime } from './config';
+import {
+  defineWispConfig,
+  type WispConfig,
+  type WispConfigInput,
+  type WispRuntime,
+} from './config';
 import { mergePalette, readPalette, type PaletteOverride } from './tokens/palette';
 import { genThemeCss } from './tokens/generate';
 import { checkContrast } from './tokens/contrast';
@@ -49,11 +55,20 @@ export const OVERRIDABLE_LAYOUTS = astroFiles('./layouts');
 
 /** 主题注入的路由：routes 开关键 → [pattern, 入口文件]。 */
 const ROUTES: Record<keyof WispConfig['routes'], Array<[string, string]>> = {
-  home: [['/', './routes/index.astro'], ['/page/[page]', './routes/page/[page].astro']],
+  home: [
+    ['/', './routes/index.astro'],
+    ['/page/[page]', './routes/page/[page].astro'],
+  ],
   posts: [['/posts/[...id]', './routes/posts/[...id].astro']],
   archive: [['/archive', './routes/archive.astro']],
-  tags: [['/tags', './routes/tags/index.astro'], ['/tags/[tag]', './routes/tags/[tag].astro']],
-  categories: [['/categories', './routes/categories/index.astro'], ['/categories/[cat]', './routes/categories/[cat].astro']],
+  tags: [
+    ['/tags', './routes/tags/index.astro'],
+    ['/tags/[tag]', './routes/tags/[tag].astro'],
+  ],
+  categories: [
+    ['/categories', './routes/categories/index.astro'],
+    ['/categories/[cat]', './routes/categories/[cat].astro'],
+  ],
   about: [['/about', './routes/about.astro']],
   rss: [['/rss.xml', './routes/rss.xml.ts']],
   notFound: [['/404', './routes/404.astro']],
@@ -61,7 +76,8 @@ const ROUTES: Record<keyof WispConfig['routes'], Array<[string, string]>> = {
 
 const fromRoot = (root: string, p: string) => (isAbsolute(p) ? p : resolve(root, p));
 /** customCss：`./` 开头或绝对路径按项目根解析，其余（包名）交给 Vite 解析。 */
-const cssSpecifier = (root: string, p: string) => (p.startsWith('.') || isAbsolute(p) ? resolve(root, p) : p);
+const cssSpecifier = (root: string, p: string) =>
+  p.startsWith('.') || isAbsolute(p) ? resolve(root, p) : p;
 
 /**
  * Wisp 主题集成。站点只需要：
@@ -80,11 +96,21 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
   return {
     name: 'astro-wisp',
     hooks: {
-      'astro:config:setup': ({ config: astroConfig, updateConfig, injectRoute, command, logger, createCodegenDir, addWatchFile }) => {
+      'astro:config:setup': ({
+        config: astroConfig,
+        updateConfig,
+        injectRoute,
+        command,
+        logger,
+        createCodegenDir,
+        addWatchFile,
+      }) => {
         root = fileURLToPath(astroConfig.root);
         const dev = command === 'dev';
         if (!astroConfig.site) {
-          logger.warn('astro.config 未设置 `site`：RSS、Sitemap、canonical 与图表下载链接需要绝对地址，暂用 https://example.com。');
+          logger.warn(
+            'astro.config 未设置 `site`：RSS、Sitemap、canonical 与图表下载链接需要绝对地址，暂用 https://example.com。',
+          );
         }
         const site = astroConfig.site ?? 'https://example.com';
 
@@ -92,16 +118,24 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
         const names = new Set([...OVERRIDABLE_COMPONENTS, ...OVERRIDABLE_LAYOUTS]);
         const unknown = Object.keys(config.components).filter((k) => !names.has(k));
         if (unknown.length) {
-          throw new Error(`[astro-wisp] components 中有未知的组件名：${unknown.join(', ')}。可覆盖：${[...names].join(', ')}`);
+          throw new Error(
+            `[astro-wisp] components 中有未知的组件名：${unknown.join(', ')}。可覆盖：${[...names].join(', ')}`,
+          );
         }
         const componentFile = (name: string): string => {
           const override = config.components[name];
           if (override) return fromRoot(root, override);
-          return OVERRIDABLE_LAYOUTS.includes(name) ? here(`./layouts/${name}.astro`) : here(`./components/${name}.astro`);
+          return OVERRIDABLE_LAYOUTS.includes(name)
+            ? here(`./layouts/${name}.astro`)
+            : here(`./components/${name}.astro`);
         };
 
         // ---- 调色板：有覆盖时生成到 codegen 目录，否则直接用包内提交的产物 ----
-        let themeCss = [here('./styles/tokens.css'), here('./styles/pele.css'), here('./styles/diagram.css')];
+        let themeCss = [
+          here('./styles/tokens.css'),
+          here('./styles/pele.css'),
+          here('./styles/diagram.css'),
+        ];
         if (config.palette !== undefined) {
           let override: PaletteOverride;
           if (typeof config.palette === 'string') {
@@ -113,7 +147,8 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
           }
           const palette = mergePalette(override);
           const bad = checkContrast(palette).filter((r) => !r.pass);
-          for (const r of bad) logger.warn(`调色板对比度不足 4.5:1 —— [${r.mode}] ${r.pair}: ${r.ratio.toFixed(2)}`);
+          for (const r of bad)
+            logger.warn(`调色板对比度不足 4.5:1 —— [${r.mode}] ${r.pair}: ${r.ratio.toFixed(2)}`);
           const dir = fileURLToPath(createCodegenDir());
           mkdirSync(dir, { recursive: true });
           const file = join(dir, 'theme.css');
@@ -141,20 +176,30 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
           // 客户端 island 只需要语言；不要把整份配置（含项目根路径）打进浏览器 bundle
           'virtual:wisp/locale': `export const lang = ${JSON.stringify(config.site.lang)};`,
           'virtual:wisp/theme-css': themeCss.map((f) => `import ${JSON.stringify(f)};`).join('\n'),
-          'virtual:wisp/user-css': config.customCss.map((f) => `import ${JSON.stringify(cssSpecifier(root, f))};`).join('\n'),
+          'virtual:wisp/user-css': config.customCss
+            .map((f) => `import ${JSON.stringify(cssSpecifier(root, f))};`)
+            .join('\n'),
         };
         for (const name of names) {
-          virtualModules[`virtual:wisp/components/${name}`] = `export { default } from ${JSON.stringify(componentFile(name))};`;
+          virtualModules[`virtual:wisp/components/${name}`] =
+            `export { default } from ${JSON.stringify(componentFile(name))};`;
         }
 
         // ---- Markdown 管线 ----
-        const remarkPlugins: any[] = [];
-        const rehypePlugins: any[] = [];
+        const remarkPlugins: RemarkPlugins = [];
+        const rehypePlugins: RehypePlugins = [];
         if (config.features.math) remarkPlugins.push(remarkMath);
-        if (config.features.mermaid) remarkPlugins.push([remarkPele, { strict: config.mermaid.strict, dev }]);
+        if (config.features.mermaid)
+          remarkPlugins.push([remarkPele, { strict: config.mermaid.strict, dev }]);
         remarkPlugins.push([
           remarkDiagram,
-          { dev, downloads: config.features.diagramDownload, siteUrl: String(site), base: astroConfig.base, root },
+          {
+            dev,
+            downloads: config.features.diagramDownload,
+            siteUrl: String(site),
+            base: astroConfig.base,
+            root,
+          },
         ]);
         remarkPlugins.push(remarkReadingTime, remarkHasMath, remarkHeadingText);
         if (config.features.math) rehypePlugins.push(rehypeKatex);
@@ -177,7 +222,9 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
             shikiConfig: wispShikiConfig(config),
           },
           vite: {
-            resolve: katexDir ? { alias: [{ find: /^katex(\/.*)?$/, replacement: `${katexDir}$1` }] } : undefined,
+            resolve: katexDir
+              ? { alias: [{ find: /^katex(\/.*)?$/, replacement: `${katexDir}$1` }] }
+              : undefined,
             ssr: {
               noExternal: [
                 // RSS 全文渲染静态导入 @astrojs/mdx/server.js，需要打进 SSR 产物（见 routes/rss.xml.ts）
@@ -202,13 +249,19 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
         });
 
         // ---- 路由 ----
-        for (const [key, routes] of Object.entries(ROUTES) as Array<[keyof WispConfig['routes'], Array<[string, string]>]>) {
+        for (const [key, routes] of Object.entries(ROUTES) as Array<
+          [keyof WispConfig['routes'], Array<[string, string]>]
+        >) {
           if (!config.routes[key]) continue;
-          for (const [pattern, entry] of routes) injectRoute({ pattern, entrypoint: new URL(entry, import.meta.url) });
+          for (const [pattern, entry] of routes)
+            injectRoute({ pattern, entrypoint: new URL(entry, import.meta.url) });
         }
       },
       'astro:config:done': ({ injectTypes }) => {
-        injectTypes({ filename: 'virtual.d.ts', content: readFileSync(here('../virtual.d.ts'), 'utf8') });
+        injectTypes({
+          filename: 'virtual.d.ts',
+          content: readFileSync(here('../virtual.d.ts'), 'utf8'),
+        });
       },
       'astro:server:setup': ({ server }) => {
         if (config.features.diagramDownload) {

@@ -1,6 +1,6 @@
 ---
-title: "Typography for Technical Writing"
-description: "A short guide to typography for technical writing: choosing a readable measure, using monospace and proportional fonts with purpose, and keeping numbers, quotes and dashes consistent."
+title: 'Typography for Technical Writing'
+description: 'A short guide to typography for technical writing: choosing a readable measure, using monospace and proportional fonts with purpose, and keeping numbers, quotes and dashes consistent.'
 pubDate: 2026-09-14
 lang: en
 tags: [Typography]

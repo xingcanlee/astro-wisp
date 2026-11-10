@@ -52,7 +52,7 @@ Wisp 是一个 Astro 7 集成（npm 包 `astro-wisp`），基于 Tailwind CSS 4 
 
 ## 快速开始
 
-环境要求：**Node.js ≥ 22.23.4** 和 **pnpm**。
+环境要求：**Node.js ≥ 22.23.4** 和 **pnpm 12.18.0**（版本由 `package.json#packageManager` 固定）。
 
 **新建站点**（starter 只有配置和内容，主题本身从 npm 安装）：
 
@@ -107,20 +107,20 @@ src/content/posts/
 
 frontmatter 字段（`astro-wisp/content` 的 `postsSchema()`，可用 `extend` 扩展）：
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|
-| `title` | string（≤ 80 字） | 是 | — | 标题 |
-| `description` | string（≤ 200 字） | 是 | — | 摘要，用于列表和 SEO |
-| `pubDate` | 日期 | 是 | — | 发布日期 |
-| `updatedDate` | 日期 | 否 | — | 更新日期 |
-| `tags` | string[] | 否 | `[]` | 标签 |
-| `category` | string | 否 | — | 分类 |
-| `draft` | boolean | 否 | `false` | 草稿，生产构建中不出现 |
-| `featured` | boolean | 否 | `false` | 出现在首页精选 |
-| `cover` | 图片 | 否 | — | 封面图 |
-| `lang` | string | 否 | — | 文章语言，覆盖站点语言 |
-| `toc` | boolean | 否 | `true` | 是否显示目录 |
-| `series` | `{ id: string; order: integer ≥ 1 }` | 否 | — | 系列文章标识与顺序；首页按系列列出总目录，文章页显示系列导航和页眉书眉 |
+| 字段          | 类型                                 | 必填 | 默认值  | 说明                                                                   |
+| ------------- | ------------------------------------ | ---- | ------- | ---------------------------------------------------------------------- |
+| `title`       | string（≤ 80 字）                    | 是   | —       | 标题                                                                   |
+| `description` | string（≤ 200 字）                   | 是   | —       | 摘要，用于列表和 SEO                                                   |
+| `pubDate`     | 日期                                 | 是   | —       | 发布日期                                                               |
+| `updatedDate` | 日期                                 | 否   | —       | 更新日期                                                               |
+| `tags`        | string[]                             | 否   | `[]`    | 标签                                                                   |
+| `category`    | string                               | 否   | —       | 分类                                                                   |
+| `draft`       | boolean                              | 否   | `false` | 草稿，生产构建中不出现                                                 |
+| `featured`    | boolean                              | 否   | `false` | 出现在首页精选                                                         |
+| `cover`       | 图片                                 | 否   | —       | 封面图                                                                 |
+| `lang`        | string                               | 否   | —       | 文章语言，覆盖站点语言                                                 |
+| `toc`         | boolean                              | 否   | `true`  | 是否显示目录                                                           |
+| `series`      | `{ id: string; order: integer ≥ 1 }` | 否   | —       | 系列文章标识与顺序；首页按系列列出总目录，文章页显示系列导航和页眉书眉 |
 
 文章 id 即目录名（`my-first-post`），URL 为 `/posts/my-first-post/`。完整写作说明见 [docs/guide/writing.md](docs/guide/writing.md)。
 
@@ -128,11 +128,11 @@ frontmatter 字段（`astro-wisp/content` 的 `postsSchema()`，可用 `extend` 
 
 三种图表各有分工：
 
-| 场景 | 方式 | 源文件 |
-|---|---|---|
-| 流程图、时序图、状态图等结构化图 | Mermaid 代码块 | 无（正文中直接写） |
-| 概念图、示意图（手绘风格） | Excalidraw | `*.excalidraw`（JSON） |
-| 精确排版的结构图、多页架构图 | draw.io | `*.drawio`（未压缩 XML） |
+| 场景                             | 方式           | 源文件                   |
+| -------------------------------- | -------------- | ------------------------ |
+| 流程图、时序图、状态图等结构化图 | Mermaid 代码块 | 无（正文中直接写）       |
+| 概念图、示意图（手绘风格）       | Excalidraw     | `*.excalidraw`（JSON）   |
+| 精确排版的结构图、多页架构图     | draw.io        | `*.drawio`（未压缩 XML） |
 
 Mermaid：
 
@@ -146,7 +146,7 @@ flowchart LR
 Excalidraw 或 draw.io，使用标准图片语法引用源文件：
 
 ```markdown
-![自注意力计算流程](./diagrams/attention-flow.excalidraw "图 1：自注意力")
+![自注意力计算流程](./diagrams/attention-flow.excalidraw '图 1：自注意力')
 ![Transformer Block](./diagrams/transformer-block.drawio#page=encoder)
 ```
 
@@ -178,7 +178,17 @@ pnpm diagram check      # 只校验哈希，CI 中使用，不需要浏览器
 ```mdx
 import MatMul from './MatMul';
 
-<MatMul client:visible a={[[1,2],[3,4]]} b={[[5,6],[7,8]]} />
+<MatMul
+  client:visible
+  a={[
+    [1, 2],
+    [3, 4],
+  ]}
+  b={[
+    [5, 6],
+    [7, 8],
+  ]}
+/>
 ```
 
 演示站的 [矩阵乘法](src/content/posts/matrix-multiplication/) 就是这样写的：`matmul.ts`（算法）+ `MatMul.tsx`（画面）。完整说明见 [docs/guide/explainers.md](docs/guide/explainers.md)。
@@ -197,25 +207,25 @@ export default defineConfig({
 });
 ```
 
-| 选项 | 类型 | 默认值 | 说明 |
-|---|---|---|---|
-| `site.title` | string | `Wisp` | 站点标题 |
-| `site.description` | string | `安静好读的技术博客` | 站点描述 |
-| `site.author` | string | `""` | 作者 |
-| `site.authorGithub` | URL | — | 配置后页脚作者名链接到 GitHub |
-| `site.lang` | string | `zh-CN` | 站点语言 |
-| `nav` | `{label, href}[]` | 归档、标签、关于 | 顶部导航 |
-| `social` | `{kind, href, label?}[]` | RSS | 社交链接，`kind` 可选 github、x、mastodon、bluesky、email、rss、link |
-| `home.featuredCount` | 整数 ≥ 0 | `3` | 首页精选篇数 |
-| `home.pageSize` | 整数 ≥ 1 | `10` | 列表每页篇数 |
-| `features.*` | boolean | `true` | `codeCopy`、`lineNumbers`、`math`、`mermaid`、`toc`、`diagramDownload`；`codeFold` 为对象 |
-| `mermaid.strict` | boolean | `false` | `true` 时 Mermaid 渲染失败使构建失败 |
-| `rss.fullText` | boolean | `true` | RSS 输出全文；`false` 只输出摘要 |
-| `taxonomy.slugMap` | Record<string, string> | `{}` | 覆盖标签、分类的 URL 段 |
-| `components` | Record<组件名, 路径> | `{}` | 覆盖主题组件或布局，见下文 |
-| `customCss` | string[] | `[]` | 追加的样式文件 |
-| `palette` | 路径或对象 | — | 覆盖调色板（与默认值深度合并） |
-| `routes.*` | boolean | `true` | `home`、`posts`、`archive`、`tags`、`categories`、`about`、`rss`、`notFound` |
+| 选项                 | 类型                     | 默认值               | 说明                                                                                      |
+| -------------------- | ------------------------ | -------------------- | ----------------------------------------------------------------------------------------- |
+| `site.title`         | string                   | `Wisp`               | 站点标题                                                                                  |
+| `site.description`   | string                   | `安静好读的技术博客` | 站点描述                                                                                  |
+| `site.author`        | string                   | `""`                 | 作者                                                                                      |
+| `site.authorGithub`  | URL                      | —                    | 配置后页脚作者名链接到 GitHub                                                             |
+| `site.lang`          | string                   | `zh-CN`              | 站点语言                                                                                  |
+| `nav`                | `{label, href}[]`        | 归档、标签、关于     | 顶部导航                                                                                  |
+| `social`             | `{kind, href, label?}[]` | RSS                  | 社交链接，`kind` 可选 github、x、mastodon、bluesky、email、rss、link                      |
+| `home.featuredCount` | 整数 ≥ 0                 | `3`                  | 首页精选篇数                                                                              |
+| `home.pageSize`      | 整数 ≥ 1                 | `10`                 | 列表每页篇数                                                                              |
+| `features.*`         | boolean                  | `true`               | `codeCopy`、`lineNumbers`、`math`、`mermaid`、`toc`、`diagramDownload`；`codeFold` 为对象 |
+| `mermaid.strict`     | boolean                  | `false`              | `true` 时 Mermaid 渲染失败使构建失败                                                      |
+| `rss.fullText`       | boolean                  | `true`               | RSS 输出全文；`false` 只输出摘要                                                          |
+| `taxonomy.slugMap`   | Record<string, string>   | `{}`                 | 覆盖标签、分类的 URL 段                                                                   |
+| `components`         | Record<组件名, 路径>     | `{}`                 | 覆盖主题组件或布局，见下文                                                                |
+| `customCss`          | string[]                 | `[]`                 | 追加的样式文件                                                                            |
+| `palette`            | 路径或对象               | —                    | 覆盖调色板（与默认值深度合并）                                                            |
+| `routes.*`           | boolean                  | `true`               | `home`、`posts`、`archive`、`tags`、`categories`、`about`、`rss`、`notFound`              |
 
 数组（如 `nav`、`social`）整体替换，对象逐字段深度合并。非法值会在启动时报错并指出字段路径。完整说明见 [docs/guide/configuration.md](docs/guide/configuration.md)。
 
@@ -231,11 +241,13 @@ export default defineConfig({
    ---
    import Default from 'astro-wisp/components/Footer.astro';
    ---
+
    <Default />
    <p class="text-muted">额外的一行</p>
    ```
 
    可覆盖的名称：`Header`、`Footer`、`PostCard`、`PostMeta`、`Toc`、`TagList`、`Pagination`、`PrevNext`、`ThemeToggle`、`Icon`、`Figure`、`Diagram` 等全部组件，以及布局 `Base`、`Post`、`Page`。`Base` 与 `Header` 有可选的 `running` prop（书眉：`{ label, href?, position?, title? }`），文章页用它在站名后显示系列与位置，覆盖这两个组件时请透传。写错名称时启动报错并列出可选项。
+
 4. **页面**：`routes: { about: false }` 关掉主题的路由，再在 `src/pages/` 中自己实现。自定义页面可以复用 `astro-wisp/layouts/Base.astro` 等布局，以及 `astro-wisp/utils` 中的 `getPosts()`、`getTags()`。
 5. **内容模型**：文章 frontmatter 已内置 `series.id` / `series.order`，其他字段再用 `postsSchema({ extend })` 扩展。
 
@@ -243,33 +255,35 @@ export default defineConfig({
 
 站点（starter）中：
 
-| 命令 | 说明 |
-|---|---|
-| `pnpm dev` / `pnpm build` / `pnpm preview` | Astro 标准命令 |
-| `pnpm check` | `astro check` + `wisp diagram check` |
-| `pnpm diagram <子命令>` | 即 `wisp diagram`，图表工具，见下表 |
+| 命令                                       | 说明                                                       |
+| ------------------------------------------ | ---------------------------------------------------------- |
+| `pnpm dev` / `pnpm build` / `pnpm preview` | Astro 标准命令                                             |
+| `pnpm check`                               | 类型检查 + ESLint + Prettier + 测试 + `wisp diagram check` |
+| `pnpm lint`                                | ESLint 全仓库检查                                          |
+| `pnpm format` / `pnpm format:check`        | 自动格式化 / 只检查格式                                    |
+| `pnpm diagram <子命令>`                    | 即 `wisp diagram`，图表工具，见下表                        |
 
 本仓库（主题开发）额外有：
 
-| 命令 | 说明 |
-|---|---|
-| `pnpm check` | `astro check` + `tsc` + vitest + 对比度检查 + 图表校验（质量门禁） |
-| `pnpm test` / `pnpm test:e2e` | vitest 单元测试 / Playwright 端到端测试 |
-| `pnpm tokens` | 根据默认调色板重新生成主题包内的令牌 CSS |
-| `pnpm contrast` | 检查默认调色板的对比度 |
-| `pnpm build:template` | 构建 starter（工作区内链接当前主题源码） |
+| 命令                          | 说明                                                                                   |
+| ----------------------------- | -------------------------------------------------------------------------------------- |
+| `pnpm check`                  | `astro check` + `tsc` + ESLint + Prettier + vitest + 对比度检查 + 图表校验（质量门禁） |
+| `pnpm test` / `pnpm test:e2e` | vitest 单元测试 / Playwright 端到端测试                                                |
+| `pnpm tokens`                 | 根据默认调色板重新生成主题包内的令牌 CSS                                               |
+| `pnpm contrast`               | 检查默认调色板的对比度                                                                 |
+| `pnpm build:template`         | 构建 starter（工作区内链接当前主题源码）                                               |
 
 图表子命令（`wisp diagram`）：
 
-| 子命令 | 说明 |
-|---|---|
-| `build [路径...] [--force] [--embed-fonts] [--fix] [--drawio cli\|docker\|browser]` | 增量构建源文件为 `.wisp.svg`，更新 `diagrams.manifest.json` |
-| `check` | 校验 manifest 哈希是否与源文件一致（CI 用，失败退出码 1） |
-| `lint [文件...] [--fix] [--strict]` | 检查颜色、字号、网格、字体、文件大小 |
-| `export <文件> [--png] [--theme light\|dark] [--scale 2] [-o out.png] [--transparent]` | 导出 PNG 预览（或发布到不支持 SVG 的平台） |
-| `new <skeleton.json> [-o out.excalidraw] [--build]` | 由骨架 JSON 生成 `.excalidraw`，可选立即构建 |
-| `probe` | 显示 Chromium、Excalidraw 与 draw.io 导出方式（cli / docker / browser）的探测结果 |
-| `cache [status\|warm\|clear]` | 查看、预热（离线使用前）或清空导出资源缓存 `~/.cache/wisp-diagram/` |
+| 子命令                                                                                 | 说明                                                                              |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `build [路径...] [--force] [--embed-fonts] [--fix] [--drawio cli\|docker\|browser]`    | 增量构建源文件为 `.wisp.svg`，更新 `diagrams.manifest.json`                       |
+| `check`                                                                                | 校验 manifest 哈希是否与源文件一致（CI 用，失败退出码 1）                         |
+| `lint [文件...] [--fix] [--strict]`                                                    | 检查颜色、字号、网格、字体、文件大小                                              |
+| `export <文件> [--png] [--theme light\|dark] [--scale 2] [-o out.png] [--transparent]` | 导出 PNG 预览（或发布到不支持 SVG 的平台）                                        |
+| `new <skeleton.json> [-o out.excalidraw] [--build]`                                    | 由骨架 JSON 生成 `.excalidraw`，可选立即构建                                      |
+| `probe`                                                                                | 显示 Chromium、Excalidraw 与 draw.io 导出方式（cli / docker / browser）的探测结果 |
+| `cache [status\|warm\|clear]`                                                          | 查看、预热（离线使用前）或清空导出资源缓存 `~/.cache/wisp-diagram/`               |
 
 ## 设计令牌
 

@@ -7,9 +7,10 @@ import remarkReadingTime, { estimateReadingTime } from './remark-reading-time';
 
 /** 只运行 transformer（不需要 stringify），返回处理后的 VFile */
 async function runPlugin(md: string, plugins: 'with-math' | 'bare' = 'with-math'): Promise<VFile> {
-  const processor = plugins === 'with-math'
-    ? unified().use(remarkParse).use(remarkMath).use(remarkReadingTime)
-    : unified().use(remarkParse).use(remarkReadingTime);
+  const processor =
+    plugins === 'with-math'
+      ? unified().use(remarkParse).use(remarkMath).use(remarkReadingTime)
+      : unified().use(remarkParse).use(remarkReadingTime);
   const file = new VFile(md);
   const tree = processor.parse(file);
   await processor.run(tree, file);
@@ -18,7 +19,8 @@ async function runPlugin(md: string, plugins: 'with-math' | 'bare' = 'with-math'
 
 async function readingTimeOf(md: string): Promise<number> {
   const file = await runPlugin(md);
-  const fm = (file.data as { astro?: { frontmatter?: { readingTime?: number } } }).astro?.frontmatter;
+  const fm = (file.data as { astro?: { frontmatter?: { readingTime?: number } } }).astro
+    ?.frontmatter;
   return fm?.readingTime as number;
 }
 
@@ -69,7 +71,8 @@ describe('remarkReadingTime 插件', () => {
 
   it('文件 data 为空时会创建 astro.frontmatter', async () => {
     const file = await runPlugin('hello world', 'bare');
-    expect((file.data as any).astro.frontmatter.readingTime).toBe(1);
+    const data = file.data as { astro: { frontmatter: { readingTime: number } } };
+    expect(data.astro.frontmatter.readingTime).toBe(1);
   });
 
   it('代码块内容按 0.3 权重计入（Markdown 整体）', async () => {

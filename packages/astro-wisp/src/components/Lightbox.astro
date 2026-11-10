@@ -29,7 +29,12 @@ import Icon from 'virtual:wisp/components/Icon';
     const mediaSlot = dialog.querySelector('[data-lightbox-media]');
     const title = dialog.querySelector('[data-lightbox-title]');
     const close = dialog.querySelector('[data-lightbox-close]');
-    if (!(mediaSlot instanceof HTMLElement) || !(title instanceof HTMLElement) || !(close instanceof HTMLButtonElement)) return;
+    if (
+      !(mediaSlot instanceof HTMLElement) ||
+      !(title instanceof HTMLElement) ||
+      !(close instanceof HTMLButtonElement)
+    )
+      return;
 
     const isChinese = /^zh(?:-|$)/i.test(document.documentElement.lang);
     const labels = {
@@ -49,7 +54,10 @@ import Icon from 'virtual:wisp/components/Icon';
       const svgTitle = source.querySelector(':scope > title')?.textContent?.trim();
       if (svgTitle) return svgTitle;
       const parentLabel = source.closest('[aria-label]')?.getAttribute('aria-label')?.trim();
-      return parentLabel || (source.closest('.wisp-diagram') ? (isChinese ? '图表' : 'Chart') : labels.image);
+      return (
+        parentLabel ||
+        (source.closest('.wisp-diagram') ? (isChinese ? '图表' : 'Chart') : labels.image)
+      );
     }
 
     function remapSvgIds(svg) {
@@ -131,7 +139,8 @@ import Icon from 'virtual:wisp/components/Icon';
       const mediaContainer = source.closest('.wisp-pele-body, .wisp-diagram-body');
       if (mediaContainer) {
         mediaContainer.removeAttribute('tabindex');
-        if (mediaContainer.getAttribute('role') === 'img') mediaContainer.setAttribute('role', 'group');
+        if (mediaContainer.getAttribute('role') === 'img')
+          mediaContainer.setAttribute('role', 'group');
       }
     }
 
@@ -139,7 +148,12 @@ import Icon from 'virtual:wisp/components/Icon';
       if (!(source instanceof HTMLElement || source instanceof SVGElement)) continue;
       // 交互讲解组件（React islands）内的 SVG 是可操作舞台，增强成放大触发器
       // 会弹出静态克隆、并与客户端水合打架（role 不一致），必须排除。
-      if (source.closest('.wisp-explainer, .wisp-explainer__scroll, a, button, dialog, pre, .wisp-diagram-actions')) continue;
+      if (
+        source.closest(
+          '.wisp-explainer, .wisp-explainer__scroll, a, button, dialog, pre, .wisp-diagram-actions',
+        )
+      )
+        continue;
       if (source instanceof SVGElement) {
         if (source.matches('.wisp-icon') || source.parentElement?.closest('svg')) continue;
         if (!source.closest('figure, .wisp-pele-body, .wisp-diagram-body')) continue;

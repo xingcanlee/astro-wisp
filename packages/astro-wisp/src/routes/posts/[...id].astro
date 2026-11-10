@@ -1,7 +1,13 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import { render } from 'astro:content';
-import { filterAndSortSeries, getPosts, seriesNeighbors, type PostEntry, type SeriesItem } from '../../utils/posts';
+import {
+  filterAndSortSeries,
+  getPosts,
+  seriesNeighbors,
+  type PostEntry,
+  type SeriesItem,
+} from '../../utils/posts';
 import Post from 'virtual:wisp/components/Post';
 
 export const getStaticPaths = (async () => {
@@ -39,7 +45,9 @@ const { Content, headings, remarkPluginFrontmatter } = await render(post);
 // render() 的 headings[].text 取自 rehype-katex 渲染后的 hast，行内公式会被搅乱（如 $w$ → "www"）。
 // 用 remark-heading-text 在渲染前收集的原始文本按序号覆盖，供 Toc 构建时自行用 KaTeX 渲染。
 const tocTexts = remarkPluginFrontmatter.tocHeadingTexts as string[] | undefined;
-const headingsFixed = tocTexts ? headings.map((h, i) => ({ ...h, text: tocTexts[i] ?? h.text })) : headings;
+const headingsFixed = tocTexts
+  ? headings.map((h, i) => ({ ...h, text: tocTexts[i] ?? h.text }))
+  : headings;
 ---
 
 <Post

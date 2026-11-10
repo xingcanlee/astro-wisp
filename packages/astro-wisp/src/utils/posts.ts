@@ -20,10 +20,15 @@ export interface PostLike {
 }
 
 /** 过滤草稿（includeDrafts 为 true 时保留），按 pubDate 降序；同时间按 id 升序以保持稳定。 */
-export function filterAndSortPosts<T extends PostLike>(posts: T[], opts: { includeDrafts?: boolean } = {}): T[] {
+export function filterAndSortPosts<T extends PostLike>(
+  posts: T[],
+  opts: { includeDrafts?: boolean } = {},
+): T[] {
   return posts
     .filter((p) => opts.includeDrafts || !p.data.draft)
-    .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime() || a.id.localeCompare(b.id));
+    .sort(
+      (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime() || a.id.localeCompare(b.id),
+    );
 }
 
 /** 按发布年份分组，年份降序，组内保持输入顺序。 */
@@ -37,16 +42,19 @@ export function groupByYear<T extends PostLike>(posts: T[]): Array<{ year: numbe
 }
 
 /** 按系列顺序返回文章导航项，未加入该系列的文章不参与排序。 */
-export function filterAndSortSeries<T extends { id: string; data: { title: string; pubDate: Date; series?: { id: string; order: number } } }>(
-  posts: T[],
-  seriesId: string,
-): SeriesItem[] {
+export function filterAndSortSeries<
+  T extends {
+    id: string;
+    data: { title: string; pubDate: Date; series?: { id: string; order: number } };
+  },
+>(posts: T[], seriesId: string): SeriesItem[] {
   return posts
     .filter((post) => post.data.series?.id === seriesId)
-    .sort((a, b) =>
-      a.data.series!.order - b.data.series!.order ||
-      a.data.pubDate.getTime() - b.data.pubDate.getTime() ||
-      a.id.localeCompare(b.id),
+    .sort(
+      (a, b) =>
+        a.data.series!.order - b.data.series!.order ||
+        a.data.pubDate.getTime() - b.data.pubDate.getTime() ||
+        a.id.localeCompare(b.id),
     )
     .map((post) => ({ id: post.id, title: post.data.title, order: post.data.series!.order }));
 }
@@ -84,7 +92,15 @@ export interface SeriesSummary {
 
 /** 把文章按 series.id 分组成系列摘要，按最近更新时间降序；同时间按系列 id 升序。 */
 export function summarizeSeries<
-  T extends { id: string; data: { title: string; description?: string; pubDate: Date; series?: { id: string; order: number } } },
+  T extends {
+    id: string;
+    data: {
+      title: string;
+      description?: string;
+      pubDate: Date;
+      series?: { id: string; order: number };
+    };
+  },
 >(posts: T[]): SeriesSummary[] {
   const ids = [...new Set(posts.map((p) => p.data.series?.id).filter((id): id is string => !!id))];
   return ids

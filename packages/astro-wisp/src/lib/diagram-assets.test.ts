@@ -1,10 +1,23 @@
 import { EventEmitter } from 'node:events';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, cpSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+  cpSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { contentDisposition, copyDiagramSources, diagramDevMiddleware, downloadKeyFromUrl } from './diagram-assets';
+import {
+  contentDisposition,
+  copyDiagramSources,
+  diagramDevMiddleware,
+  downloadKeyFromUrl,
+} from './diagram-assets';
 import { FIX, makeRepo } from './render-diagram.fixture';
 
 let repo: ReturnType<typeof makeRepo>;
@@ -13,7 +26,10 @@ beforeAll(() => {
   // 一篇 draft 文章，其图表不应被复制
   const d = join(repo.root, 'src/content/posts/secret/diagrams');
   mkdirSync(d, { recursive: true });
-  writeFileSync(join(repo.root, 'src/content/posts/secret/index.md'), '---\ntitle: s\ndraft: true\n---\n');
+  writeFileSync(
+    join(repo.root, 'src/content/posts/secret/index.md'),
+    '---\ntitle: s\ndraft: true\n---\n',
+  );
   cpSync(join(FIX, 'hand-attention.excalidraw'), join(d, 'x.excalidraw'));
 });
 afterAll(() => rmSync(repo.root, { recursive: true, force: true }));
@@ -23,11 +39,17 @@ function request(mw: ReturnType<typeof diagramDevMiddleware>, url: string, metho
   const res = Object.assign(new EventEmitter(), {
     statusCode: 0,
     body: undefined as Buffer | undefined,
-    setHeader(k: string, v: unknown) { headers[k.toLowerCase()] = v; },
-    end(b?: Buffer) { this.body = b; },
+    setHeader(k: string, v: unknown) {
+      headers[k.toLowerCase()] = v;
+    },
+    end(b?: Buffer) {
+      this.body = b;
+    },
   });
   let nexted = false;
-  mw({ url, method } as never, res as never, () => { nexted = true; });
+  mw({ url, method } as never, res as never, () => {
+    nexted = true;
+  });
   return { res, headers, nexted };
 }
 
@@ -38,8 +60,12 @@ describe('diagramDevMiddleware', () => {
     expect(r.nexted).toBe(false);
     expect(r.res.statusCode).toBe(200);
     expect(r.headers['content-type']).toBe('application/json; charset=utf-8');
-    expect(r.headers['content-disposition']).toBe(`attachment; filename="flow.excalidraw"; filename*=UTF-8''flow.excalidraw`);
-    expect(r.res.body!.toString()).toBe(readFileSync(join(repo.root, 'src/content/posts/demo/diagrams/flow.excalidraw'), 'utf8'));
+    expect(r.headers['content-disposition']).toBe(
+      `attachment; filename="flow.excalidraw"; filename*=UTF-8''flow.excalidraw`,
+    );
+    expect(r.res.body!.toString()).toBe(
+      readFileSync(join(repo.root, 'src/content/posts/demo/diagrams/flow.excalidraw'), 'utf8'),
+    );
     const d = request(mw, '/diagrams/demo/model.drawio?x=1');
     expect(d.headers['content-type']).toBe('application/xml; charset=utf-8');
   });
@@ -57,7 +83,11 @@ describe('diagramDevMiddleware', () => {
     expect(request(mw, '/posts/demo/').nexted).toBe(true);
   });
   it('HEAD has headers but no body', () => {
-    const r = request(diagramDevMiddleware({ root: repo.root }), '/diagrams/demo/flow.excalidraw', 'HEAD');
+    const r = request(
+      diagramDevMiddleware({ root: repo.root }),
+      '/diagrams/demo/flow.excalidraw',
+      'HEAD',
+    );
     expect(r.res.statusCode).toBe(200);
     expect(r.res.body).toBeUndefined();
   });
@@ -65,7 +95,9 @@ describe('diagramDevMiddleware', () => {
 
 describe('helpers', () => {
   it('encodes non-ascii filenames', () => {
-    expect(contentDisposition('注意力.drawio')).toBe(`attachment; filename="___.drawio"; filename*=UTF-8''${encodeURIComponent('注意力.drawio')}`);
+    expect(contentDisposition('注意力.drawio')).toBe(
+      `attachment; filename="___.drawio"; filename*=UTF-8''${encodeURIComponent('注意力.drawio')}`,
+    );
   });
   it('extracts keys', () => {
     expect(downloadKeyFromUrl('/diagrams/a/b.drawio')).toBe('a/b.drawio');
@@ -79,7 +111,11 @@ describe('copyDiagramSources', () => {
     const out = mkdtempSync(join(tmpdir(), 'wisp-dist-'));
     try {
       const copied = copyDiagramSources(pathToFileURL(out + '/'), { root: repo.root });
-      expect(copied.map((c) => c.key).sort()).toEqual(['demo/flow.excalidraw', 'demo/model.drawio', 'shared/shared-flow.excalidraw']);
+      expect(copied.map((c) => c.key).sort()).toEqual([
+        'demo/flow.excalidraw',
+        'demo/model.drawio',
+        'shared/shared-flow.excalidraw',
+      ]);
       expect(existsSync(join(out, 'diagrams/demo/model.drawio'))).toBe(true);
       expect(existsSync(join(out, 'diagrams/shared/shared-flow.excalidraw'))).toBe(true);
       expect(existsSync(join(out, 'diagrams/secret'))).toBe(false);

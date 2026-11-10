@@ -71,8 +71,24 @@ export default function Player<S>({ steps, label, children, lang, labels }: Play
 
       <div className="wisp-player__controls">
         <div className="wisp-player__buttons">
-          <button type="button" aria-label={t.first} title={`${t.first} (${t.keys.first})`} onClick={p.first} disabled={atFirst}><PlayerIcon name="first" /></button>
-          <button type="button" aria-label={t.prev} title={`${t.prev} (${t.keys.prev})`} onClick={p.prev} disabled={atFirst}><PlayerIcon name="prev" /></button>
+          <button
+            type="button"
+            aria-label={t.first}
+            title={`${t.first} (${t.keys.first})`}
+            onClick={p.first}
+            disabled={atFirst}
+          >
+            <PlayerIcon name="first" />
+          </button>
+          <button
+            type="button"
+            aria-label={t.prev}
+            title={`${t.prev} (${t.keys.prev})`}
+            onClick={p.prev}
+            disabled={atFirst}
+          >
+            <PlayerIcon name="prev" />
+          </button>
           <button
             type="button"
             className="wisp-player__play"
@@ -83,8 +99,24 @@ export default function Player<S>({ steps, label, children, lang, labels }: Play
           >
             <PlayerIcon name={p.playing ? 'pause' : 'play'} />
           </button>
-          <button type="button" aria-label={t.next} title={`${t.next} (${t.keys.next})`} onClick={p.next} disabled={atLast}><PlayerIcon name="next" /></button>
-          <button type="button" aria-label={t.last} title={`${t.last} (${t.keys.last})`} onClick={p.last} disabled={atLast}><PlayerIcon name="last" /></button>
+          <button
+            type="button"
+            aria-label={t.next}
+            title={`${t.next} (${t.keys.next})`}
+            onClick={p.next}
+            disabled={atLast}
+          >
+            <PlayerIcon name="next" />
+          </button>
+          <button
+            type="button"
+            aria-label={t.last}
+            title={`${t.last} (${t.keys.last})`}
+            onClick={p.last}
+            disabled={atLast}
+          >
+            <PlayerIcon name="last" />
+          </button>
         </div>
 
         <input
@@ -104,7 +136,13 @@ export default function Player<S>({ steps, label, children, lang, labels }: Play
 
         <div className="wisp-player__speed" role="group" aria-label={t.speed}>
           {SPEEDS.map((s) => (
-            <button key={s} type="button" aria-pressed={p.speed === s} aria-label={t.speedValue(s)} onClick={() => p.setSpeed(s)}>
+            <button
+              key={s}
+              type="button"
+              aria-pressed={p.speed === s}
+              aria-label={t.speedValue(s)}
+              onClick={() => p.setSpeed(s)}
+            >
               {s}×
             </button>
           ))}

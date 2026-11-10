@@ -3,15 +3,28 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { FIX, makeRepo } from './render-diagram.fixture';
 import {
-  downloadKeyFor, isDiagramUrl, outputPathFor, parseDiagramUrl, postId, prepareSvg, renderDiagram,
+  downloadKeyFor,
+  isDiagramUrl,
+  outputPathFor,
+  parseDiagramUrl,
+  postId,
+  prepareSvg,
+  renderDiagram,
   sourceForDownloadKey,
 } from './render-diagram';
 
 let repo: ReturnType<typeof makeRepo>;
-beforeAll(() => { repo = makeRepo(); });
+beforeAll(() => {
+  repo = makeRepo();
+});
 afterAll(() => rmSync(repo.root, { recursive: true, force: true }));
 
-const env = (over: object = {}) => ({ dev: false, root: repo.root, siteUrl: 'https://blog.dev', ...over });
+const env = (over: object = {}) => ({
+  dev: false,
+  root: repo.root,
+  siteUrl: 'https://blog.dev',
+  ...over,
+});
 const ids = (html: string) => [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
 
 describe('url helpers', () => {
@@ -22,8 +35,14 @@ describe('url helpers', () => {
     expect(isDiagramUrl('https://x.com/a.drawio')).toBe(false);
   });
   it('parses #page', () => {
-    expect(parseDiagramUrl('./a.drawio#page=encoder')).toEqual({ path: './a.drawio', page: 'encoder' });
-    expect(parseDiagramUrl('./a%20b.drawio#page=%E6%95%B0%E6%8D%AE%E6%B5%81')).toEqual({ path: './a b.drawio', page: '数据流' });
+    expect(parseDiagramUrl('./a.drawio#page=encoder')).toEqual({
+      path: './a.drawio',
+      page: 'encoder',
+    });
+    expect(parseDiagramUrl('./a%20b.drawio#page=%E6%95%B0%E6%8D%AE%E6%B5%81')).toEqual({
+      path: './a b.drawio',
+      page: '数据流',
+    });
     expect(parseDiagramUrl('./a.excalidraw').page).toBeUndefined();
   });
   it('outputPathFor 与 Python 版 build 的命名一致', () => {
@@ -43,8 +62,12 @@ describe('url helpers', () => {
     expect(downloadKeyFor('/r/src/content/shared/diagrams/a.drawio', r)).toBe('shared/a.drawio');
     expect(downloadKeyFor('/r/src/content/posts/diagrams/a.drawio', r)).toBe('a.drawio');
     expect(downloadKeyFor('/r/tests/a.drawio', r)).toBeUndefined();
-    expect(sourceForDownloadKey('demo/a.drawio', r)).toBe('/r/src/content/posts/demo/diagrams/a.drawio');
-    expect(sourceForDownloadKey('shared/a.drawio', r)).toBe('/r/src/content/shared/diagrams/a.drawio');
+    expect(sourceForDownloadKey('demo/a.drawio', r)).toBe(
+      '/r/src/content/posts/demo/diagrams/a.drawio',
+    );
+    expect(sourceForDownloadKey('shared/a.drawio', r)).toBe(
+      '/r/src/content/shared/diagrams/a.drawio',
+    );
     expect(sourceForDownloadKey('a.drawio', r)).toBe('/r/src/content/posts/diagrams/a.drawio');
     expect(sourceForDownloadKey('../etc/a.drawio', r)).toBeUndefined();
     expect(sourceForDownloadKey('demo/a.svg', r)).toBeUndefined();
@@ -79,30 +102,58 @@ describe('prepareSvg', () => {
     expect(r.svg).toContain('<title id="hand-attention-title-1">A &lt;b&gt; &amp; C</title>');
   });
   it('inserts <title> when missing', () => {
-    const r = prepareSvg('<svg viewBox="0 0 10 10" width="10"><rect/></svg>', { suffix: '1', alt: 'x', fallbackTitleId: 'f-title-1' });
-    expect(r.svg).toBe('<svg viewBox="0 0 10 10" aria-labelledby="f-title-1" role="img"><title id="f-title-1">x</title><rect/></svg>');
+    const r = prepareSvg('<svg viewBox="0 0 10 10" width="10"><rect/></svg>', {
+      suffix: '1',
+      alt: 'x',
+      fallbackTitleId: 'f-title-1',
+    });
+    expect(r.svg).toBe(
+      '<svg viewBox="0 0 10 10" aria-labelledby="f-title-1" role="img"><title id="f-title-1">x</title><rect/></svg>',
+    );
   });
 });
 
 describe('renderDiagram', () => {
   it('renders figure with caption and download link', () => {
-    const r = renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, alt: '流程', caption: '图 1：<b>', seq: 1 }, env());
+    const r = renderDiagram(
+      {
+        src: './diagrams/flow.excalidraw',
+        from: repo.post,
+        alt: '流程',
+        caption: '图 1：<b>',
+        seq: 1,
+      },
+      env(),
+    );
     expect(r.ok).toBe(true);
     expect(r.style).toBe('hand');
-    expect(r.html).toMatch(/^<figure class="wisp-figure wisp-diagram wisp-has-caption" data-style="hand"><div class="wisp-diagram-body" tabindex="0" role="group" aria-label="流程" style="--wd-w:848px"><svg /);
+    expect(r.html).toMatch(
+      /^<figure class="wisp-figure wisp-diagram wisp-has-caption" data-style="hand"><div class="wisp-diagram-body" tabindex="0" role="group" aria-label="流程" style="--wd-w:848px"><svg /,
+    );
     expect(r.html).toContain('<figcaption>图 1：&lt;b&gt;</figcaption>');
     expect(r.html).toContain('href="/diagrams/demo/flow.excalidraw" download="flow.excalidraw"');
     expect(r.html).toContain('aria-label="下载源文件 flow.excalidraw（Excalidraw）"');
-    expect(r.html).toMatch(/class="wisp-diagram-dl"[^>]*title="下载源文件 flow\.excalidraw"[^>]*><svg [^>]*class="wisp-icon"[^>]*aria-hidden="true"[\s\S]*?<\/svg>下载源文件<\/a>/);
+    expect(r.html).toMatch(
+      /class="wisp-diagram-dl"[^>]*title="下载源文件 flow\.excalidraw"[^>]*><svg [^>]*class="wisp-icon"[^>]*aria-hidden="true"[\s\S]*?<\/svg>下载源文件<\/a>/,
+    );
     expect(r.html).not.toContain('app.diagrams.net'); // Excalidraw 没有在线打开
     expect(r.html).toContain('>流程</title>');
   });
   it('selects draw.io page by name, by 1-based index, defaults to first', () => {
     const first = renderDiagram({ src: './diagrams/model.drawio', from: repo.post, seq: 1 }, env());
     expect(first.html).toContain('data-page="encoder"');
-    const byName = renderDiagram({ src: './diagrams/model.drawio#page=数据流', from: repo.post, seq: 2 }, env());
-    const byIndex = renderDiagram({ src: './diagrams/model.drawio#page=2', from: repo.post, seq: 2 }, env());
-    const byProp = renderDiagram({ src: './diagrams/model.drawio', page: 2, from: repo.post, seq: 2 }, env());
+    const byName = renderDiagram(
+      { src: './diagrams/model.drawio#page=数据流', from: repo.post, seq: 2 },
+      env(),
+    );
+    const byIndex = renderDiagram(
+      { src: './diagrams/model.drawio#page=2', from: repo.post, seq: 2 },
+      env(),
+    );
+    const byProp = renderDiagram(
+      { src: './diagrams/model.drawio', page: 2, from: repo.post, seq: 2 },
+      env(),
+    );
     expect(byName.html).toContain('data-page="数据流"');
     expect(byName.html).toContain('clean-transformer-p2-title-2');
     expect(byIndex.html).toBe(byName.html);
@@ -110,51 +161,88 @@ describe('renderDiagram', () => {
   });
   it('adds open-in-draw.io link only with a real site url', () => {
     const r = renderDiagram({ src: './diagrams/model.drawio', from: repo.post, seq: 1 }, env());
-    expect(r.html).toMatch(/class="wisp-diagram-open"[^>]*aria-label="在 draw\.io 中打开"[^>]*><svg [^>]*class="wisp-icon"[\s\S]*?<\/svg>打开 draw\.io<\/a>/);
-    expect(r.html).toContain(`https://app.diagrams.net/#U${encodeURIComponent('https://blog.dev/diagrams/demo/model.drawio')}`);
-    const r2 = renderDiagram({ src: './diagrams/model.drawio', from: repo.post, seq: 1 }, env({ siteUrl: 'https://example.com' }));
+    expect(r.html).toMatch(
+      /class="wisp-diagram-open"[^>]*aria-label="在 draw\.io 中打开"[^>]*><svg [^>]*class="wisp-icon"[\s\S]*?<\/svg>打开 draw\.io<\/a>/,
+    );
+    expect(r.html).toContain(
+      `https://app.diagrams.net/#U${encodeURIComponent('https://blog.dev/diagrams/demo/model.drawio')}`,
+    );
+    const r2 = renderDiagram(
+      { src: './diagrams/model.drawio', from: repo.post, seq: 1 },
+      env({ siteUrl: 'https://example.com' }),
+    );
     expect(r2.html).not.toContain('app.diagrams.net');
   });
   it('respects base, download=false and the global switch', () => {
-    expect(renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 }, env({ base: '/blog/' })).html)
-      .toContain('href="/blog/diagrams/demo/flow.excalidraw"');
-    expect(renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 1, download: false }, env()).html)
-      .not.toContain('wisp-diagram-dl');
-    expect(renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 }, env({ downloads: false })).html)
-      .not.toContain('wisp-diagram-actions');
+    expect(
+      renderDiagram(
+        { src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 },
+        env({ base: '/blog/' }),
+      ).html,
+    ).toContain('href="/blog/diagrams/demo/flow.excalidraw"');
+    expect(
+      renderDiagram(
+        { src: './diagrams/flow.excalidraw', from: repo.post, seq: 1, download: false },
+        env(),
+      ).html,
+    ).not.toContain('wisp-diagram-dl');
+    expect(
+      renderDiagram(
+        { src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 },
+        env({ downloads: false }),
+      ).html,
+    ).not.toContain('wisp-diagram-actions');
   });
   it('shared diagrams download from /diagrams/shared/', () => {
-    const r = renderDiagram({ src: '../../shared/diagrams/shared-flow.excalidraw', from: repo.post, seq: 1 }, env());
+    const r = renderDiagram(
+      { src: '../../shared/diagrams/shared-flow.excalidraw', from: repo.post, seq: 1 },
+      env(),
+    );
     expect(r.html).toContain('href="/diagrams/shared/shared-flow.excalidraw"');
   });
   it('wide adds .wisp-wide', () => {
-    expect(renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 1, wide: true }, env()).html)
-      .toMatch(/^<figure class="wisp-figure wisp-diagram wisp-wide"/);
+    expect(
+      renderDiagram(
+        { src: './diagrams/flow.excalidraw', from: repo.post, seq: 1, wide: true },
+        env(),
+      ).html,
+    ).toMatch(/^<figure class="wisp-figure wisp-diagram wisp-wide"/);
   });
   it('same diagram twice → disjoint ids', () => {
-    const a = ids(renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 }, env()).html);
-    const b = ids(renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 2 }, env()).html);
+    const a = ids(
+      renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 }, env()).html,
+    );
+    const b = ids(
+      renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 2 }, env()).html,
+    );
     expect(a.length).toBeGreaterThan(0);
     expect(a.filter((x) => b.includes(x))).toEqual([]);
   });
   it('unknown page: build throws, dev shows placeholder', () => {
-    expect(() => renderDiagram({ src: './diagrams/model.drawio#page=nope', from: repo.post, seq: 1 }, env()))
-      .toThrow(/找不到页面 "nope"/);
+    expect(() =>
+      renderDiagram({ src: './diagrams/model.drawio#page=nope', from: repo.post, seq: 1 }, env()),
+    ).toThrow(/找不到页面 "nope"/);
   });
 
   describe('missing / stale outputs', () => {
     it('missing source file', () => {
-      expect(() => renderDiagram({ src: './diagrams/none.excalidraw', from: repo.post, seq: 1 }, env())).toThrow(/源文件不存在/);
+      expect(() =>
+        renderDiagram({ src: './diagrams/none.excalidraw', from: repo.post, seq: 1 }, env()),
+      ).toThrow(/源文件不存在/);
     });
     it('hash mismatch: build throws, dev placeholder', () => {
       const svgPath = join(repo.root, 'src/content/posts/demo/diagrams/flow.wisp.svg');
       const orig = readFileSync(svgPath, 'utf8');
       writeFileSync(svgPath, orig.replace('自注意力', '改过'));
       try {
-        expect(() => renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 }, env()))
-          .toThrow(/哈希不一致[\s\S]*pnpm diagram build/);
+        expect(() =>
+          renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 }, env()),
+        ).toThrow(/哈希不一致[\s\S]*pnpm diagram build/);
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const r = renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 }, env({ dev: true }));
+        const r = renderDiagram(
+          { src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 },
+          env({ dev: true }),
+        );
         expect(warn).toHaveBeenCalled();
         warn.mockRestore();
         expect(r.ok).toBe(false);
@@ -168,11 +256,12 @@ describe('renderDiagram', () => {
       const p = join(repo.root, 'src/content/posts/demo/diagrams/new.excalidraw');
       writeFileSync(p, '{}');
       try {
-        expect(() => renderDiagram({ src: './diagrams/new.excalidraw', from: repo.post, seq: 1 }, env())).toThrow(/尚未构建/);
+        expect(() =>
+          renderDiagram({ src: './diagrams/new.excalidraw', from: repo.post, seq: 1 }, env()),
+        ).toThrow(/尚未构建/);
       } finally {
         rmSync(p);
       }
     });
   });
 });
-

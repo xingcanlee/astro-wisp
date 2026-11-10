@@ -18,7 +18,8 @@ describe('fonts（Astro Fonts API）', () => {
 
   it('Excalifont 分片文件都随包分发', () => {
     const hand = wispFonts().find((f) => f.name === 'Excalifont')!;
-    const variants = (hand as any).options.variants as Array<{ src: URL[] }>;
+    const variants = (hand as unknown as { options: { variants: Array<{ src: URL[] }> } }).options
+      .variants;
     expect(variants).toHaveLength(7);
     for (const v of variants) expect(existsSync(fileURLToPath(v.src[0]!))).toBe(true);
   });
@@ -26,14 +27,18 @@ describe('fonts（Astro Fonts API）', () => {
   it('从 Fontsource 文件名取子集（供 preload 过滤）', () => {
     expect(fontsourceSubset('/x/inter-latin-wght-normal.woff2')).toBe('latin');
     expect(fontsourceSubset('/x/inter-latin-ext-wght-italic.woff2')).toBe('latin-ext');
-    expect(fontsourceSubset('/x/jetbrains-mono-cyrillic-ext-wght-normal.woff2')).toBe('cyrillic-ext');
+    expect(fontsourceSubset('/x/jetbrains-mono-cyrillic-ext-wght-normal.woff2')).toBe(
+      'cyrillic-ext',
+    );
     expect(fontsourceSubset('/x/noto-sans-sc-87-wght-normal.woff2')).toBe('87');
     expect(fontsourceSubset('/x/foo.woff2')).toBeUndefined();
   });
 
   it('令牌通过变量引用 Fonts API 字体，并保留原族名作回退；思源黑体仍按族名引用', () => {
     const css = genTokens();
-    expect(css).toContain('--wisp-font-sans: var(--font-wisp-sans, "Inter Variable"), "Noto Sans SC Variable"');
+    expect(css).toContain(
+      '--wisp-font-sans: var(--font-wisp-sans, "Inter Variable"), "Noto Sans SC Variable"',
+    );
     expect(css).toContain('--wisp-font-mono: var(--font-wisp-mono, "JetBrains Mono Variable")');
     expect(css).toContain('--wisp-font-hand: var(--font-wisp-hand, Excalifont)');
   });

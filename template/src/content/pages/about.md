@@ -1,6 +1,6 @@
 ---
-title: "关于"
-description: "关于这个博客"
+title: '关于'
+description: '关于这个博客'
 ---
 
 这里是一个使用 Wisp 搭建的技术博客。

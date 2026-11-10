@@ -2,19 +2,19 @@
 
 权威来源是 `src/content.config.ts` 中的 `posts` schema。字段以 YAML 写在文件开头的 `---` 之间。
 
-| 字段 | 必填 | 类型 | 约束与说明 |
-|---|---|---|---|
-| `title` | 是 | string | 最多 80 个字符。含冒号、`#` 等特殊字符时加双引号 |
-| `description` | 是 | string | 最多 200 个字符。显示在列表页、RSS 和搜索结果中，写清文章解决什么问题，不要只重复标题 |
-| `pubDate` | 是 | 日期 | `YYYY-MM-DD`，如 `2026-03-18` |
-| `updatedDate` | 否 | 日期 | 实质性修改后更新；不早于 `pubDate` |
-| `tags` | 否 | string[] | 默认 `[]`。如 `[LLM, Transformer]` |
-| `category` | 否 | string | 一篇文章只有一个分类 |
-| `draft` | 否 | boolean | 默认 `false`；`true` 时生产构建不包含 |
-| `featured` | 否 | boolean | 默认 `false`；`true` 时出现在首页精选区。不要擅自设置 |
-| `cover` | 否 | 图片路径 | 相对路径，经 Astro 图片优化 |
-| `lang` | 否 | string | 覆盖站点语言，英文文章写 `en` |
-| `toc` | 否 | boolean | 默认 `true`；很短的文章可以设为 `false` |
+| 字段          | 必填 | 类型     | 约束与说明                                                                            |
+| ------------- | ---- | -------- | ------------------------------------------------------------------------------------- |
+| `title`       | 是   | string   | 最多 80 个字符。含冒号、`#` 等特殊字符时加双引号                                      |
+| `description` | 是   | string   | 最多 200 个字符。显示在列表页、RSS 和搜索结果中，写清文章解决什么问题，不要只重复标题 |
+| `pubDate`     | 是   | 日期     | `YYYY-MM-DD`，如 `2026-03-18`                                                         |
+| `updatedDate` | 否   | 日期     | 实质性修改后更新；不早于 `pubDate`                                                    |
+| `tags`        | 否   | string[] | 默认 `[]`。如 `[LLM, Transformer]`                                                    |
+| `category`    | 否   | string   | 一篇文章只有一个分类                                                                  |
+| `draft`       | 否   | boolean  | 默认 `false`；`true` 时生产构建不包含                                                 |
+| `featured`    | 否   | boolean  | 默认 `false`；`true` 时出现在首页精选区。不要擅自设置                                 |
+| `cover`       | 否   | 图片路径 | 相对路径，经 Astro 图片优化                                                           |
+| `lang`        | 否   | string   | 覆盖站点语言，英文文章写 `en`                                                         |
+| `toc`         | 否   | boolean  | 默认 `true`；很短的文章可以设为 `false`                                               |
 
 字符数按 UTF-16 码元计，与 zod 的 `.max()` 一致；check_post.py 用同样的算法。
 
@@ -22,8 +22,8 @@
 
 ```yaml
 ---
-title: "自注意力机制讲解"
-description: "从直觉到公式，逐步讲清楚 Transformer 中自注意力的计算过程，并附上 PyTorch 实现。"
+title: '自注意力机制讲解'
+description: '从直觉到公式，逐步讲清楚 Transformer 中自注意力的计算过程，并附上 PyTorch 实现。'
 pubDate: 2026-03-18
 tags: [LLM, Transformer, 注意力]
 category: 机器学习

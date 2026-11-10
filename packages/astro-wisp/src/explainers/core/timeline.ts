@@ -47,11 +47,18 @@ export function focusOf(focus: readonly string[] | undefined, prefix: string): S
  * });
  * ```
  */
-export function record<S>(initial: S, run: (state: S, emit: (caption: string, focus?: string[]) => void) => void): Timeline<S> {
+export function record<S>(
+  initial: S,
+  run: (state: S, emit: (caption: string, focus?: string[]) => void) => void,
+): Timeline<S> {
   const state = structuredClone(initial);
   const steps: Timeline<S> = [];
   run(state, (caption, focus) => {
-    steps.push(focus ? { state: structuredClone(state), caption, focus } : { state: structuredClone(state), caption });
+    steps.push(
+      focus
+        ? { state: structuredClone(state), caption, focus }
+        : { state: structuredClone(state), caption },
+    );
   });
   if (steps.length === 0) throw new Error('record：算法没有产生任何步骤（至少调用一次 emit）');
   return steps;

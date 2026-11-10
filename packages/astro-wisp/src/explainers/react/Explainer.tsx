@@ -28,7 +28,15 @@ export interface ExplainerProps<S> {
  * }
  * ```
  */
-export default function Explainer<S>({ steps, children, title, label, wide = true, lang, labels }: ExplainerProps<S>) {
+export default function Explainer<S>({
+  steps,
+  children,
+  title,
+  label,
+  wide = true,
+  lang,
+  labels,
+}: ExplainerProps<S>) {
   return (
     <figure className={wide ? 'wisp-wide wisp-explainer' : 'wisp-explainer'}>
       {title && <figcaption className="wisp-explainer__title">{title}</figcaption>}

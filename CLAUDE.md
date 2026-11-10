@@ -3,11 +3,13 @@
 Wisp —— 安静好读的技术博客主题（Astro 7 集成 + Tailwind 4 + MDX + Pele + React islands）。
 
 ## 仓库结构
+
 - `packages/astro-wisp/`：主题包（npm `astro-wisp`）。集成入口 `index.ts` → `src/integration.ts`；注入的页面在 `src/routes/`，可覆盖的组件 / 布局在 `src/components/`、`src/layouts/`。
 - 根目录：使用主题的演示站（`astro.config.ts` + `src/content/`），也是 e2e 测试对象。
 - `template/`：starter，只有配置和内容，依赖 `astro-wisp`（工作区内链接到 packages/astro-wisp）。
 
 ## 开工前必读
+
 - `DESIGN.md`：**外观规范**（字体、配色、圆角、间距、组件样式、品牌原则）。任何样式 / 组件改动先读它，改完如果改变了规范就同步更新它
 - `PRODUCT.md`：读者、定位、约束
 - `docs/README.md`：决策记录和环境前提
@@ -15,6 +17,7 @@ Wisp —— 安静好读的技术博客主题（Astro 7 集成 + Tailwind 4 + MD
 - `docs/tasks.md` §0：协作规则（文件所有权、报告格式）
 
 ## 硬性规则
+
 - 颜色只能来自调色板生成的 CSS 变量（`--wisp-*`、图表中的 `--wd-*`；交互组件用 `Tone`）。禁止硬编码十六进制颜色，禁止 Tailwind 原始色阶，禁止 `dark:` 颜色变体。
 - 默认调色板是 `packages/astro-wisp/design/palette.json`。`src/styles/{tokens,pele,diagram}.css`、`src/explainers/core/tones.generated.ts`、`skills/wisp-diagram/palette.json` 是生成文件，修改调色板后运行 `pnpm tokens`（有单测检查是否过期）。
 - 主题内部互相引用组件 / 布局时必须经过 `virtual:wisp/components/<Name>`（否则站点无法覆盖）；读配置用 `virtual:wisp/config`；客户端代码只能用 `virtual:wisp/locale`，不要把整份配置打进浏览器。
@@ -28,12 +31,15 @@ Wisp —— 安静好读的技术博客主题（Astro 7 集成 + Tailwind 4 + MD
 - Astro 7 的 API 以官方文档为准，docs 中的代码只表达意图。
 
 ## 常用命令
-- `pnpm dev` / `pnpm build` / `pnpm check`（astro check + tsc + vitest + 对比度 + 图表校验）
+
+- `pnpm dev` / `pnpm build` / `pnpm check`（astro check + tsc + ESLint + Prettier + vitest + 对比度 + 图表校验）
+- `pnpm lint`、`pnpm format`、`pnpm format:check`：代码质量检查与格式化；提交前 hook 只处理 staged 文件
 - `pnpm build:template`：构建 starter
 - `pnpm tokens`：根据默认调色板重新生成令牌
 - `pnpm diagram build|check|lint [--fix]`（即 `wisp diagram`）
 - `pnpm exec vitest run <path>`
 
 ## Agent skills（随主题包分发）
+
 - 写文章：`packages/astro-wisp/skills/wisp-writer/SKILL.md`（`uv run packages/astro-wisp/skills/wisp-writer/scripts/new_post.py` / `check_post.py`）
 - 画图：`packages/astro-wisp/skills/wisp-diagram/SKILL.md`（`pnpm diagram ...`）

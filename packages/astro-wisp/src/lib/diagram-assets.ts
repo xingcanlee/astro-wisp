@@ -11,7 +11,14 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from 'nod
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { contentTypeFor, downloadKeyFor, POSTS_DIR, REPO_ROOT, scanSources, sourceForDownloadKey } from './render-diagram';
+import {
+  contentTypeFor,
+  downloadKeyFor,
+  POSTS_DIR,
+  REPO_ROOT,
+  scanSources,
+  sourceForDownloadKey,
+} from './render-diagram';
 
 export interface DiagramAssetOptions {
   /** 仓库根（测试用） */
@@ -72,13 +79,20 @@ function isDraftDir(root: string, postDir: string): boolean {
   return false;
 }
 
-export interface CopiedSource { from: string; to: string; key: string }
+export interface CopiedSource {
+  from: string;
+  to: string;
+  key: string;
+}
 
 /**
  * 在 `astro:build:done` 中调用：复制源文件到 `<outDir>/diagrams/<key>`。
  * outDir 可以是 URL（钩子参数 `dir`）或路径。返回复制清单。
  */
-export function copyDiagramSources(outDir: URL | string, opts: DiagramAssetOptions = {}): CopiedSource[] {
+export function copyDiagramSources(
+  outDir: URL | string,
+  opts: DiagramAssetOptions = {},
+): CopiedSource[] {
   const root = opts.root ?? REPO_ROOT;
   const out = typeof outDir === 'string' ? outDir : fileURLToPath(outDir);
   const copied: CopiedSource[] = [];

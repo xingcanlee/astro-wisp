@@ -17,42 +17,45 @@ export interface Props {
   label?: string;
 }
 
-const { tags, base = '/tags/', class: className, label = (/^zh\b/i.test(config.site.lang) ? '标签' : 'Tags') } = Astro.props;
+const {
+  tags,
+  base = '/tags/',
+  class: className,
+  label = /^zh\b/i.test(config.site.lang) ? '标签' : 'Tags',
+} = Astro.props;
 const linkBase = sitePath(import.meta.env.BASE_URL, base);
 ---
 
-{
-  tags.length > 0 && (
-    <ul class:list={['wisp-tags', className]} aria-label={label}>
-      {tags.map((t) => (
-        <li>
-          <a href={`${linkBase}${slugify(t, config.taxonomy.slugMap)}/`}>#{t}</a>
-        </li>
-      ))}
-    </ul>
-  )
-}
+{tags.length > 0 && (
+  <ul class:list={['wisp-tags', className]} aria-label={label}>
+    {tags.map((t) => (
+      <li>
+        <a href={`${linkBase}${slugify(t, config.taxonomy.slugMap)}/`}>#{t}</a>
+      </li>
+    ))}
+  </ul>
+)}
 
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
-  .wisp-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25em 0.9em;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .wisp-tags a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2rem;
-    color: var(--wisp-muted);
-    transition: color 150ms;
-  }
-  .wisp-tags a:hover {
-    color: var(--wisp-accent);
-  }
+    .wisp-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25em 0.9em;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .wisp-tags a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2rem;
+      color: var(--wisp-muted);
+      transition: color 150ms;
+    }
+    .wisp-tags a:hover {
+      color: var(--wisp-accent);
+    }
   }
 </style>

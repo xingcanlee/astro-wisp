@@ -16,13 +16,19 @@ describe('timeline', () => {
       [s.arr[0], s.arr[1]] = [s.arr[1], s.arr[0]];
       emit('交换', [itemId('arr', 0), itemId('arr', 1)]);
     });
-    expect(steps.map((x) => x.state.arr)).toEqual([[3, 1, 2], [1, 3, 2]]);
+    expect(steps.map((x) => x.state.arr)).toEqual([
+      [3, 1, 2],
+      [1, 3, 2],
+    ]);
     expect(steps[0]).not.toHaveProperty('focus');
     expect(steps[1].focus).toEqual(['arr:0', 'arr:1']);
   });
   it('record 不修改输入，且至少要有一步', () => {
     const input = { n: 1 };
-    record(input, (s, emit) => { s.n = 2; emit('x'); });
+    record(input, (s, emit) => {
+      s.n = 2;
+      emit('x');
+    });
     expect(input.n).toBe(1);
     expect(() => record(input, () => {})).toThrow(/至少/);
   });

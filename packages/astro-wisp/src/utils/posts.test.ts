@@ -1,15 +1,31 @@
 import { describe, expect, it } from 'vitest';
-import { filterAndSortPosts, filterAndSortSeries, groupByYear, seriesNeighbors, summarizeSeries } from './posts';
+import {
+  filterAndSortPosts,
+  filterAndSortSeries,
+  groupByYear,
+  seriesNeighbors,
+  summarizeSeries,
+} from './posts';
 
 const p = (id: string, d: string, draft = false) => ({ id, data: { pubDate: new Date(d), draft } });
-const posts = [p('a', '2025-03-01'), p('b', '2026-11-06'), p('c', '2026-01-02', true), p('d', '2024-12-31')];
+const posts = [
+  p('a', '2025-03-01'),
+  p('b', '2026-11-06'),
+  p('c', '2026-01-02', true),
+  p('d', '2024-12-31'),
+];
 
 describe('filterAndSortPosts', () => {
   it('过滤草稿并按日期降序', () => {
     expect(filterAndSortPosts(posts).map((x) => x.id)).toEqual(['b', 'a', 'd']);
   });
   it('includeDrafts 保留草稿', () => {
-    expect(filterAndSortPosts(posts, { includeDrafts: true }).map((x) => x.id)).toEqual(['b', 'c', 'a', 'd']);
+    expect(filterAndSortPosts(posts, { includeDrafts: true }).map((x) => x.id)).toEqual([
+      'b',
+      'c',
+      'a',
+      'd',
+    ]);
   });
   it('不修改入参', () => {
     const copy = [...posts];
@@ -30,9 +46,18 @@ describe('groupByYear', () => {
 describe('filterAndSortSeries', () => {
   it('只保留系列文章并按 order 排序', () => {
     const input = [
-      { id: 'later', data: { title: 'Later', pubDate: new Date('2026-01-01'), series: { id: 'x', order: 2 } } },
-      { id: 'other', data: { title: 'Other', pubDate: new Date('2025-01-01'), series: { id: 'y', order: 1 } } },
-      { id: 'first', data: { title: 'First', pubDate: new Date('2026-02-01'), series: { id: 'x', order: 1 } } },
+      {
+        id: 'later',
+        data: { title: 'Later', pubDate: new Date('2026-01-01'), series: { id: 'x', order: 2 } },
+      },
+      {
+        id: 'other',
+        data: { title: 'Other', pubDate: new Date('2025-01-01'), series: { id: 'y', order: 1 } },
+      },
+      {
+        id: 'first',
+        data: { title: 'First', pubDate: new Date('2026-02-01'), series: { id: 'x', order: 1 } },
+      },
     ];
     expect(filterAndSortSeries(input, 'x').map((x) => x.id)).toEqual(['first', 'later']);
   });
@@ -52,9 +77,23 @@ describe('filterAndSortSeries', () => {
 describe('summarizeSeries', () => {
   const d = (s: string) => new Date(s);
   const posts = [
-    { id: 'a/intro', data: { title: 'A 总览', description: 'A desc', pubDate: d('2026-01-01'), series: { id: 'a', order: 1 } } },
-    { id: 'a/02', data: { title: 'A 第二篇', pubDate: d('2026-03-01'), series: { id: 'a', order: 2 } } },
-    { id: 'b/intro', data: { title: 'B 总览', pubDate: d('2026-02-01'), series: { id: 'b', order: 1 } } },
+    {
+      id: 'a/intro',
+      data: {
+        title: 'A 总览',
+        description: 'A desc',
+        pubDate: d('2026-01-01'),
+        series: { id: 'a', order: 1 },
+      },
+    },
+    {
+      id: 'a/02',
+      data: { title: 'A 第二篇', pubDate: d('2026-03-01'), series: { id: 'a', order: 2 } },
+    },
+    {
+      id: 'b/intro',
+      data: { title: 'B 总览', pubDate: d('2026-02-01'), series: { id: 'b', order: 1 } },
+    },
     { id: 'solo', data: { title: 'Solo', pubDate: d('2026-04-01') } },
   ];
 

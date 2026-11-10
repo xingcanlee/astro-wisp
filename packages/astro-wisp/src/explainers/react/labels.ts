@@ -52,7 +52,10 @@ export const EN: PlayerLabels = {
 };
 
 /** 按 BCP 47 语言标签选择内置文字：zh* → 中文，其余 → 英文。缺省取站点语言（wisp 配置的 site.lang）。 */
-export function labelsFor(lang: string = siteLang, overrides: Partial<PlayerLabels> = {}): PlayerLabels {
+export function labelsFor(
+  lang: string = siteLang,
+  overrides: Partial<PlayerLabels> = {},
+): PlayerLabels {
   const base = /^zh\b/i.test(lang) ? ZH : EN;
   return { ...base, ...overrides, keys: { ...base.keys, ...overrides.keys } };
 }

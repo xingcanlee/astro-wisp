@@ -16,7 +16,8 @@ async function runPlugin(md: string): Promise<VFile> {
 
 async function hasMathOf(md: string): Promise<boolean> {
   const file = await runPlugin(md);
-  return (file.data as { astro?: { frontmatter?: { hasMath?: boolean } } }).astro?.frontmatter?.hasMath as boolean;
+  return (file.data as { astro?: { frontmatter?: { hasMath?: boolean } } }).astro?.frontmatter
+    ?.hasMath as boolean;
 }
 
 describe('remarkHasMath 插件', () => {
@@ -29,7 +30,9 @@ describe('remarkHasMath 插件', () => {
   });
 
   it('没有公式时写入 false', async () => {
-    expect(await hasMathOf('# 标题\n\n普通段落，没有公式。\n\n```js\nconst a = 1;\n```')).toBe(false);
+    expect(await hasMathOf('# 标题\n\n普通段落，没有公式。\n\n```js\nconst a = 1;\n```')).toBe(
+      false,
+    );
   });
 
   it('金额等美元符号不被误判（无闭合时）', async () => {
@@ -38,6 +41,7 @@ describe('remarkHasMath 插件', () => {
 
   it('文件 data 为空时会创建 astro.frontmatter 并写入布尔值', async () => {
     const file = await runPlugin('plain');
-    expect((file.data as any).astro.frontmatter.hasMath).toBe(false);
+    const data = file.data as { astro: { frontmatter: { hasMath: boolean } } };
+    expect(data.astro.frontmatter.hasMath).toBe(false);
   });
 });

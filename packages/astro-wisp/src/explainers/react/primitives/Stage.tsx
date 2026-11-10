@@ -16,7 +16,15 @@ export interface StageProps {
 }
 
 /** 讲解画面的 SVG 舞台：viewBox 自适应宽度、窄屏横向滚动、四周留白。 */
-export default function Stage({ width, height, label, pad = 3, minScale = 0.8, maxScale = 1.15, children }: StageProps) {
+export default function Stage({
+  width,
+  height,
+  label,
+  pad = 3,
+  minScale = 0.8,
+  maxScale = 1.15,
+  children,
+}: StageProps) {
   const vbW = width + 2 * pad;
   const vbH = height + 2 * pad;
   return (

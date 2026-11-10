@@ -16,216 +16,237 @@ export interface Props {
 
 const { currentPath = Astro.url.pathname, running } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const routePath = currentPath.startsWith(base) ? `/${currentPath.slice(base.length).replace(/^\/+/, '')}` : currentPath;
+const routePath = currentPath.startsWith(base)
+  ? `/${currentPath.slice(base.length).replace(/^\/+/, '')}`
+  : currentPath;
 const norm = (p: string) => (p.endsWith('/') ? p : `${p}/`);
-const isCurrent = (href: string) => href !== '/' && norm(decodeURI(routePath)).startsWith(norm(href));
+const isCurrent = (href: string) =>
+  href !== '/' && norm(decodeURI(routePath)).startsWith(norm(href));
 ---
 
 <header class="wisp-header">
   <div class="wisp-shell wisp-header-inner">
-    <a href={sitePath(base, '/')} class="wisp-brand" aria-current={routePath === '/' ? 'page' : undefined}>
+    <a
+      href={sitePath(base, '/')}
+      class="wisp-brand"
+      aria-current={routePath === '/' ? 'page' : undefined}
+    >
       <span class="wisp-brand-mark" aria-hidden="true"></span>
       <span class="wisp-brand-name">{config.site.title}</span>
     </a>
     {running && (
       <p class="wisp-running" data-wisp-running>
-        <span class="wisp-running-sep" aria-hidden="true">/</span>
-        {running.href ? <a href={running.href} class="wisp-running-label">{running.label}</a> : <span class="wisp-running-label">{running.label}</span>}
+        <span class="wisp-running-sep" aria-hidden="true">
+          /
+        </span>
+        {running.href ? (
+          <a href={running.href} class="wisp-running-label">
+            {running.label}
+          </a>
+        ) : (
+          <span class="wisp-running-label">{running.label}</span>
+        )}
         {running.position && <span class="wisp-running-pos">{running.position}</span>}
-        {running.title && <span class="wisp-running-title" aria-hidden="true">{running.title}</span>}
+        {running.title && (
+          <span class="wisp-running-title" aria-hidden="true">
+            {running.title}
+          </span>
+        )}
       </p>
     )}
     <nav aria-label="主导航" class="wisp-nav">
       <ul>
-        {
-          config.nav.map((item) => (
-            <li>
-              <a href={sitePath(base, item.href)} aria-current={isCurrent(item.href) ? 'page' : undefined}>
-                <span class="wisp-draw">{item.label}</span>
-              </a>
-            </li>
-          ))
-        }
+        {config.nav.map((item) => (
+          <li>
+            <a
+              href={sitePath(base, item.href)}
+              aria-current={isCurrent(item.href) ? 'page' : undefined}
+            >
+              <span class="wisp-draw">{item.label}</span>
+            </a>
+          </li>
+        ))}
       </ul>
       <ThemeToggle />
     </nav>
   </div>
 </header>
 
-{running?.title && (
-  <script is:inline>
-    // 页眉先于 <main> 解析，等文档解析完再找正文标题
-    addEventListener('DOMContentLoaded', () => {
-      const head = document.querySelector('[data-wisp-running]');
-      const h1 = document.querySelector('main h1');
-      if (!head || !h1 || !('IntersectionObserver' in window)) return;
-      new IntersectionObserver(([e]) => {
+{running?.title && <script is:inline>
+  // 页眉先于 <main> 解析，等文档解析完再找正文标题
+  addEventListener('DOMContentLoaded', () => {
+    const head = document.querySelector('[data-wisp-running]');
+    const h1 = document.querySelector('main h1');
+    if (!head || !h1 || !('IntersectionObserver' in window)) return;
+    new IntersectionObserver(
+      ([e]) => {
         head.toggleAttribute('data-past-title', !e.isIntersecting && e.boundingClientRect.top < 0);
-      }, { rootMargin: '-56px 0px 0px 0px' }).observe(h1);
-    });
-  </script>
-)}
+      },
+      { rootMargin: '-56px 0px 0px 0px' },
+    ).observe(h1);
+  });
+</script>}
 
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
-  /* 吸顶顶栏：半透明底 + 背景模糊，滚动时正文从下方淡淡透出；不支持时回落为实色 */
-  /* 实色底 + 一条发丝线：手册的书眉，不做毛玻璃 */
-  .wisp-header {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background-color: var(--wisp-bg);
-    border-bottom: 1px solid var(--wisp-border);
-  }
-  .wisp-header-inner {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    height: var(--wisp-header-h);
-  }
-  .wisp-header-inner > .wisp-nav {
-    margin-inline-start: auto;
-  }
-
-  /* 书眉：站点名 / 系列 · 05/23 · 章节标题（标题滚出视口后淡入） */
-  .wisp-running {
-    display: none;
-    align-items: baseline;
-    gap: 0.625rem;
-    min-width: 0;
-    margin: 0;
-    color: var(--wisp-muted);
-    font-size: 0.875rem;
-    line-height: 1.4;
-    white-space: nowrap;
-  }
-  @media (min-width: 60rem) {
-    .wisp-running {
-      display: flex;
+    /* 吸顶顶栏：半透明底 + 背景模糊，滚动时正文从下方淡淡透出；不支持时回落为实色 */
+    /* 实色底 + 一条发丝线：手册的书眉，不做毛玻璃 */
+    .wisp-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background-color: var(--wisp-bg);
+      border-bottom: 1px solid var(--wisp-border);
     }
-  }
-  .wisp-running-sep {
-    color: var(--wisp-subtle);
-  }
-  .wisp-running-label {
-    color: var(--wisp-fg);
-    font-weight: 500;
-    transition: color 150ms;
-  }
-  a.wisp-running-label:hover {
-    color: var(--wisp-accent);
-  }
-  .wisp-running-pos {
-    color: var(--wisp-accent);
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
-  }
-  .wisp-running-title {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    opacity: 0;
-    transform: translateY(0.25rem);
-    transition:
-      opacity 200ms var(--wisp-ease),
-      transform 200ms var(--wisp-ease);
-  }
-  .wisp-running[data-past-title] .wisp-running-title {
-    opacity: 1;
-    transform: none;
-  }
-  .wisp-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.625rem;
-    min-width: 0;
-    min-height: 2.75rem;
-    color: var(--wisp-fg);
-    font-weight: 650;
-    font-size: 1rem;
-    letter-spacing: 0.01em;
-    white-space: nowrap;
-  }
-  /* 品牌标记：两块错位的方块，强调色 + 前景色，不依赖图片 */
-  .wisp-brand-mark {
-    position: relative;
-    flex: none;
-    width: 1.125rem;
-    height: 1.125rem;
-    border-radius: 3px;
-    background: var(--wisp-accent);
-    transition: transform 220ms var(--wisp-ease);
-  }
-  .wisp-brand-mark::after {
-    content: "";
-    position: absolute;
-    right: -3px;
-    bottom: -3px;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 2px;
-    background: var(--wisp-fg);
-    box-shadow: 0 0 0 2px var(--wisp-bg);
-  }
-  .wisp-brand:hover .wisp-brand-mark {
-    transform: rotate(-8deg);
-  }
-  .wisp-brand-name {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .wisp-nav {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    gap: 0.25rem;
-  }
-  .wisp-nav ul {
-    display: flex;
-    min-width: 0;
-    overflow-x: auto;
-    gap: 0.25rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    scrollbar-width: none;
-  }
-  .wisp-nav ul::-webkit-scrollbar {
-    display: none;
-  }
-  .wisp-nav a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2.75rem;
-    padding-inline: 0.75rem;
-    color: var(--wisp-muted);
-    font-size: 0.875rem;
-    transition: color 150ms;
-    white-space: nowrap;
-  }
-  .wisp-nav a:hover {
-    color: var(--wisp-fg);
-  }
-  .wisp-nav a:hover .wisp-draw {
-    background-size: 100% 1px;
-  }
-  /* 当前页：前景色 + 常显的强调色下划线（与侧栏当前项同一种强调色） */
-  .wisp-nav a[aria-current='page'] {
-    color: var(--wisp-fg);
-  }
-  .wisp-nav a[aria-current='page'] .wisp-draw {
-    background-image: linear-gradient(var(--wisp-accent), var(--wisp-accent));
-    background-size: 100% 1px;
-  }
-  @media (max-width: 23.99rem) {
     .wisp-header-inner {
-      gap: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      height: var(--wisp-header-h);
+    }
+    .wisp-header-inner > .wisp-nav {
+      margin-inline-start: auto;
+    }
+
+    /* 书眉：站点名 / 系列 · 05/23 · 章节标题（标题滚出视口后淡入） */
+    .wisp-running {
+      display: none;
+      align-items: baseline;
+      gap: 0.625rem;
+      min-width: 0;
+      margin: 0;
+      color: var(--wisp-muted);
+      font-size: 0.875rem;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+    @media (min-width: 60rem) {
+      .wisp-running {
+        display: flex;
+      }
+    }
+    .wisp-running-sep {
+      color: var(--wisp-subtle);
+    }
+    .wisp-running-label {
+      color: var(--wisp-fg);
+      font-weight: 500;
+      transition: color 150ms;
+    }
+    a.wisp-running-label:hover {
+      color: var(--wisp-accent);
+    }
+    .wisp-running-pos {
+      color: var(--wisp-accent);
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+    }
+    .wisp-running-title {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 0;
+      transform: translateY(0.25rem);
+      transition:
+        opacity 200ms var(--wisp-ease),
+        transform 200ms var(--wisp-ease);
+    }
+    .wisp-running[data-past-title] .wisp-running-title {
+      opacity: 1;
+      transform: none;
+    }
+    .wisp-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.625rem;
+      min-width: 0;
+      min-height: 2.75rem;
+      color: var(--wisp-fg);
+      font-weight: 650;
+      font-size: 1rem;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+    /* 品牌标记：两块错位的方块，强调色 + 前景色，不依赖图片 */
+    .wisp-brand-mark {
+      position: relative;
+      flex: none;
+      width: 1.125rem;
+      height: 1.125rem;
+      border-radius: 3px;
+      background: var(--wisp-accent);
+      transition: transform 220ms var(--wisp-ease);
+    }
+    .wisp-brand-mark::after {
+      content: '';
+      position: absolute;
+      right: -3px;
+      bottom: -3px;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 2px;
+      background: var(--wisp-fg);
+      box-shadow: 0 0 0 2px var(--wisp-bg);
+    }
+    .wisp-brand:hover .wisp-brand-mark {
+      transform: rotate(-8deg);
+    }
+    .wisp-brand-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .wisp-nav {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 0.25rem;
+    }
+    .wisp-nav ul {
+      display: flex;
+      min-width: 0;
+      overflow-x: auto;
+      gap: 0.25rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      scrollbar-width: none;
+    }
+    .wisp-nav ul::-webkit-scrollbar {
+      display: none;
     }
     .wisp-nav a {
-      padding-inline: 0.5rem;
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.75rem;
+      padding-inline: 0.75rem;
+      color: var(--wisp-muted);
+      font-size: 0.875rem;
+      transition: color 150ms;
+      white-space: nowrap;
     }
-  }
+    .wisp-nav a:hover {
+      color: var(--wisp-fg);
+    }
+    .wisp-nav a:hover .wisp-draw {
+      background-size: 100% 1px;
+    }
+    /* 当前页：前景色 + 常显的强调色下划线（与侧栏当前项同一种强调色） */
+    .wisp-nav a[aria-current='page'] {
+      color: var(--wisp-fg);
+    }
+    .wisp-nav a[aria-current='page'] .wisp-draw {
+      background-image: linear-gradient(var(--wisp-accent), var(--wisp-accent));
+      background-size: 100% 1px;
+    }
+    @media (max-width: 23.99rem) {
+      .wisp-header-inner {
+        gap: 0.5rem;
+      }
+      .wisp-nav a {
+        padding-inline: 0.5rem;
+      }
+    }
   }
 </style>

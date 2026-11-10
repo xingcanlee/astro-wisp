@@ -10,12 +10,15 @@ async function textsOf(md: string): Promise<string[]> {
   const file = new VFile(md);
   const tree = processor.parse(file);
   await processor.run(tree, file);
-  return (file.data as { astro?: { frontmatter?: { tocHeadingTexts?: string[] } } }).astro?.frontmatter?.tocHeadingTexts as string[];
+  return (file.data as { astro?: { frontmatter?: { tocHeadingTexts?: string[] } } }).astro
+    ?.frontmatter?.tocHeadingTexts as string[];
 }
 
 describe('remarkHeadingText 插件', () => {
   it('标题中的行内公式还原为原始文本，而非渲染后搅乱的文本', async () => {
-    expect(await textsOf('## 从 $q$ 到 $\\mathcal{H}^{res}$')).toEqual(['从 $q$ 到 $\\mathcal{H}^{res}$']);
+    expect(await textsOf('## 从 $q$ 到 $\\mathcal{H}^{res}$')).toEqual([
+      '从 $q$ 到 $\\mathcal{H}^{res}$',
+    ]);
   });
 
   it('无公式的标题原样返回，含加粗/行内代码时取文字内容', async () => {

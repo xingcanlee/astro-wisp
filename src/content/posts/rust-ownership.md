@@ -1,6 +1,6 @@
 ---
-title: "Rust 所有权：从 TypeScript 的视角理解"
-description: "用 TypeScript 熟悉的内存模型作对照，讲清 Rust 所有权的三条规则、移动与借用，以及它为什么能在编译期防止悬垂引用和数据竞争。"
+title: 'Rust 所有权：从 TypeScript 的视角理解'
+description: '用 TypeScript 熟悉的内存模型作对照，讲清 Rust 所有权的三条规则、移动与借用，以及它为什么能在编译期防止悬垂引用和数据竞争。'
 pubDate: 2026-07-22
 tags: [Rust, TypeScript]
 category: 编程语言
@@ -93,7 +93,10 @@ function normalizeRecord(r: Record, config: { upper: boolean }): string {
 }
 
 const config = { upper: true };
-const rawRecords: Record[] = [{ id: "1", value: " ada " }, { id: "2", value: "" }];
+const rawRecords: Record[] = [
+  { id: '1', value: ' ada ' },
+  { id: '2', value: '' },
+];
 
 // 数组和对象都是共享的引用，map 之后原数组仍然可以用
 const processed: string[] = rawRecords.filter(isValid).map((r) => normalizeRecord(r, config));

@@ -19,7 +19,13 @@ export interface Props {
   showTags?: boolean;
 }
 
-const { post, readingTime, headingLevel = 2, showDescription = true, showTags = true } = Astro.props;
+const {
+  post,
+  readingTime,
+  headingLevel = 2,
+  showDescription = true,
+  showTags = true,
+} = Astro.props;
 const H = `h${headingLevel}` as 'h2' | 'h3';
 const { title, description, pubDate, tags, lang } = post.data;
 ---
@@ -35,45 +41,45 @@ const { title, description, pubDate, tags, lang } = post.data;
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
-  .wisp-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    min-width: 0;
-  }
-  .wisp-card-title {
-    margin: 0;
-    min-width: 0;
-    font-size: 1.1875rem;
-    font-weight: 650;
-    line-height: 1.45;
-    letter-spacing: 0.01em;
-    text-wrap: balance;
-  }
-  .wisp-card-title a {
-    color: var(--wisp-fg);
-    transition: color 150ms;
-  }
-  .wisp-card-title a:hover {
-    color: var(--wisp-accent);
-  }
-  .wisp-card-title a:focus-visible {
-    color: var(--wisp-accent);
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.2em;
-  }
-  .wisp-card-desc {
-    margin: 0;
-    color: var(--wisp-muted);
-    font-size: 0.9375rem;
-    line-height: 1.7;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    overflow: hidden;
-    text-wrap: pretty;
-  }
+    .wisp-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      min-width: 0;
+    }
+    .wisp-card-title {
+      margin: 0;
+      min-width: 0;
+      font-size: 1.1875rem;
+      font-weight: 650;
+      line-height: 1.45;
+      letter-spacing: 0.01em;
+      text-wrap: balance;
+    }
+    .wisp-card-title a {
+      color: var(--wisp-fg);
+      transition: color 150ms;
+    }
+    .wisp-card-title a:hover {
+      color: var(--wisp-accent);
+    }
+    .wisp-card-title a:focus-visible {
+      color: var(--wisp-accent);
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 0.2em;
+    }
+    .wisp-card-desc {
+      margin: 0;
+      color: var(--wisp-muted);
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      overflow: hidden;
+      text-wrap: pretty;
+    }
   }
 </style>

@@ -69,11 +69,26 @@ export function usePlayer(length: number): PlayerApi {
     playing,
     speed,
     reducedMotion,
-    next: () => { pause(); setIndex((i) => clampIndex(i + 1, length)); },
-    prev: () => { pause(); setIndex((i) => clampIndex(i - 1, length)); },
-    first: () => { pause(); setIndex(0); },
-    last: () => { pause(); setIndex(lastIndex); },
-    seek: (i) => { pause(); seek(i); },
+    next: () => {
+      pause();
+      setIndex((i) => clampIndex(i + 1, length));
+    },
+    prev: () => {
+      pause();
+      setIndex((i) => clampIndex(i - 1, length));
+    },
+    first: () => {
+      pause();
+      setIndex(0);
+    },
+    last: () => {
+      pause();
+      setIndex(lastIndex);
+    },
+    seek: (i) => {
+      pause();
+      seek(i);
+    },
     toggle: () => {
       if (playing) return setPlaying(false);
       if (index >= lastIndex) setIndex(0);

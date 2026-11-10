@@ -85,16 +85,28 @@ export function parseDiagramUrl(url: string): { path: string; page?: string } {
 }
 
 const safeDecode = (s: string) => {
-  try { return decodeURI(s); } catch { return s; }
+  try {
+    return decodeURI(s);
+  } catch {
+    return s;
+  }
 };
 
-export const styleOf = (file: string): DiagramStyle => (/\.excalidraw$/i.test(file) ? 'hand' : 'clean');
+export const styleOf = (file: string): DiagramStyle =>
+  /\.excalidraw$/i.test(file) ? 'hand' : 'clean';
 const stemOf = (file: string) => basename(file).replace(DIAGRAM_EXT, '');
 const toPosix = (p: string) => p.split(sep).join('/');
 
 /** 与 skills/wisp-diagram/scripts/build.ts 的 outputPathFor 一致（不引入导出器依赖）。 */
 export function outputPathFor(file: string, pageIndex = 0): string {
-  return toPosix(join(dirname(file), pageIndex === 0 ? `${stemOf(file)}.wisp.svg` : `${stemOf(file)}.page-${pageIndex + 1}.wisp.svg`));
+  return toPosix(
+    join(
+      dirname(file),
+      pageIndex === 0
+        ? `${stemOf(file)}.wisp.svg`
+        : `${stemOf(file)}.page-${pageIndex + 1}.wisp.svg`,
+    ),
+  );
 }
 
 export { postId };
@@ -125,13 +137,17 @@ export function downloadKeyFor(absSource: string, root = REPO_ROOT): string | un
 /** 下载路径的反向映射（dev 中间件用）。返回源文件绝对路径；不合法或不是图表源文件时返回 undefined。 */
 export function sourceForDownloadKey(key: string, root = REPO_ROOT): string | undefined {
   const parts = key.split('/');
-  if (!parts.length || parts.some((p) => !p || p === '.' || p === '..' || p.includes('\\'))) return undefined;
+  if (!parts.length || parts.some((p) => !p || p === '.' || p === '..' || p.includes('\\')))
+    return undefined;
   const file = parts.at(-1)!;
   if (!DIAGRAM_EXT.test(file)) return undefined;
   const dir = parts.slice(0, -1).join('/');
-  const rel = dir === 'shared' ? `${SHARED_DIR}/${file}`
-    : dir === '' ? `${POSTS_DIR}/diagrams/${file}`
-    : `${POSTS_DIR}/${dir}/diagrams/${file}`;
+  const rel =
+    dir === 'shared'
+      ? `${SHARED_DIR}/${file}`
+      : dir === ''
+        ? `${POSTS_DIR}/diagrams/${file}`
+        : `${POSTS_DIR}/${dir}/diagrams/${file}`;
   return toPosix(join(root, rel));
 }
 
@@ -139,7 +155,8 @@ export const CONTENT_TYPES: Record<string, string> = {
   '.excalidraw': 'application/json; charset=utf-8',
   '.drawio': 'application/xml; charset=utf-8',
 };
-export const contentTypeFor = (file: string) => CONTENT_TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream';
+export const contentTypeFor = (file: string) =>
+  CONTENT_TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream';
 
 const KIND_NAME: Record<DiagramStyle, string> = { hand: 'Excalidraw', clean: 'draw.io' };
 
@@ -156,7 +173,10 @@ const escText = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 export const REPO_ROOT = process.cwd();
 export const MANIFEST_FILE = 'diagrams.manifest.json';
 const manifestPathFor = (root: string) => join(root, MANIFEST_FILE);
-export const SCAN_PATTERNS = ['src/content/**/diagrams/*.excalidraw', 'src/content/**/diagrams/*.drawio'];
+export const SCAN_PATTERNS = [
+  'src/content/**/diagrams/*.excalidraw',
+  'src/content/**/diagrams/*.drawio',
+];
 
 export interface ManifestEntry {
   source: string;
@@ -167,7 +187,11 @@ export interface ManifestEntry {
   outputs: Record<string, string>;
   pages?: string[];
 }
-export interface Manifest { version: 1; generator: string; entries: Record<string, ManifestEntry> }
+export interface Manifest {
+  version: 1;
+  generator: string;
+  entries: Record<string, ManifestEntry>;
+}
 
 /** 与 wisp_diagram_lib/manifest.py 的 content_hash 相同：统一换行后 sha256。 */
 export function contentHash(data: string | Buffer): string {
@@ -209,7 +233,8 @@ export function manifestProblem(rel: string, m: Manifest, root = REPO_ROOT): str
 let manifestCache: { path: string; mtime: number; m: Manifest } | undefined;
 function manifestAt(path: string): Manifest {
   const mtime = existsSync(path) ? statSync(path).mtimeMs : -1;
-  if (manifestCache && manifestCache.path === path && manifestCache.mtime === mtime) return manifestCache.m;
+  if (manifestCache && manifestCache.path === path && manifestCache.mtime === mtime)
+    return manifestCache.m;
   const m = loadManifest(path);
   manifestCache = { path, mtime, m };
   return m;
@@ -226,21 +251,30 @@ function selectPage(pages: string[], page: string | number | undefined): number 
     const n = Number(s);
     if (n >= 1 && n <= pages.length) return n - 1;
   }
-  throw new DiagramProblem(`找不到页面 "${s}"（可用：${pages.map((p, i) => `${i + 1}=${p}`).join('，')}）`);
+  throw new DiagramProblem(
+    `找不到页面 "${s}"（可用：${pages.map((p, i) => `${i + 1}=${p}`).join('，')}）`,
+  );
 }
 
 /**
  * 处理 SVG 文本：id 加后缀、引用同步改写、alt 写入 <title>、去掉根元素 width/height。
  * 返回新 SVG 与自然宽度（viewBox 宽，用于 CSS 的 --wd-w）。
  */
-export function prepareSvg(svg: string, opts: { suffix: string; alt?: string; fallbackTitleId: string }): { svg: string; width?: number } {
+export function prepareSvg(
+  svg: string,
+  opts: { suffix: string; alt?: string; fallbackTitleId: string },
+): { svg: string; width?: number } {
   let out = svg.replace(/^﻿?\s*(<\?xml[^>]*\?>\s*)?(<!DOCTYPE[^>]*>\s*)?/i, '').trim();
   const rootMatch = /<svg\b[^>]*>/i.exec(out);
   if (!rootMatch) throw new DiagramProblem('产物不是 SVG');
 
   // 1. 根元素：去掉 width/height，记录自然宽度
   let rootTag = rootMatch[0];
-  const vb = /\sviewBox="([^"]+)"/.exec(rootTag)?.[1]?.trim().split(/[\s,]+/).map(Number);
+  const vb = /\sviewBox="([^"]+)"/
+    .exec(rootTag)?.[1]
+    ?.trim()
+    .split(/[\s,]+/)
+    .map(Number);
   const wAttr = /\swidth="([\d.]+)(?:px)?"/.exec(rootTag)?.[1];
   const width = vb && vb.length === 4 && vb[2]! > 0 ? vb[2] : wAttr ? Number(wAttr) : undefined;
   rootTag = rootTag.replace(/\s(?:width|height)="[^"]*"/g, '');
@@ -253,10 +287,19 @@ export function prepareSvg(svg: string, opts: { suffix: string; alt?: string; fa
     const map = (id: string) => ids.get(id) ?? id;
     out = out
       .replace(/(\sid=")([^"]+)(")/g, (_, a: string, id: string, b: string) => a + map(id) + b)
-      .replace(/url\((['"]?)#([^'")]+)\1\)/g, (_, q: string, id: string) => `url(${q}#${map(id)}${q})`)
-      .replace(/(\s(?:xlink:)?href=")#([^"]+)(")/g, (_, a: string, id: string, b: string) => `${a}#${map(id)}${b}`)
-      .replace(/(\saria-(?:labelledby|describedby)=")([^"]*)(")/g, (_, a: string, v: string, b: string) =>
-        a + v.split(/\s+/).filter(Boolean).map(map).join(' ') + b);
+      .replace(
+        /url\((['"]?)#([^'")]+)\1\)/g,
+        (_, q: string, id: string) => `url(${q}#${map(id)}${q})`,
+      )
+      .replace(
+        /(\s(?:xlink:)?href=")#([^"]+)(")/g,
+        (_, a: string, id: string, b: string) => `${a}#${map(id)}${b}`,
+      )
+      .replace(
+        /(\saria-(?:labelledby|describedby)=")([^"]*)(")/g,
+        (_, a: string, v: string, b: string) =>
+          a + v.split(/\s+/).filter(Boolean).map(map).join(' ') + b,
+      );
   }
 
   // 3. alt → <title>
@@ -264,7 +307,10 @@ export function prepareSvg(svg: string, opts: { suffix: string; alt?: string; fa
   if (alt) {
     const t = /<title\b([^>]*)>[\s\S]*?<\/title>/i.exec(out);
     if (t) {
-      out = out.slice(0, t.index) + `<title${t[1]}>${escText(alt)}</title>` + out.slice(t.index + t[0].length);
+      out =
+        out.slice(0, t.index) +
+        `<title${t[1]}>${escText(alt)}</title>` +
+        out.slice(t.index + t[0].length);
     } else {
       const start = /<svg\b[^>]*>/i.exec(out)!;
       const id = opts.fallbackTitleId;
@@ -273,7 +319,11 @@ export function prepareSvg(svg: string, opts: { suffix: string; alt?: string; fa
         ? tag.replace(/(\saria-labelledby=")/, `$1${id} `)
         : tag.replace(/>$/, ` aria-labelledby="${id}">`);
       if (!/\srole="/.test(tag)) tag = tag.replace(/>$/, ' role="img">');
-      out = out.slice(0, start.index) + tag + `<title id="${id}">${escText(alt)}</title>` + out.slice(start.index + start[0].length);
+      out =
+        out.slice(0, start.index) +
+        tag +
+        `<title id="${id}">${escText(alt)}</title>` +
+        out.slice(start.index + start[0].length);
     }
   }
   return { svg: out, width };
@@ -307,7 +357,8 @@ function resolveSource(ref: DiagramRef, root: string): { abs: string; page?: str
   const { path, page } = parseDiagramUrl(ref.src);
   let abs: string;
   if (isAbsolute(path) && existsSync(path)) abs = path;
-  else if (path.startsWith('/')) abs = join(root, path); // 项目根相对：/src/content/...
+  else if (path.startsWith('/'))
+    abs = join(root, path); // 项目根相对：/src/content/...
   else if (path.startsWith('@/')) abs = join(root, 'src', path.slice(2));
   else {
     if (!ref.from) throw new DiagramProblem(`相对路径 ${ref.src} 需要知道引用它的文件（from）`);
@@ -343,12 +394,15 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     if (style === 'hand' && r.page) throw new DiagramProblem('#page= 只适用于 draw.io 文件');
     const pageIndex = style === 'clean' ? selectPage(pages, r.page) : 0;
     const svgPath = outputPathFor(abs, pageIndex);
-    if (!existsSync(svgPath)) throw new DiagramProblem(`缺少产物 ${toPosix(relative(root, svgPath))}`);
+    if (!existsSync(svgPath))
+      throw new DiagramProblem(`缺少产物 ${toPosix(relative(root, svgPath))}`);
 
     const seq = String(ref.seq);
     const stem = stemOf(abs).replace(/[^\w-]+/g, '-');
     const { svg, width } = prepareSvg(readFileSync(svgPath, 'utf8'), {
-      suffix: seq, alt: ref.alt, fallbackTitleId: `${stem}-title-${seq}`,
+      suffix: seq,
+      alt: ref.alt,
+      fallbackTitleId: `${stem}-title-${seq}`,
     });
 
     const key = downloadKeyFor(abs, root);
@@ -359,20 +413,26 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     if (showDl && href) {
       links.push(
         `<a class="wisp-diagram-dl" href="${escAttr(href)}" download="${escAttr(file)}" type="${escAttr(contentTypeFor(file).split(';')[0]!)}"` +
-        ` aria-label="${escAttr(`下载源文件 ${file}（${KIND_NAME[style]}）`)}" title="${escAttr(`下载源文件 ${file}`)}">${iconSvg('file-down')}下载源文件</a>`,
+          ` aria-label="${escAttr(`下载源文件 ${file}（${KIND_NAME[style]}）`)}" title="${escAttr(`下载源文件 ${file}`)}">${iconSvg('file-down')}下载源文件</a>`,
       );
       const absHref = style === 'clean' ? absoluteUrl(env.siteUrl, href) : undefined;
       if (absHref) {
         links.push(
           `<a class="wisp-diagram-open" href="${escAttr(`https://app.diagrams.net/#U${encodeURIComponent(absHref)}`)}"` +
-          ` target="_blank" rel="noopener noreferrer" aria-label="在 draw.io 中打开" title="在 draw.io 中打开">${iconSvg('external-link')}打开 draw.io</a>`,
+            ` target="_blank" rel="noopener noreferrer" aria-label="在 draw.io 中打开" title="在 draw.io 中打开">${iconSvg('external-link')}打开 draw.io</a>`,
         );
       }
     }
 
     const caption = ref.caption?.trim();
-    const cls = ['wisp-figure', 'wisp-diagram', ...(caption ? ['wisp-has-caption'] : []), ...(ref.wide ? ['wisp-wide'] : [])].join(' ');
-    const pageAttr = style === 'clean' && pages[pageIndex] ? ` data-page="${escAttr(pages[pageIndex]!)}"` : '';
+    const cls = [
+      'wisp-figure',
+      'wisp-diagram',
+      ...(caption ? ['wisp-has-caption'] : []),
+      ...(ref.wide ? ['wisp-wide'] : []),
+    ].join(' ');
+    const pageAttr =
+      style === 'clean' && pages[pageIndex] ? ` data-page="${escAttr(pages[pageIndex]!)}"` : '';
     const bodyStyle = width ? ` style="--wd-w:${Math.round(width * 100) / 100}px"` : '';
     const html =
       `<figure class="${cls}" data-style="${style}"${pageAttr}>` +
@@ -387,8 +447,14 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     const rel = abs ? toPosix(relative(root, abs)) : ref.src;
     const where = ref.from ? ` (${toPosix(relative(root, ref.from))})` : '';
     const msg = `[wisp] 图表 ${rel}${where}：${err.message}。运行 \`pnpm diagram build\` 后重试。`;
-    if (!env.dev) throw new Error(msg);
+    if (!env.dev) throw new Error(msg, { cause: err });
     console.warn(msg);
-    return { html: placeholder(rel, err.message), ok: false, style, source: abs, problem: err.message };
+    return {
+      html: placeholder(rel, err.message),
+      ok: false,
+      style,
+      source: abs,
+      problem: err.message,
+    };
   }
 }

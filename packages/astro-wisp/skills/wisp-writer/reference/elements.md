@@ -14,6 +14,7 @@
   \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
   $$
   ```
+
 - **对齐**用 `aligned` 环境，在 `=` 前加 `&`，行尾 `\\`：
 
   ```markdown
@@ -24,6 +25,7 @@
   \end{aligned}
   $$
   ```
+
 - **矩阵**用 `bmatrix`（方括号）或 `pmatrix`（圆括号），全文统一：`\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}`。
 - 函数名用 `\operatorname{softmax}`，文字下标用 `\text{model}`，向量与矩阵的写法全文一致。
 - 公式后用文字解释每个符号，不要让读者自己去猜。
@@ -55,6 +57,7 @@ def add(a: int, b: int) -> int:
   + const title = post.data.title.trim();
   ```
   ````
+
 - **在其他语言中标注增删**：行尾加注释标记 `[!code ++]` 或 `[!code --]`，标记会被去掉，该行获得增删样式：
 
   ````markdown
@@ -64,7 +67,9 @@ def add(a: int, b: int) -> int:
   const c = 3; // [!code --]
   ```
   ````
+
   注释符号随语言选择（`//`、`#`、`/* */`）。
+
 - 示例代码保持最小可运行，长度控制在约 40 行内；更长的放在仓库里并链接。
 - 代码里的注释用与正文相同的语言。
 
@@ -93,8 +98,8 @@ flowchart LR
 标准图片语法，引用**源文件**（不是 `.wisp.svg`）：
 
 ```markdown
-![自注意力计算流程](./diagrams/attention-flow.excalidraw "图 1：自注意力")
-![Transformer Block 的残差结构](./diagrams/transformer-block.drawio#page=encoder "图 2：编码器")
+![自注意力计算流程](./diagrams/attention-flow.excalidraw '图 1：自注意力')
+![Transformer Block 的残差结构](./diagrams/transformer-block.drawio#page=encoder '图 2：编码器')
 ```
 
 - **alt 必填**，写图要表达的结论，会成为屏幕阅读器读到的名称。不要只写“图 1”。
@@ -112,7 +117,17 @@ flowchart LR
 ```mdx
 import MatMul from './MatMul';
 
-<MatMul client:visible a={[[1,2],[3,4]]} b={[[5,6],[7,8]]} />
+<MatMul
+  client:visible
+  a={[
+    [1, 2],
+    [3, 4],
+  ]}
+  b={[
+    [5, 6],
+    [7, 8],
+  ]}
+/>
 ```
 
 - 主题只提供通用积木（`astro-wisp/explainers`：`Explainer`、`Player`、`Stage`、`Matrix`、`record()` 等），具体讲解组件放在文章目录里（如 `src/content/posts/<slug>/MatMul.tsx`），从文章用相对路径导入。站点里已有的讲解组件就是可用列表。
@@ -131,6 +146,7 @@ import MatMul from './MatMul';
 
   <Figure src={photo} alt="描述" caption="图 3：说明" wide />
   ```
+
 - 截图尽量裁剪到相关区域；大图在提交前压缩。不要引用无法确认版权的图片。
 - 示意图优先自己画（wisp-diagram），不要截取论文或他人文章中的图。
 
@@ -139,10 +155,10 @@ import MatMul from './MatMul';
 标准 GFM 语法，第二行 `|---|---|` 分隔，不需要对齐空格。何时使用见 style-guide。
 
 ```markdown
-| 算法 | 时间复杂度 | 说明 |
-|---|---|---|
-| 朴素三重循环 | $O(n^3)$ | 最容易理解 |
-| 分块 | $O(n^3)$ | 缓存友好 |
+| 算法         | 时间复杂度 | 说明       |
+| ------------ | ---------- | ---------- |
+| 朴素三重循环 | $O(n^3)$   | 最容易理解 |
+| 分块         | $O(n^3)$   | 缓存友好   |
 ```
 
 - 单元格内可以用行内代码和行内公式；管道符 `|` 要写成 `\|`。

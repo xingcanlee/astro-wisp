@@ -29,16 +29,28 @@ export function makeRepo(): { root: string; post: string; manifest: Manifest } {
     generator: 'wisp-diagram@1',
     entries: {
       [`${P}/flow.excalidraw`]: {
-        source: h(`${P}/flow.excalidraw`), style: 'hand', exporter: 'x', embedFonts: false,
+        source: h(`${P}/flow.excalidraw`),
+        style: 'hand',
+        exporter: 'x',
+        embedFonts: false,
         outputs: { [`${P}/flow.wisp.svg`]: h(`${P}/flow.wisp.svg`) },
       },
       [`${P}/model.drawio`]: {
-        source: h(`${P}/model.drawio`), style: 'clean', exporter: 'x', embedFonts: false,
-        outputs: { [`${P}/model.wisp.svg`]: h(`${P}/model.wisp.svg`), [`${P}/model.page-2.wisp.svg`]: h(`${P}/model.page-2.wisp.svg`) },
+        source: h(`${P}/model.drawio`),
+        style: 'clean',
+        exporter: 'x',
+        embedFonts: false,
+        outputs: {
+          [`${P}/model.wisp.svg`]: h(`${P}/model.wisp.svg`),
+          [`${P}/model.page-2.wisp.svg`]: h(`${P}/model.page-2.wisp.svg`),
+        },
         pages: ['encoder', '数据流'],
       },
       [`${S}/shared-flow.excalidraw`]: {
-        source: h(`${S}/shared-flow.excalidraw`), style: 'hand', exporter: 'x', embedFonts: false,
+        source: h(`${S}/shared-flow.excalidraw`),
+        style: 'hand',
+        exporter: 'x',
+        embedFonts: false,
         outputs: { [`${S}/shared-flow.wisp.svg`]: h(`${S}/shared-flow.wisp.svg`) },
       },
     },
@@ -46,4 +58,3 @@ export function makeRepo(): { root: string; post: string; manifest: Manifest } {
   writeFileSync(join(root, MANIFEST_FILE), `${JSON.stringify(manifest, null, 2)}\n`);
   return { root, post: join(root, 'src/content/posts/demo/index.mdx'), manifest };
 }
-

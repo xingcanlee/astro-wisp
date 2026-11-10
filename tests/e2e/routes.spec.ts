@@ -1,13 +1,27 @@
 import { test, expect } from '@playwright/test';
 
 const OK = [
-  '/', '/archive/', '/tags/', '/categories/', '/about/',
-  '/posts/kitchen-sink/', '/posts/attention-explained/', '/posts/matrix-multiplication/',
-  '/posts/welcome-to-wisp/', '/posts/rust-ownership/', '/posts/english-post/',
-  '/tags/rust/', '/tags/' + encodeURI('线性代数') + '/', '/tags/' + encodeURI('示例') + '/',
-  '/categories/' + encodeURI('机器学习') + '/', '/categories/' + encodeURI('算法') + '/',
-  '/rss.xml', '/sitemap-index.xml', '/sitemap-0.xml',
-  '/diagrams/kitchen-sink/attention-flow.excalidraw', '/diagrams/shared/transformer-block.drawio',
+  '/',
+  '/archive/',
+  '/tags/',
+  '/categories/',
+  '/about/',
+  '/posts/kitchen-sink/',
+  '/posts/attention-explained/',
+  '/posts/matrix-multiplication/',
+  '/posts/welcome-to-wisp/',
+  '/posts/rust-ownership/',
+  '/posts/english-post/',
+  '/tags/rust/',
+  '/tags/' + encodeURI('线性代数') + '/',
+  '/tags/' + encodeURI('示例') + '/',
+  '/categories/' + encodeURI('机器学习') + '/',
+  '/categories/' + encodeURI('算法') + '/',
+  '/rss.xml',
+  '/sitemap-index.xml',
+  '/sitemap-0.xml',
+  '/diagrams/kitchen-sink/attention-flow.excalidraw',
+  '/diagrams/shared/transformer-block.drawio',
 ];
 
 for (const path of OK) {

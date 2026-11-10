@@ -12,161 +12,160 @@
  */
 @layer theme, base, components, utilities;
 
-
 @layer utilities {
-/* Excalifont 由 Astro Fonts API 注册（src/fonts.ts），Post 布局在有手绘图时输出 <Font>。 */
+  /* Excalifont 由 Astro Fonts API 注册（src/fonts.ts），Post 布局在有手绘图时输出 <Font>。 */
 
-/* ---------- figure ---------- */
-.wisp-diagram {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
-  column-gap: 1rem;
-  margin-block: 1.5em;
-  max-width: 100%;
-  max-inline-size: 100%;
-  min-width: 0;
-}
-.wisp-diagram.wisp-wide {
-  max-width: none;
-  max-inline-size: none;
-}
+  /* ---------- figure ---------- */
+  .wisp-diagram {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: 1rem;
+    margin-block: 1.5em;
+    max-width: 100%;
+    max-inline-size: 100%;
+    min-width: 0;
+  }
+  .wisp-diagram.wisp-wide {
+    max-width: none;
+    max-inline-size: none;
+  }
 
-/*
+  /*
  * 图表本体：SVG 去掉了 width/height，按容器宽度缩放，但不超过自然宽度（--wd-w）。
  * 所有图表都允许缩小到容器宽度，避免 min-width 触发横向滚动或页面溢出。
  */
-.wisp-diagram-body {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  max-width: 100%;
-  max-inline-size: 100%;
-  min-width: 0;
-  overflow-x: clip;
-  overflow-y: clip;
-  padding-block: 0.125em;
-}
-.wisp-diagram > figcaption {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  min-width: 0;
-  margin-top: 0.5em;
-}
-.wisp-diagram-body > svg {
-  display: block;
-  width: 100%;
-  max-width: var(--wd-w, 100%);
-  max-inline-size: 100%;
-  min-width: 0;
-  height: auto;
-  margin-inline: auto;
-  overflow: visible;
-}
+  .wisp-diagram-body {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    max-width: 100%;
+    max-inline-size: 100%;
+    min-width: 0;
+    overflow-x: clip;
+    overflow-y: clip;
+    padding-block: 0.125em;
+  }
+  .wisp-diagram > figcaption {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-width: 0;
+    margin-top: 0.5em;
+  }
+  .wisp-diagram-body > svg {
+    display: block;
+    width: 100%;
+    max-width: var(--wd-w, 100%);
+    max-inline-size: 100%;
+    min-width: 0;
+    height: auto;
+    margin-inline: auto;
+    overflow: visible;
+  }
 
-/*
+  /*
  * draw.io 标签里的行内公式（MathJax 输出的 <mjx-container><svg>）：
  * Tailwind preflight 把所有 svg 设成 display:block，会让每个公式独占一行、把标签撑出节点。
  * 这里还原成行内，基线偏移沿用 MathJax 写在 style 里的 vertical-align；$$…$$ 的块级公式独占一行。
  */
-svg.wisp-d mjx-container {
-  display: inline-block;
-  line-height: 0;
-  white-space: nowrap;
-}
-svg.wisp-d mjx-container > svg {
-  display: inline;
-  overflow: visible;
-}
-svg.wisp-d mjx-container[display='true'] {
-  display: block;
-  margin-block: 0.5em;
-  text-align: center;
-}
-
-/* 下载 / 在 draw.io 中打开 */
-.wisp-diagram-actions {
-  display: flex;
-  grid-column: 1 / -1;
-  grid-row: 3;
-  flex-wrap: nowrap;
-  justify-content: flex-end;
-  gap: 0.25em 1em;
-  margin-top: 0.25em;
-  font-size: 0.75rem;
-  line-height: 1.6;
-  white-space: nowrap;
-}
-.wisp-diagram:not(.wisp-has-caption) > .wisp-diagram-actions {
-  grid-row: 2;
-}
-.prose .wisp-diagram-actions a,
-.wisp-diagram-actions a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-  color: var(--wisp-muted);
-  text-decoration-line: none;
-}
-.prose .wisp-diagram-actions a:hover,
-.wisp-diagram-actions a:hover {
-  color: var(--wisp-accent);
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.25em;
-}
-.wisp-diagram-actions a:focus-visible {
-  outline: 2px solid var(--wisp-accent);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-/* 图标（Lucide 内联 SVG）：与文字居中对齐，颜色跟随 currentColor */
-.wisp-diagram-actions a .wisp-icon {
-  width: 0.95em;
-  height: 0.95em;
-  vertical-align: 0;
-}
-
-@media (max-width: 39.99rem) {
-  .wisp-diagram {
-    grid-template-columns: 1fr;
+  svg.wisp-d mjx-container {
+    display: inline-block;
+    line-height: 0;
+    white-space: nowrap;
   }
-  .wisp-diagram > figcaption,
-  .wisp-diagram-actions,
-  .wisp-diagram:not(.wisp-has-caption) > .wisp-diagram-actions {
-    grid-column: 1;
+  svg.wisp-d mjx-container > svg {
+    display: inline;
+    overflow: visible;
   }
+  svg.wisp-d mjx-container[display='true'] {
+    display: block;
+    margin-block: 0.5em;
+    text-align: center;
+  }
+
+  /* 下载 / 在 draw.io 中打开 */
   .wisp-diagram-actions {
+    display: flex;
+    grid-column: 1 / -1;
     grid-row: 3;
-    justify-content: flex-start;
-  }
-  .wisp-diagram-actions a {
-    min-height: 2.75rem;
-    padding-inline: 0.25rem;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 0.25em 1em;
+    margin-top: 0.25em;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    white-space: nowrap;
   }
   .wisp-diagram:not(.wisp-has-caption) > .wisp-diagram-actions {
     grid-row: 2;
   }
-}
+  .prose .wisp-diagram-actions a,
+  .wisp-diagram-actions a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    color: var(--wisp-muted);
+    text-decoration-line: none;
+  }
+  .prose .wisp-diagram-actions a:hover,
+  .wisp-diagram-actions a:hover {
+    color: var(--wisp-accent);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+  .wisp-diagram-actions a:focus-visible {
+    outline: 2px solid var(--wisp-accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  /* 图标（Lucide 内联 SVG）：与文字居中对齐，颜色跟随 currentColor */
+  .wisp-diagram-actions a .wisp-icon {
+    width: 0.95em;
+    height: 0.95em;
+    vertical-align: 0;
+  }
 
-/* ---------- dev 占位：产物缺失或哈希不一致 ---------- */
-.wisp-diagram-missing {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25em;
-  margin-block: 2em;
-  padding: 1em 1.25em;
-  border: 2px dashed var(--wisp-sem-error);
-  border-radius: 4px;
-  background-color: var(--wisp-sem-error-fill);
-  color: var(--wisp-fg);
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.wisp-diagram-missing strong {
-  color: var(--wisp-sem-error);
-  font-weight: 600;
-}
-.wisp-diagram-missing code {
-  font-family: var(--wisp-font-mono);
-}
+  @media (max-width: 39.99rem) {
+    .wisp-diagram {
+      grid-template-columns: 1fr;
+    }
+    .wisp-diagram > figcaption,
+    .wisp-diagram-actions,
+    .wisp-diagram:not(.wisp-has-caption) > .wisp-diagram-actions {
+      grid-column: 1;
+    }
+    .wisp-diagram-actions {
+      grid-row: 3;
+      justify-content: flex-start;
+    }
+    .wisp-diagram-actions a {
+      min-height: 2.75rem;
+      padding-inline: 0.25rem;
+    }
+    .wisp-diagram:not(.wisp-has-caption) > .wisp-diagram-actions {
+      grid-row: 2;
+    }
+  }
+
+  /* ---------- dev 占位：产物缺失或哈希不一致 ---------- */
+  .wisp-diagram-missing {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25em;
+    margin-block: 2em;
+    padding: 1em 1.25em;
+    border: 2px dashed var(--wisp-sem-error);
+    border-radius: 4px;
+    background-color: var(--wisp-sem-error-fill);
+    color: var(--wisp-fg);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .wisp-diagram-missing strong {
+    color: var(--wisp-sem-error);
+    font-weight: 600;
+  }
+  .wisp-diagram-missing code {
+    font-family: var(--wisp-font-mono);
+  }
 }

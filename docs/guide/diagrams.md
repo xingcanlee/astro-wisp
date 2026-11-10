@@ -4,11 +4,11 @@ Wisp 支持三类图表。本文说明如何选择、如何放置源文件、如
 
 ## 一、选择图表工具
 
-| 场景 | 工具 | 源文件 | 产物 |
-|---|---|---|---|
-| 流程图、时序图、状态图、类图、甘特图等结构化图 | Mermaid | 正文中的 ` ```mermaid ` 代码块 | 构建期生成的内联 SVG，不单独保存文件 |
-| 概念图、示意图、手绘风格 | Excalidraw | `*.excalidraw`（JSON） | `*.wisp.svg` |
-| 精确排版的模型结构图、多页架构图 | draw.io | `*.drawio`（未压缩 XML） | `*.wisp.svg` |
+| 场景                                           | 工具       | 源文件                         | 产物                                 |
+| ---------------------------------------------- | ---------- | ------------------------------ | ------------------------------------ |
+| 流程图、时序图、状态图、类图、甘特图等结构化图 | Mermaid    | 正文中的 ` ```mermaid ` 代码块 | 构建期生成的内联 SVG，不单独保存文件 |
+| 概念图、示意图、手绘风格                       | Excalidraw | `*.excalidraw`（JSON）         | `*.wisp.svg`                         |
+| 精确排版的模型结构图、多页架构图               | draw.io    | `*.drawio`（未压缩 XML）       | `*.wisp.svg`                         |
 
 原则：能用 Mermaid 讲清楚就用 Mermaid。Excalidraw 适合手绘风格的概念图，不超过约 12 个节点；draw.io 适合需要直角折线、分组和多页的结构图。同一篇文章尽量只用一种风格。
 
@@ -37,22 +37,28 @@ src/content/posts/attention-explained/
 使用标准图片语法，引用源文件（不是 `.wisp.svg`）：
 
 ```markdown
-![自注意力计算流程](./diagrams/attention-flow.excalidraw "图 1：Q·Kᵀ → softmax → ·V")
+![自注意力计算流程](./diagrams/attention-flow.excalidraw '图 1：Q·Kᵀ → softmax → ·V')
 ![Transformer Block](./diagrams/transformer-block.drawio#page=encoder)
 ```
 
-| 部分 | 作用 |
-|---|---|
-| 方括号中的 alt | 写入 SVG 的 `<title>`，是屏幕阅读器读到的名称。应描述图要表达的结论，不要只写“图 1” |
-| 引号中的 title | 成为图注（`<figcaption>`） |
-| `#page=<名称或序号>` | 选择 draw.io 文件中的页面，默认第一页。序号从 1 开始 |
+| 部分                 | 作用                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| 方括号中的 alt       | 写入 SVG 的 `<title>`，是屏幕阅读器读到的名称。应描述图要表达的结论，不要只写“图 1” |
+| 引号中的 title       | 成为图注（`<figcaption>`）                                                          |
+| `#page=<名称或序号>` | 选择 draw.io 文件中的页面，默认第一页。序号从 1 开始                                |
 
 在 MDX 中还可以使用组件写法，需要更多控制时（例如突破正文宽度）使用：
 
 ```mdx
 import Diagram from 'astro-wisp/components/Diagram.astro';
 
-<Diagram src="./diagrams/transformer-block.drawio" page="encoder" alt="Transformer Block 的残差结构" caption="图 2" wide />
+<Diagram
+  src="./diagrams/transformer-block.drawio"
+  page="encoder"
+  alt="Transformer Block 的残差结构"
+  caption="图 2"
+  wide
+/>
 ```
 
 `wide` 让图突破正文宽度；`download={false}` 隐藏下载链接。

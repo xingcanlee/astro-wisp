@@ -21,15 +21,15 @@ rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=F;strokeColor=S;strokeWidth
 
 各 hue 的 `fillColor` / `strokeColor`（括号内是语义名）：
 
-| hue | 颜色片段 |
-|---|---|
-| `blue` (q, active) | `fillColor=#dbeafe;strokeColor=#1d4ed8;` |
-| `amber` (k, highlight) | `fillColor=#fef3c7;strokeColor=#b45309;` |
-| `green` (v, done) | `fillColor=#dcfce7;strokeColor=#15803d;` |
-| `rose` (grad, error) | `fillColor=#ffe4e6;strokeColor=#be123c;` |
-| `violet` (weight) | `fillColor=#ede9fe;strokeColor=#7c3aed;` |
-| `teal` (activation) | `fillColor=#ccfbf1;strokeColor=#0f766e;` |
-| `orange` (bias) | `fillColor=#ffedd5;strokeColor=#c2410c;` |
+| hue                     | 颜色片段                                 |
+| ----------------------- | ---------------------------------------- |
+| `blue` (q, active)      | `fillColor=#dbeafe;strokeColor=#1d4ed8;` |
+| `amber` (k, highlight)  | `fillColor=#fef3c7;strokeColor=#b45309;` |
+| `green` (v, done)       | `fillColor=#dcfce7;strokeColor=#15803d;` |
+| `rose` (grad, error)    | `fillColor=#ffe4e6;strokeColor=#be123c;` |
+| `violet` (weight)       | `fillColor=#ede9fe;strokeColor=#7c3aed;` |
+| `teal` (activation)     | `fillColor=#ccfbf1;strokeColor=#0f766e;` |
+| `orange` (bias)         | `fillColor=#ffedd5;strokeColor=#c2410c;` |
 | `slate` (mask, visited) | `fillColor=#e2e8f0;strokeColor=#475569;` |
 
 - 强调节点：把 `strokeWidth=1.5` 换成 `strokeWidth=2.5`。
@@ -46,24 +46,24 @@ rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#e2e2dd
 
 ## 连线（edge）
 
-| 用途 | 样式 |
-|---|---|
-| 实线 | `endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.5;` |
-| 带标签 | 在实线样式后加 `fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;`，`value="标签"` |
-| 虚线/可选 | `endArrow=classic;html=1;strokeColor=#5c6067;strokeWidth=1.5;dashed=1;` |
+| 用途                  | 样式                                                                                                                                                           |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 实线                  | `endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.5;`                                                                                                 |
+| 带标签                | 在实线样式后加 `fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;`，`value="标签"`                                                                               |
+| 虚线/可选             | `endArrow=classic;html=1;strokeColor=#5c6067;strokeWidth=1.5;dashed=1;`                                                                                        |
 | 残差/梯度（玫红虚线） | `edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=classic;html=1;strokeColor=#be123c;strokeWidth=1.5;dashed=1;fontFamily=Inter;fontSize=12;fontColor=#be123c;` |
-| 直角折线 | 加 `edgeStyle=orthogonalEdgeStyle;rounded=1;` |
+| 直角折线              | 加 `edgeStyle=orthogonalEdgeStyle;rounded=1;`                                                                                                                  |
 
 - 连线必须带 `source` 和 `target`（节点 id），`<mxGeometry relative="1" as="geometry"/>`。
 - 绕行的残差线：加 `exitX=1;exitY=0.5;entryX=1;entryY=0.5;`，并在 `mxGeometry` 里用 `<Array as="points">` 给出拐点（x 落在节点右侧 40px 处，如 296）。
 
 ## 文字
 
-| 用途 | 样式 |
-|---|---|
+| 用途 | 样式                                                                                                                       |
+| ---- | -------------------------------------------------------------------------------------------------------------------------- |
 | 标题 | `text;html=1;align=left;verticalAlign=middle;fontFamily=Inter;fontSize=18;fontStyle=1;fontColor=#1d1d1f;`（宽 240、高 32） |
-| 标签 | `text;html=1;align=left;verticalAlign=middle;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;` |
-| 注释 | `text;html=1;align=left;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#5c6067;` |
+| 标签 | `text;html=1;align=left;verticalAlign=middle;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;`                              |
+| 注释 | `text;html=1;align=left;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#5c6067;`                              |
 
 `<title>` 取自页面名（页面名是默认的 `Page-1` 时取文件名），`<desc>` 由图中所有文字标签拼成；可用 `wisp_diagram.py build <文件> --title ... --desc ...` 覆盖（仅单文件构建时可用）。所以**给页面起一个有意义的名字**。
 

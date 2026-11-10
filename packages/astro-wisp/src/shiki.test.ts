@@ -1,12 +1,32 @@
 import { describe, it, expect } from 'vitest';
-import { createShikiHighlighter } from '@astrojs/markdown-remark/shiki';
+import {
+  createShikiHighlighter,
+  type CreateShikiHighlighterOptions,
+  type ShikiHighlighterHighlightOptions,
+} from '@astrojs/markdown-remark/shiki';
 import { wispShikiConfig, parseFoldMeta } from './shiki';
 import { wispConfigSchema } from './config';
 
-async function render(code: string, lang: string, lineNumbers = true, meta?: string, fold: object = {}) {
+async function render(
+  code: string,
+  lang: string,
+  lineNumbers = true,
+  meta?: string,
+  fold: object = {},
+) {
   const c = wispShikiConfig(wispConfigSchema.parse({ features: { lineNumbers, codeFold: fold } }));
-  const h = await createShikiHighlighter({ themes: c.themes as any, langs: [lang] as any });
-  return h.codeToHtml(code, lang, { defaultColor: c.defaultColor, transformers: c.transformers, ...(meta !== undefined ? { meta } : {}) } as any);
+  const h = await createShikiHighlighter({
+    themes: c.themes as unknown as CreateShikiHighlighterOptions['themes'],
+    langs: [lang] as unknown as CreateShikiHighlighterOptions['langs'],
+  });
+  const options: ShikiHighlighterHighlightOptions = {
+    defaultColor: c.defaultColor,
+    transformers: c.transformers,
+    ...(meta !== undefined ? { meta } : {}),
+  };
+  return h.codeToHtml(code, lang, {
+    ...options,
+  });
 }
 
 describe('wispShikiConfig', () => {
@@ -47,7 +67,8 @@ describe('wispShikiConfig', () => {
   });
 
   describe('代码折叠标记', () => {
-    const long = (n: number) => Array.from({ length: n }, (_, i) => `const a${i} = ${i}`).join('\n');
+    const long = (n: number) =>
+      Array.from({ length: n }, (_, i) => `const a${i} = ${i}`).join('\n');
     it('parseFoldMeta', () => {
       expect(parseFoldMeta(undefined)).toBeUndefined();
       expect(parseFoldMeta('title="x"')).toBeUndefined();
@@ -77,7 +98,9 @@ describe('wispShikiConfig', () => {
       expect(await render(long(5), 'ts', true, 'fold')).not.toContain('data-fold');
     });
     it('enabled=false 时一律不折叠', async () => {
-      expect(await render(long(40), 'ts', true, 'fold', { enabled: false })).not.toContain('data-fold');
+      expect(await render(long(40), 'ts', true, 'fold', { enabled: false })).not.toContain(
+        'data-fold',
+      );
     });
   });
 });

@@ -21,7 +21,11 @@ export interface Props {
   title?: string;
 }
 
-const { headings, variant = 'aside', title = (/^zh\b/i.test(config.site.lang) ? '目录' : 'Contents') } = Astro.props;
+const {
+  headings,
+  variant = 'aside',
+  title = /^zh\b/i.test(config.site.lang) ? '目录' : 'Contents',
+} = Astro.props;
 const zh = /^zh\b/i.test(config.site.lang);
 const collapseLabel = zh ? `收起${title}` : `Collapse ${title}`;
 const minDepth = Math.min(...headings.map((h) => h.depth));
@@ -77,284 +81,297 @@ function renderHeadingText(text: string): string {
 }
 ---
 
-{
-  headings.length > 0 &&
-    (variant === 'inline' ? (
-      <details class="wisp-toc wisp-toc-inline">
-        <summary>
-          <Icon name="chevron-right" class="wisp-toc-chev" />
+{headings.length > 0 &&
+  (variant === 'inline' ? (
+    <details class="wisp-toc wisp-toc-inline">
+      <summary>
+        <Icon name="chevron-right" class="wisp-toc-chev" />
+        {title}
+      </summary>
+      <ol>
+        {list.map((h) => (
+          <li data-level={h.level}>
+            <a href={`#${h.slug}`} data-toc-link={h.slug}>
+              {no(h.slug) && <span class="wisp-toc-no">{no(h.slug)}</span>}
+              <span set:html={renderHeadingText(h.text)} />
+            </a>
+          </li>
+        ))}
+      </ol>
+    </details>
+  ) : (
+    <nav class="wisp-toc wisp-toc-aside" aria-labelledby="wisp-toc-title">
+      <div class="wisp-toc-head">
+        <p id="wisp-toc-title" class="wisp-toc-title">
           {title}
-        </summary>
-        <ol>
-          {list.map((h) => (
-            <li data-level={h.level}>
-              <a href={`#${h.slug}`} data-toc-link={h.slug}>
-                {no(h.slug) && <span class="wisp-toc-no">{no(h.slug)}</span>}
-                <span set:html={renderHeadingText(h.text)} />
+        </p>
+        <button
+          type="button"
+          class="wisp-toc-toggle"
+          aria-label={collapseLabel}
+          aria-expanded="true"
+          aria-controls="wisp-toc-list"
+          data-toc-toggle
+          data-toc-title={title}
+        >
+          <Icon name="chevron-right" class="wisp-toc-ico-close" />
+          <Icon name="chevron-left" class="wisp-toc-ico-open" />
+          <span class="sr-only" data-toc-action-label>
+            {collapseLabel}
+          </span>
+        </button>
+      </div>
+      <ol id="wisp-toc-list">
+        {groups.map(({ head, kids }, i) =>
+          kids.length === 0 ? (
+            <li>
+              <a href={`#${head.slug}`} data-toc-link={head.slug}>
+                {no(head.slug) && <span class="wisp-toc-no">{no(head.slug)}</span>}
+                <span set:html={renderHeadingText(head.text)} />
               </a>
             </li>
-          ))}
-        </ol>
-      </details>
-    ) : (
-      <nav class="wisp-toc wisp-toc-aside" aria-labelledby="wisp-toc-title">
-        <div class="wisp-toc-head">
-          <p id="wisp-toc-title" class="wisp-toc-title">
-            {title}
-          </p>
-          <button type="button" class="wisp-toc-toggle" aria-label={collapseLabel} aria-expanded="true" aria-controls="wisp-toc-list" data-toc-toggle data-toc-title={title}>
-            <Icon name="chevron-right" class="wisp-toc-ico-close" />
-            <Icon name="chevron-left" class="wisp-toc-ico-open" />
-            <span class="sr-only" data-toc-action-label>{collapseLabel}</span>
-          </button>
-        </div>
-        <ol id="wisp-toc-list">
-          {groups.map(({ head, kids }, i) =>
-            kids.length === 0 ? (
-              <li>
+          ) : (
+            <li data-group>
+              <div class="wisp-toc-row">
                 <a href={`#${head.slug}`} data-toc-link={head.slug}>
                   {no(head.slug) && <span class="wisp-toc-no">{no(head.slug)}</span>}
                   <span set:html={renderHeadingText(head.text)} />
                 </a>
-              </li>
-            ) : (
-              <li data-group>
-                <div class="wisp-toc-row">
-                  <a href={`#${head.slug}`} data-toc-link={head.slug}>
-                    {no(head.slug) && <span class="wisp-toc-no">{no(head.slug)}</span>}
-                    <span set:html={renderHeadingText(head.text)} />
-                  </a>
-                  <button type="button" class="wisp-toc-sub-toggle" aria-expanded="false" aria-controls={`wisp-toc-sub-${i}`}>
-                    <Icon name="chevron-right" class="wisp-toc-chev" />
-                    <span class="sr-only">{head.text}</span>
-                  </button>
-                </div>
-                <ol id={`wisp-toc-sub-${i}`}>
-                  {kids.map((k) => (
-                    <li>
-                      <a href={`#${k.slug}`} data-toc-link={k.slug}>
-                        {no(k.slug) && <span class="wisp-toc-no">{no(k.slug)}</span>}
-                        <span set:html={renderHeadingText(k.text)} />
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              </li>
-            ),
-          )}
-        </ol>
-      </nav>
-    ))
-}
+                <button
+                  type="button"
+                  class="wisp-toc-sub-toggle"
+                  aria-expanded="false"
+                  aria-controls={`wisp-toc-sub-${i}`}
+                >
+                  <Icon name="chevron-right" class="wisp-toc-chev" />
+                  <span class="sr-only">{head.text}</span>
+                </button>
+              </div>
+              <ol id={`wisp-toc-sub-${i}`}>
+                {kids.map((k) => (
+                  <li>
+                    <a href={`#${k.slug}`} data-toc-link={k.slug}>
+                      {no(k.slug) && <span class="wisp-toc-no">{no(k.slug)}</span>}
+                      <span set:html={renderHeadingText(k.text)} />
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </li>
+          ),
+        )}
+      </ol>
+    </nav>
+  ))}
 
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
-  .wisp-toc {
-    font-size: 0.875rem;
-    line-height: 1.55;
-  }
-  .wisp-toc ol {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .wisp-toc li {
-    margin: 0;
-  }
-  .wisp-toc li[data-level='1'] {
-    padding-inline-start: 0.9rem;
-  }
-  .wisp-toc li[data-level='2'] {
-    padding-inline-start: 1.8rem;
-  }
-  /* 编号 + 标题两列：编号等宽数字、subtle 色，换行后标题悬挂对齐 */
-  .wisp-toc a {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    padding-block: 0.3rem;
-    color: var(--wisp-muted);
-    transition: color 150ms;
-  }
-  .wisp-toc-no {
-    flex: none;
-    min-width: 1.25rem;
-    color: var(--wisp-subtle);
-    font-size: 0.75rem;
-    font-variant-numeric: tabular-nums;
-    transition: color 150ms;
-  }
-  li ol .wisp-toc-no {
-    min-width: 1.75rem;
-  }
-  .wisp-toc a:hover {
-    color: var(--wisp-fg);
-  }
-  .wisp-toc a[aria-current='true'] {
-    color: var(--wisp-fg);
-  }
-  .wisp-toc a[aria-current='true'] .wisp-toc-no {
-    color: var(--wisp-accent);
-  }
-  .wisp-toc :global(.wisp-toc-chev) {
-    flex: none;
-  }
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .wisp-toc-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-  }
-  .wisp-toc-title {
-    margin: 0;
-    color: var(--wisp-fg);
-    font-weight: 600;
-    font-size: 0.875rem;
-  }
-  .wisp-toc-toggle,
-  .wisp-toc-sub-toggle {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border: 0;
-    border-radius: 4px;
-    background: none;
-    color: var(--wisp-muted);
-    font-size: 1rem;
-    cursor: pointer;
-    transition: color 150ms;
-  }
-  .wisp-toc-toggle:hover,
-  .wisp-toc-sub-toggle:hover {
-    color: var(--wisp-accent);
-  }
-  .wisp-toc-toggle:focus-visible,
-  .wisp-toc-sub-toggle:focus-visible {
-    outline: 2px solid var(--wisp-accent);
-    outline-offset: 2px;
-  }
-  .wisp-toc-sub-toggle {
-    width: 1.5rem;
-    height: 1.5rem;
-    font-size: 0.875rem;
-  }
-  .wisp-toc-sub-toggle[aria-expanded='true'] :global(.wisp-toc-chev) {
-    transform: rotate(90deg);
-  }
-  .wisp-toc-toggle :global(.wisp-toc-ico-open) {
-    display: none;
-  }
-
-  .wisp-toc-aside ol {
-    border-inline-start: 1px solid var(--wisp-border);
-  }
-  .wisp-toc-aside a {
-    margin-inline-start: -1px;
-    padding: 0.3rem 0.25rem 0.3rem 0.875rem;
-    border-inline-start: 1px solid transparent;
-    font-size: 0.8125rem;
-    line-height: 1.5;
-    transition:
-      color 150ms,
-      border-color 150ms;
-  }
-  .wisp-toc-aside a[aria-current='true'] {
-    border-inline-start-color: var(--wisp-accent);
-    font-weight: 500;
-  }
-  .wisp-toc-row {
-    display: flex;
-    align-items: center;
-    gap: 0.125rem;
-  }
-  /* chevron 紧跟文字，而不是被 flex:1 顶到侧栏最右缘 */
-  .wisp-toc-row a {
-    flex: 0 1 auto;
-    min-width: 0;
-  }
-  .wisp-toc-aside li ol {
-    border-inline-start: 0;
-  }
-  .wisp-toc-aside li ol a {
-    padding-inline-start: 1.625rem;
-    font-size: 0.78125rem;
-  }
-
-  /* 以下规则只在 JS 可用时生效（html[data-toc] 由 Post 内联脚本写入）；无 JS 时目录完整展开 */
-  :global(html:not([data-toc])) .wisp-toc-toggle,
-  :global(html:not([data-toc])) .wisp-toc-sub-toggle {
-    display: none;
-  }
-  :global(html[data-toc]) li[data-group]:not([data-open]) > ol {
-    display: none;
-  }
-  :global(html[data-toc='collapsed']) .wisp-toc-title,
-  :global(html[data-toc='collapsed']) #wisp-toc-list {
-    display: none;
-  }
-  :global(html[data-toc='collapsed']) .wisp-toc-head {
-    justify-content: flex-start;
-    margin-bottom: 0;
-  }
-  /* 收起时保留栏宽，避免展开/收起引起正文栅格抖动 */
-  :global(html[data-toc='collapsed']) .wisp-toc-aside {
-    min-width: 9rem;
-  }
-  :global(html[data-toc='collapsed']) .wisp-toc-toggle :global(.wisp-toc-ico-close) {
-    display: none;
-  }
-  :global(html[data-toc='collapsed']) .wisp-toc-toggle :global(.wisp-toc-ico-open) {
-    display: inline;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .wisp-toc :global(.wisp-toc-chev) {
-      transition: transform 150ms;
+    .wisp-toc {
+      font-size: 0.875rem;
+      line-height: 1.55;
     }
-  }
+    .wisp-toc ol {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .wisp-toc li {
+      margin: 0;
+    }
+    .wisp-toc li[data-level='1'] {
+      padding-inline-start: 0.9rem;
+    }
+    .wisp-toc li[data-level='2'] {
+      padding-inline-start: 1.8rem;
+    }
+    /* 编号 + 标题两列：编号等宽数字、subtle 色，换行后标题悬挂对齐 */
+    .wisp-toc a {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      padding-block: 0.3rem;
+      color: var(--wisp-muted);
+      transition: color 150ms;
+    }
+    .wisp-toc-no {
+      flex: none;
+      min-width: 1.25rem;
+      color: var(--wisp-subtle);
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+      transition: color 150ms;
+    }
+    li ol .wisp-toc-no {
+      min-width: 1.75rem;
+    }
+    .wisp-toc a:hover {
+      color: var(--wisp-fg);
+    }
+    .wisp-toc a[aria-current='true'] {
+      color: var(--wisp-fg);
+    }
+    .wisp-toc a[aria-current='true'] .wisp-toc-no {
+      color: var(--wisp-accent);
+    }
+    .wisp-toc :global(.wisp-toc-chev) {
+      flex: none;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
 
-  .wisp-toc-inline {
-    margin: 0 0 2.5rem;
-    border-bottom: 1px solid var(--wisp-border);
-  }
-  .wisp-toc-inline summary {
-    display: flex;
-    align-items: center;
-    min-height: 2.75rem;
-    gap: 0.35rem;
-    cursor: pointer;
-    color: var(--wisp-muted);
-    font-size: 0.875rem;
-    font-weight: 500;
-    list-style: none;
-    transition: color 150ms;
-  }
-  .wisp-toc-inline summary::-webkit-details-marker {
-    display: none;
-  }
-  .wisp-toc-inline summary:hover,
-  .wisp-toc-inline[open] summary {
-    color: var(--wisp-fg);
-  }
-  .wisp-toc-inline[open] summary :global(.wisp-toc-chev) {
-    transform: rotate(90deg);
-  }
-  .wisp-toc-inline ol {
-    padding-bottom: 0.75rem;
-  }
+    .wisp-toc-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .wisp-toc-title {
+      margin: 0;
+      color: var(--wisp-fg);
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .wisp-toc-toggle,
+    .wisp-toc-sub-toggle {
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      padding: 0;
+      border: 0;
+      border-radius: 4px;
+      background: none;
+      color: var(--wisp-muted);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: color 150ms;
+    }
+    .wisp-toc-toggle:hover,
+    .wisp-toc-sub-toggle:hover {
+      color: var(--wisp-accent);
+    }
+    .wisp-toc-toggle:focus-visible,
+    .wisp-toc-sub-toggle:focus-visible {
+      outline: 2px solid var(--wisp-accent);
+      outline-offset: 2px;
+    }
+    .wisp-toc-sub-toggle {
+      width: 1.5rem;
+      height: 1.5rem;
+      font-size: 0.875rem;
+    }
+    .wisp-toc-sub-toggle[aria-expanded='true'] :global(.wisp-toc-chev) {
+      transform: rotate(90deg);
+    }
+    .wisp-toc-toggle :global(.wisp-toc-ico-open) {
+      display: none;
+    }
+
+    .wisp-toc-aside ol {
+      border-inline-start: 1px solid var(--wisp-border);
+    }
+    .wisp-toc-aside a {
+      margin-inline-start: -1px;
+      padding: 0.3rem 0.25rem 0.3rem 0.875rem;
+      border-inline-start: 1px solid transparent;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      transition:
+        color 150ms,
+        border-color 150ms;
+    }
+    .wisp-toc-aside a[aria-current='true'] {
+      border-inline-start-color: var(--wisp-accent);
+      font-weight: 500;
+    }
+    .wisp-toc-row {
+      display: flex;
+      align-items: center;
+      gap: 0.125rem;
+    }
+    /* chevron 紧跟文字，而不是被 flex:1 顶到侧栏最右缘 */
+    .wisp-toc-row a {
+      flex: 0 1 auto;
+      min-width: 0;
+    }
+    .wisp-toc-aside li ol {
+      border-inline-start: 0;
+    }
+    .wisp-toc-aside li ol a {
+      padding-inline-start: 1.625rem;
+      font-size: 0.78125rem;
+    }
+
+    /* 以下规则只在 JS 可用时生效（html[data-toc] 由 Post 内联脚本写入）；无 JS 时目录完整展开 */
+    :global(html:not([data-toc])) .wisp-toc-toggle,
+    :global(html:not([data-toc])) .wisp-toc-sub-toggle {
+      display: none;
+    }
+    :global(html[data-toc]) li[data-group]:not([data-open]) > ol {
+      display: none;
+    }
+    :global(html[data-toc='collapsed']) .wisp-toc-title,
+    :global(html[data-toc='collapsed']) #wisp-toc-list {
+      display: none;
+    }
+    :global(html[data-toc='collapsed']) .wisp-toc-head {
+      justify-content: flex-start;
+      margin-bottom: 0;
+    }
+    /* 收起时保留栏宽，避免展开/收起引起正文栅格抖动 */
+    :global(html[data-toc='collapsed']) .wisp-toc-aside {
+      min-width: 9rem;
+    }
+    :global(html[data-toc='collapsed']) .wisp-toc-toggle :global(.wisp-toc-ico-close) {
+      display: none;
+    }
+    :global(html[data-toc='collapsed']) .wisp-toc-toggle :global(.wisp-toc-ico-open) {
+      display: inline;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .wisp-toc :global(.wisp-toc-chev) {
+        transition: transform 150ms;
+      }
+    }
+
+    .wisp-toc-inline {
+      margin: 0 0 2.5rem;
+      border-bottom: 1px solid var(--wisp-border);
+    }
+    .wisp-toc-inline summary {
+      display: flex;
+      align-items: center;
+      min-height: 2.75rem;
+      gap: 0.35rem;
+      cursor: pointer;
+      color: var(--wisp-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      list-style: none;
+      transition: color 150ms;
+    }
+    .wisp-toc-inline summary::-webkit-details-marker {
+      display: none;
+    }
+    .wisp-toc-inline summary:hover,
+    .wisp-toc-inline[open] summary {
+      color: var(--wisp-fg);
+    }
+    .wisp-toc-inline[open] summary :global(.wisp-toc-chev) {
+      transform: rotate(90deg);
+    }
+    .wisp-toc-inline ol {
+      padding-bottom: 0.75rem;
+    }
   }
 </style>
 
@@ -367,7 +384,7 @@ function renderHeadingText(text: string): string {
   const sync = () => {
     const expanded = root.dataset.toc !== 'collapsed';
     btn?.setAttribute('aria-expanded', String(expanded));
-    const action = expanded ? (zh ? '收起' : 'Collapse ') : (zh ? '展开' : 'Expand ');
+    const action = expanded ? (zh ? '收起' : 'Collapse ') : zh ? '展开' : 'Expand ';
     btn?.setAttribute('aria-label', `${action}${title}`);
     if (actionLabel) actionLabel.textContent = `${action}${title}`;
   };
@@ -400,7 +417,11 @@ function renderHeadingText(text: string): string {
     .filter(Boolean) as HTMLElement[];
   const box = document.querySelector<HTMLElement>('.wisp-post-aside-inner');
   const set = (id: string) => {
-    links.forEach((a) => (a.dataset.tocLink === id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+    links.forEach((a) =>
+      a.dataset.tocLink === id
+        ? a.setAttribute('aria-current', 'true')
+        : a.removeAttribute('aria-current'),
+    );
     const a = box?.querySelector<HTMLElement>('[aria-current]');
     if (!a) return;
     const g = a.closest('li[data-group]');
@@ -416,7 +437,10 @@ function renderHeadingText(text: string): string {
     const visible = new Set<string>();
     const io = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) e.isIntersecting ? visible.add(e.target.id) : visible.delete(e.target.id);
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add(e.target.id);
+          else visible.delete(e.target.id);
+        }
         // 视口上部可见的第一个标题；都不可见时取最后一个已滚过的标题
         let cur = heads.find((h) => visible.has(h.id));
         if (!cur) cur = heads.filter((h) => h.getBoundingClientRect().top < 0).pop();

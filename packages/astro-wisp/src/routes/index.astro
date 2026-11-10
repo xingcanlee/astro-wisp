@@ -54,13 +54,26 @@ const totalPages = Math.max(1, Math.ceil(latest.length / config.home.pageSize));
 const recent = all.slice(0, 5);
 const lastUpdated = all[0]?.data.pubDate;
 const start = series[0]
-  ? { href: href(series[0].firstId), label: zh ? `从「${seriesName(series[0].title)}」开始读` : `Start with ${seriesName(series[0].title)}` }
+  ? {
+      href: href(series[0].firstId),
+      label: zh
+        ? `从「${seriesName(series[0].title)}」开始读`
+        : `Start with ${seriesName(series[0].title)}`,
+    }
   : all[0]
     ? { href: href(all[0].id), label: zh ? '读最新一篇' : 'Read the latest post' }
     : undefined;
 const colophon = zh
-  ? [series.length > 0 ? `${series.length} 个系列` : '', `${all.length} 篇`, lastUpdated ? `更新于 ${formatDate(lastUpdated, config.site.lang)}` : ''].filter(Boolean)
-  : [series.length > 0 ? `${series.length} series` : '', `${all.length} posts`, lastUpdated ? `Updated ${formatDate(lastUpdated, config.site.lang)}` : ''].filter(Boolean);
+  ? [
+      series.length > 0 ? `${series.length} 个系列` : '',
+      `${all.length} 篇`,
+      lastUpdated ? `更新于 ${formatDate(lastUpdated, config.site.lang)}` : '',
+    ].filter(Boolean)
+  : [
+      series.length > 0 ? `${series.length} series` : '',
+      `${all.length} posts`,
+      lastUpdated ? `Updated ${formatDate(lastUpdated, config.site.lang)}` : '',
+    ].filter(Boolean);
 ---
 
 <Base>
@@ -76,351 +89,367 @@ const colophon = zh
             <Icon name="arrow-right" size={16} />
           </a>
         )}
-        <a class="wisp-btn" href={sitePath(base, '/archive/')}>{zh ? '全部文章' : 'All posts'}</a>
+        <a class="wisp-btn" href={sitePath(base, '/archive/')}>
+          {zh ? '全部文章' : 'All posts'}
+        </a>
       </div>
     </header>
 
-    {
-      series.length > 0 && (
-        <section class="home-contents" aria-labelledby="contents-title">
-          <h2 id="contents-title" class="home-h2">{zh ? '目录' : 'Contents'}</h2>
-          {series.map((s, i) => (
-            <section class="part" aria-labelledby={`part-${i}`}>
-              <div class="part-head">
-                <h3 id={`part-${i}`} class="part-title">
-                  <span class="part-no">{i + 1}</span>
-                  <a href={href(s.firstId)}>{seriesName(s.title)}</a>
-                </h3>
-                {seriesSub(s.title) && <p class="part-sub">{seriesSub(s.title)}</p>}
-                {s.description && <p class="part-desc">{s.description}</p>}
-                <p class="part-meta">
-                  {zh ? `${s.items.length} 篇` : `${s.items.length} posts`} ·{' '}
-                  <time datetime={toISODate(s.updated)}>{formatDate(s.updated, config.site.lang)}</time>
-                </p>
-              </div>
-              <ol class="part-list">
-                {s.items.map((item) => {
-                  const { no, text } = split(item.title);
-                  return (
-                    <li>
-                      <a href={href(item.id)}>
-                        <span class="part-item-no">{no}</span>
-                        <span class="part-item-title">{item.id === s.firstId && !no ? (zh ? '总览' : 'Overview') : text}</span>
-                        <span class="part-leader" aria-hidden="true" />
-                        <span class="part-item-time">{minutes(seriesTimes.get(item.id))}</span>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ol>
-            </section>
+    {series.length > 0 && (
+      <section class="home-contents" aria-labelledby="contents-title">
+        <h2 id="contents-title" class="home-h2">
+          {zh ? '目录' : 'Contents'}
+        </h2>
+        {series.map((s, i) => (
+          <section class="part" aria-labelledby={`part-${i}`}>
+            <div class="part-head">
+              <h3 id={`part-${i}`} class="part-title">
+                <span class="part-no">{i + 1}</span>
+                <a href={href(s.firstId)}>{seriesName(s.title)}</a>
+              </h3>
+              {seriesSub(s.title) && <p class="part-sub">{seriesSub(s.title)}</p>}
+              {s.description && <p class="part-desc">{s.description}</p>}
+              <p class="part-meta">
+                {zh ? `${s.items.length} 篇` : `${s.items.length} posts`} ·{' '}
+                <time datetime={toISODate(s.updated)}>
+                  {formatDate(s.updated, config.site.lang)}
+                </time>
+              </p>
+            </div>
+            <ol class="part-list">
+              {s.items.map((item) => {
+                const { no, text } = split(item.title);
+                return (
+                  <li>
+                    <a href={href(item.id)}>
+                      <span class="part-item-no">{no}</span>
+                      <span class="part-item-title">
+                        {item.id === s.firstId && !no ? (zh ? '总览' : 'Overview') : text}
+                      </span>
+                      <span class="part-leader" aria-hidden="true" />
+                      <span class="part-item-time">{minutes(seriesTimes.get(item.id))}</span>
+                    </a>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        ))}
+      </section>
+    )}
+
+    {soloShown.length > 0 && (
+      <section class="home-section" aria-labelledby="solo-title">
+        <h2 id="solo-title" class="home-h2">
+          {series.length > 0 ? (zh ? '其他文章' : 'Other posts') : zh ? '文章' : 'Posts'}
+        </h2>
+        <ul class="home-list">
+          {soloShown.map((post, i) => (
+            <li>
+              <PostCard post={post} readingTime={soloTimes[i]} headingLevel={3} showTags={false} />
+            </li>
           ))}
-        </section>
-      )
-    }
+        </ul>
+        {series.length === 0 && <Pagination current={1} total={totalPages} />}
+      </section>
+    )}
 
-    {
-      soloShown.length > 0 && (
-        <section class="home-section" aria-labelledby="solo-title">
-          <h2 id="solo-title" class="home-h2">{series.length > 0 ? (zh ? '其他文章' : 'Other posts') : (zh ? '文章' : 'Posts')}</h2>
-          <ul class="home-list">
-            {soloShown.map((post, i) => (
+    {recent.length > 0 && (
+      <section class="home-section" aria-labelledby="recent-title">
+        <h2 id="recent-title" class="home-h2">
+          {zh ? '修订记录' : 'Recent changes'}
+        </h2>
+        <ol class="home-revisions">
+          {recent.map((p) => {
+            const d = p.data.updatedDate ?? p.data.pubDate;
+            const owner = p.data.series
+              ? series.find((s) => s.id === p.data.series!.id)
+              : undefined;
+            return (
               <li>
-                <PostCard post={post} readingTime={soloTimes[i]} headingLevel={3} showTags={false} />
+                <time datetime={toISODate(d)}>{toISODate(d)}</time>
+                <a href={href(p.id)} lang={p.data.lang}>
+                  {p.data.title}
+                </a>
+                <span class="home-rev-part">{owner ? seriesName(owner.title) : ''}</span>
               </li>
-            ))}
-          </ul>
-          {series.length === 0 && <Pagination current={1} total={totalPages} />}
-        </section>
-      )
-    }
-
-    {
-      recent.length > 0 && (
-        <section class="home-section" aria-labelledby="recent-title">
-          <h2 id="recent-title" class="home-h2">{zh ? '修订记录' : 'Recent changes'}</h2>
-          <ol class="home-revisions">
-            {recent.map((p) => {
-              const d = p.data.updatedDate ?? p.data.pubDate;
-              const owner = p.data.series ? series.find((s) => s.id === p.data.series!.id) : undefined;
-              return (
-                <li>
-                  <time datetime={toISODate(d)}>{toISODate(d)}</time>
-                  <a href={href(p.id)} lang={p.data.lang}>{p.data.title}</a>
-                  <span class="home-rev-part">{owner ? seriesName(owner.title) : ''}</span>
-                </li>
-              );
-            })}
-          </ol>
-          <a class="home-more wisp-link" href={sitePath(base, '/archive/')}>
-            {zh ? '查看归档' : 'View archive'}
-          </a>
-        </section>
-      )
-    }
+            );
+          })}
+        </ol>
+        <a class="home-more wisp-link" href={sitePath(base, '/archive/')}>
+          {zh ? '查看归档' : 'View archive'}
+        </a>
+      </section>
+    )}
   </div>
 </Base>
 
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
-  .home {
-    padding-bottom: 1rem;
-  }
+    .home {
+      padding-bottom: 1rem;
+    }
 
-  /* ---------- 扉页 ---------- */
-  .home-title {
-    max-width: 44rem;
-    padding-block: 4rem 3.5rem;
-  }
-  @media (min-width: 48rem) {
+    /* ---------- 扉页 ---------- */
     .home-title {
-      padding-block: 6.5rem 5rem;
+      max-width: 44rem;
+      padding-block: 4rem 3.5rem;
     }
-  }
-  .home-title h1 {
-    margin: 0;
-    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4rem);
-    font-weight: 700;
-    line-height: 1.1;
-    letter-spacing: 0;
-  }
-  .home-lead {
-    margin: 1.25rem 0 0;
-    max-width: 34rem;
-    color: var(--wisp-fg);
-    font-size: 1.125rem;
-    line-height: 1.7;
-    text-wrap: pretty;
-  }
-  .home-colophon {
-    margin: 0.75rem 0 0;
-    color: var(--wisp-muted);
-    font-size: 0.875rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .home-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 2rem;
-  }
+    @media (min-width: 48rem) {
+      .home-title {
+        padding-block: 6.5rem 5rem;
+      }
+    }
+    .home-title h1 {
+      margin: 0;
+      font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+    .home-lead {
+      margin: 1.25rem 0 0;
+      max-width: 34rem;
+      color: var(--wisp-fg);
+      font-size: 1.125rem;
+      line-height: 1.7;
+      text-wrap: pretty;
+    }
+    .home-colophon {
+      margin: 0.75rem 0 0;
+      color: var(--wisp-muted);
+      font-size: 0.875rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .home-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
 
-  /* ---------- 区块标题：前景色粗线 + 标题，像手册里的分隔页 ---------- */
-  .home-h2 {
-    margin: 0 0 2rem;
-    padding-top: 0.875rem;
-    border-top: 2px solid var(--wisp-fg);
-    font-size: 1.25rem;
-    font-weight: 700;
-    line-height: 1.35;
-  }
-  .home-section {
-    margin-top: 5rem;
-  }
-  .home-section > .home-list,
-  .home-section > .home-revisions,
-  .home-section > .home-more {
-    max-width: var(--wisp-measure);
-  }
+    /* ---------- 区块标题：前景色粗线 + 标题，像手册里的分隔页 ---------- */
+    .home-h2 {
+      margin: 0 0 2rem;
+      padding-top: 0.875rem;
+      border-top: 2px solid var(--wisp-fg);
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .home-section {
+      margin-top: 5rem;
+    }
+    .home-section > .home-list,
+    .home-section > .home-revisions,
+    .home-section > .home-more {
+      max-width: var(--wisp-measure);
+    }
 
-  /* ---------- 目录：每个系列一个部分 ---------- */
-  .part {
-    display: grid;
-    gap: 1.25rem 3rem;
-    padding-block: 2rem;
-  }
-  .part + .part {
-    border-top: 1px solid var(--wisp-border);
-  }
-  .part:first-of-type {
-    padding-top: 0;
-  }
-  @media (min-width: 60rem) {
+    /* ---------- 目录：每个系列一个部分 ---------- */
     .part {
-      grid-template-columns: minmax(14rem, 20rem) minmax(0, 1fr);
-      align-items: start;
+      display: grid;
+      gap: 1.25rem 3rem;
+      padding-block: 2rem;
     }
-    .part-head {
-      position: sticky;
-      top: calc(var(--wisp-header-h) + 1.5rem);
+    .part + .part {
+      border-top: 1px solid var(--wisp-border);
     }
-  }
-  .part-title {
-    display: flex;
-    align-items: baseline;
-    gap: 0.625rem;
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 700;
-    line-height: 1.3;
-  }
-  .part-no {
-    color: var(--wisp-accent);
-    font-weight: 300;
-    font-variant-numeric: tabular-nums;
-  }
-  .part-title a {
-    color: var(--wisp-fg);
-    transition: color 150ms;
-  }
-  .part-title a:hover {
-    color: var(--wisp-accent);
-  }
-  .part-sub {
-    margin: 0.5rem 0 0;
-    color: var(--wisp-fg);
-    font-weight: 500;
-    line-height: 1.6;
-  }
-  .part-desc {
-    margin: 0.5rem 0 0;
-    color: var(--wisp-muted);
-    font-size: 0.875rem;
-    line-height: 1.7;
-    text-wrap: pretty;
-  }
-  .part-meta {
-    margin: 0.75rem 0 0;
-    color: var(--wisp-muted);
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-  }
+    .part:first-of-type {
+      padding-top: 0;
+    }
+    @media (min-width: 60rem) {
+      .part {
+        grid-template-columns: minmax(14rem, 20rem) minmax(0, 1fr);
+        align-items: start;
+      }
+      .part-head {
+        position: sticky;
+        top: calc(var(--wisp-header-h) + 1.5rem);
+      }
+    }
+    .part-title {
+      display: flex;
+      align-items: baseline;
+      gap: 0.625rem;
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .part-no {
+      color: var(--wisp-accent);
+      font-weight: 300;
+      font-variant-numeric: tabular-nums;
+    }
+    .part-title a {
+      color: var(--wisp-fg);
+      transition: color 150ms;
+    }
+    .part-title a:hover {
+      color: var(--wisp-accent);
+    }
+    .part-sub {
+      margin: 0.5rem 0 0;
+      color: var(--wisp-fg);
+      font-weight: 500;
+      line-height: 1.6;
+    }
+    .part-desc {
+      margin: 0.5rem 0 0;
+      color: var(--wisp-muted);
+      font-size: 0.875rem;
+      line-height: 1.7;
+      text-wrap: pretty;
+    }
+    .part-meta {
+      margin: 0.75rem 0 0;
+      color: var(--wisp-muted);
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
+    }
 
-  /* 篇目：编号 | 标题 | 点线引导 | 阅读时长；窄屏时宽屏两列 */
-  .part-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    column-gap: 3rem;
-  }
-  @media (min-width: 80rem) {
+    /* 篇目：编号 | 标题 | 点线引导 | 阅读时长；窄屏时宽屏两列 */
     .part-list {
-      columns: 2;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      column-gap: 3rem;
     }
-  }
-  .part-list li {
-    break-inside: avoid;
-  }
-  .part-list a {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    padding-block: 0.4375rem;
-    color: var(--wisp-fg);
-    font-size: 0.9375rem;
-    line-height: 1.5;
-  }
-  .part-item-no {
-    flex: none;
-    width: 1.5rem;
-    color: var(--wisp-subtle);
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-    transition: color 150ms;
-  }
-  .part-item-title {
-    min-width: 0;
-    transition: color 150ms;
-    text-wrap: pretty;
-  }
-  .part-leader {
-    flex: 1 1 1.5rem;
-    min-width: 1.5rem;
-    align-self: flex-end;
-    margin-bottom: 0.4375rem;
-    border-bottom: 1px dotted var(--wisp-subtle);
-    opacity: 0.6;
-  }
-  .part-item-time {
-    flex: none;
-    color: var(--wisp-muted);
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .part-list a:hover .part-item-title {
-    color: var(--wisp-accent);
-  }
-  .part-list a:hover .part-item-no {
-    color: var(--wisp-accent);
-  }
+    @media (min-width: 80rem) {
+      .part-list {
+        columns: 2;
+      }
+    }
+    .part-list li {
+      break-inside: avoid;
+    }
+    .part-list a {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      padding-block: 0.4375rem;
+      color: var(--wisp-fg);
+      font-size: 0.9375rem;
+      line-height: 1.5;
+    }
+    .part-item-no {
+      flex: none;
+      width: 1.5rem;
+      color: var(--wisp-subtle);
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
+      transition: color 150ms;
+    }
+    .part-item-title {
+      min-width: 0;
+      transition: color 150ms;
+      text-wrap: pretty;
+    }
+    .part-leader {
+      flex: 1 1 1.5rem;
+      min-width: 1.5rem;
+      align-self: flex-end;
+      margin-bottom: 0.4375rem;
+      border-bottom: 1px dotted var(--wisp-subtle);
+      opacity: 0.6;
+    }
+    .part-item-time {
+      flex: none;
+      color: var(--wisp-muted);
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .part-list a:hover .part-item-title {
+      color: var(--wisp-accent);
+    }
+    .part-list a:hover .part-item-no {
+      color: var(--wisp-accent);
+    }
 
-  /* ---------- 其他文章 ---------- */
-  .home-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .home-list > li {
-    padding-block: 1.25rem;
-  }
-  .home-list > li:first-child {
-    padding-top: 0;
-  }
-  .home-list > li + li {
-    border-top: 1px solid var(--wisp-border);
-  }
+    /* ---------- 其他文章 ---------- */
+    .home-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .home-list > li {
+      padding-block: 1.25rem;
+    }
+    .home-list > li:first-child {
+      padding-top: 0;
+    }
+    .home-list > li + li {
+      border-top: 1px solid var(--wisp-border);
+    }
 
-  /* ---------- 修订记录：日期 | 标题 | 所属系列 ---------- */
-  .home-revisions {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border-top: 1px solid var(--wisp-fg);
-    border-bottom: 1px solid var(--wisp-fg);
-  }
-  .home-revisions li {
-    display: grid;
-    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
-    gap: 1rem;
-    align-items: baseline;
-    padding-block: 0.625rem;
-    font-size: 0.9375rem;
-  }
-  .home-revisions li + li {
-    border-top: 1px solid var(--wisp-border);
-  }
-  .home-revisions time,
-  .home-rev-part {
-    color: var(--wisp-muted);
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .home-revisions a {
-    color: var(--wisp-fg);
-    transition: color 150ms;
-  }
-  .home-revisions a:hover {
-    color: var(--wisp-accent);
-  }
-  @media (max-width: 39.99rem) {
+    /* ---------- 修订记录：日期 | 标题 | 所属系列 ---------- */
+    .home-revisions {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid var(--wisp-fg);
+      border-bottom: 1px solid var(--wisp-fg);
+    }
     .home-revisions li {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0.125rem;
+      display: grid;
+      grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+      gap: 1rem;
+      align-items: baseline;
+      padding-block: 0.625rem;
+      font-size: 0.9375rem;
     }
+    .home-revisions li + li {
+      border-top: 1px solid var(--wisp-border);
+    }
+    .home-revisions time,
     .home-rev-part {
-      display: none;
+      color: var(--wisp-muted);
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
     }
-  }
-  .home-more {
-    display: inline-block;
-    margin-top: 1rem;
-    font-size: 0.875rem;
-  }
+    .home-revisions a {
+      color: var(--wisp-fg);
+      transition: color 150ms;
+    }
+    .home-revisions a:hover {
+      color: var(--wisp-accent);
+    }
+    @media (max-width: 39.99rem) {
+      .home-revisions li {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.125rem;
+      }
+      .home-rev-part {
+        display: none;
+      }
+    }
+    .home-more {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+    }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .home-title > * {
-      animation: home-rise 520ms var(--wisp-ease) both;
+    @media (prefers-reduced-motion: no-preference) {
+      .home-title > * {
+        animation: home-rise 520ms var(--wisp-ease) both;
+      }
+      .home-title > :nth-child(2) {
+        animation-delay: 60ms;
+      }
+      .home-title > :nth-child(3) {
+        animation-delay: 120ms;
+      }
+      .home-title > :nth-child(4) {
+        animation-delay: 180ms;
+      }
     }
-    .home-title > :nth-child(2) { animation-delay: 60ms; }
-    .home-title > :nth-child(3) { animation-delay: 120ms; }
-    .home-title > :nth-child(4) { animation-delay: 180ms; }
-  }
-  @keyframes home-rise {
-    from {
-      opacity: 0;
-      transform: translateY(0.5rem);
+    @keyframes home-rise {
+      from {
+        opacity: 0;
+        transform: translateY(0.5rem);
+      }
     }
-  }
   }
 </style>

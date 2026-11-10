@@ -5,7 +5,7 @@
 ## 环境要求
 
 - **Node.js ≥ 22.23.4**（Astro 7 的要求，低于此版本会安装失败）
-- **pnpm**（本项目使用 pnpm，锁文件为 `pnpm-lock.yaml`）
+- **pnpm 12.18.0**（版本由 `package.json#packageManager` 固定，锁文件为 `pnpm-lock.yaml`）
 
 ## 方式一：用 starter 创建新站点
 
@@ -82,7 +82,7 @@ pnpm preview    # 在本地预览 dist/
 pnpm check
 ```
 
-starter 的 `pnpm check` 包括 `astro check` 和图表 manifest 校验（`wisp diagram check`）。
+starter 的 `pnpm check` 包括 `astro check` 和图表 manifest 校验（`wisp diagram check`）。主题仓库额外把 `tsc`、ESLint、Prettier、Vitest 和对比度检查纳入同一个质量门禁。
 
 ## 可选：图表工具
 

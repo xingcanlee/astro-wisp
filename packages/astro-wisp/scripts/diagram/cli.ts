@@ -37,8 +37,21 @@ const USAGE = `用法：wisp diagram <build|check|lint|export|new|probe|cache> [
 
 const COMMANDS = new Set(['build', 'check', 'lint', 'export', 'new', 'probe', 'cache']);
 
-interface Flags { positional: string[]; flags: Map<string, string | true> }
-const VALUE_FLAGS = new Set(['--drawio', '--theme', '--scale', '-o', '--out', '--seed', '--title', '--desc', '--out-dir']);
+interface Flags {
+  positional: string[];
+  flags: Map<string, string | true>;
+}
+const VALUE_FLAGS = new Set([
+  '--drawio',
+  '--theme',
+  '--scale',
+  '-o',
+  '--out',
+  '--seed',
+  '--title',
+  '--desc',
+  '--out-dir',
+]);
 
 export function parseArgs(argv: string[]): Flags {
   const positional: string[] = [];
@@ -58,11 +71,16 @@ export function toPythonArgs(argv: string[], root = process.cwd()): string[] {
   const [cmd, ...rest] = argv;
   const project = ['--root', root, '--manifest', join(root, MANIFEST_FILE)];
   switch (cmd) {
-    case 'build': return ['build', ...rest, ...project];
-    case 'check': return ['check', ...project];
-    case 'lint': return ['lint', ...rest, '--root', root];
-    case 'new': return ['new', ...rest, ...project];
-    default: return [cmd!, ...rest];
+    case 'build':
+      return ['build', ...rest, ...project];
+    case 'check':
+      return ['check', ...project];
+    case 'lint':
+      return ['lint', ...rest, '--root', root];
+    case 'new':
+      return ['new', ...rest, ...project];
+    default:
+      return [cmd!, ...rest];
   }
 }
 
@@ -73,7 +91,8 @@ export function findUv(): string | null {
   for (const dir of (process.env.PATH ?? '').split(delimiter)) {
     if (dir && existsSync(join(dir, exe))) return join(dir, exe);
   }
-  for (const p of [join(homedir(), '.local', 'bin', exe), join(homedir(), '.cargo', 'bin', exe)]) if (existsSync(p)) return p;
+  for (const p of [join(homedir(), '.local', 'bin', exe), join(homedir(), '.cargo', 'bin', exe)])
+    if (existsSync(p)) return p;
   return null;
 }
 
@@ -96,10 +115,15 @@ export function main(argv: string[]): number {
   }
   const uv = findUv();
   if (!uv) {
-    process.stderr.write('wisp diagram 需要 uv：curl -LsSf https://astral.sh/uv/install.sh | sh（或设置 WISP_UV=<uv 路径>）\n');
+    process.stderr.write(
+      'wisp diagram 需要 uv：curl -LsSf https://astral.sh/uv/install.sh | sh（或设置 WISP_UV=<uv 路径>）\n',
+    );
     return 1;
   }
-  const r = spawnSync(uv, ['run', '--quiet', SKILL_CLI, ...toPythonArgs(argv)], { stdio: 'inherit', cwd: process.cwd() });
+  const r = spawnSync(uv, ['run', '--quiet', SKILL_CLI, ...toPythonArgs(argv)], {
+    stdio: 'inherit',
+    cwd: process.cwd(),
+  });
   if (r.error) throw r.error;
   return r.status ?? 1;
 }

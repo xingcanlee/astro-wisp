@@ -6,14 +6,24 @@ const real = (a: number[][], b: number[][]) =>
 
 describe('matmul', () => {
   it('2×2', () => {
-    const a = [[1, 2], [3, 4]], b = [[5, 6], [7, 8]];
+    const a = [
+        [1, 2],
+        [3, 4],
+      ],
+      b = [
+        [5, 6],
+        [7, 8],
+      ];
     const tl = matmul(a, b);
     expect(tl).toHaveLength(2 * 2 * 2 + 4 + 2);
     expect(tl[0].state.phase).toBe('start');
     const last = tl.at(-1)!.state;
     expect(last.phase).toBe('done');
     expect(last.c).toEqual(real(a, b));
-    expect(last.c).toEqual([[19, 22], [43, 50]]);
+    expect(last.c).toEqual([
+      [19, 22],
+      [43, 50],
+    ]);
     expect(tl[1].caption).toBe('C[0][0] += 1 × 5 → 5');
     expect(tl[1].focus).toEqual(['a:0,0', 'b:0,0', 'c:0,0']);
     expect(tl[2].caption).toBe('C[0][0] += 2 × 7 → 19');
@@ -23,7 +33,15 @@ describe('matmul', () => {
   });
 
   it('2×3 · 3×2', () => {
-    const a = [[1, 2, 3], [4, 5, 6]], b = [[7, 8], [9, 10], [11, 12]];
+    const a = [
+        [1, 2, 3],
+        [4, 5, 6],
+      ],
+      b = [
+        [7, 8],
+        [9, 10],
+        [11, 12],
+      ];
     const tl = matmul(a, b);
     expect(tl).toHaveLength(matmulStepCount(2, 2, 3));
     expect(tl).toHaveLength(2 * 2 * 3 + 2 * 2 + 2);

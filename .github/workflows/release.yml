@@ -45,7 +45,7 @@ jobs:
           version="$(node -p "require('./packages/astro-wisp/package.json').version")"
           test "v${version}" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} ≠ v${version}"; exit 1; }
 
-      - name: Check
+      - name: Quality checks (types + lint + format + tests + assets)
         run: pnpm check
       - run: pnpm build
       - run: pnpm build:template

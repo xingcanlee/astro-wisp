@@ -7,9 +7,24 @@
 export * from './core';
 export { default as Explainer, type ExplainerProps } from './react/Explainer';
 export { default as Player, type PlayerProps } from './react/Player';
-export { usePlayer, SPEEDS, BASE_INTERVAL_MS, stepDelay, type PlayerApi, type Speed } from './react/usePlayer';
+export {
+  usePlayer,
+  SPEEDS,
+  BASE_INTERVAL_MS,
+  stepDelay,
+  type PlayerApi,
+  type Speed,
+} from './react/usePlayer';
 export { labelsFor, ZH, EN, type PlayerLabels } from './react/labels';
 export { default as Stage, type StageProps } from './react/primitives/Stage';
-export { default as Matrix, CELL, LABEL_H, matrixWidth, matrixHeight, type MatrixProps, type GridValue } from './react/primitives/Matrix';
+export {
+  default as Matrix,
+  CELL,
+  LABEL_H,
+  matrixWidth,
+  matrixHeight,
+  type MatrixProps,
+  type GridValue,
+} from './react/primitives/Matrix';
 export { default as Cell, type CellProps, type CellState } from './react/primitives/Cell';
 export { default as Label, type LabelProps } from './react/primitives/Label';

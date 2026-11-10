@@ -12,5 +12,7 @@ export function formatNumber(n: number, digits = 2): string {
 
 /** 矩阵转字符串，null 显示为 "·"；列用空格分隔、行用换行。 */
 export function formatMatrix(m: (number | null)[][], digits = 2): string {
-  return m.map((row) => row.map((v) => (v === null ? '·' : formatNumber(v, digits))).join(' ')).join('\n');
+  return m
+    .map((row) => row.map((v) => (v === null ? '·' : formatNumber(v, digits))).join(' '))
+    .join('\n');
 }

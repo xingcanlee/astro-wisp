@@ -9,7 +9,7 @@ import config from 'virtual:wisp/config';
 export interface Props {
   label?: string;
 }
-const { label = (/^zh\b/i.test(config.site.lang) ? '返回顶部' : 'Back to top') } = Astro.props;
+const { label = /^zh\b/i.test(config.site.lang) ? '返回顶部' : 'Back to top' } = Astro.props;
 ---
 
 <button type="button" class="wisp-top" aria-label={label} data-back-to-top>
@@ -19,41 +19,41 @@ const { label = (/^zh\b/i.test(config.site.lang) ? '返回顶部' : 'Back to top
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
-  .wisp-top {
-    position: fixed;
-    z-index: 40;
-    inset-block-end: max(1rem, env(safe-area-inset-bottom));
-    inset-inline-end: max(1rem, env(safe-area-inset-right));
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    padding: 0;
-    border: 1px solid var(--wisp-border);
-    border-radius: 4px;
-    background: var(--wisp-bg);
-    color: var(--wisp-muted);
-    cursor: pointer;
-    opacity: 0;
-    visibility: hidden;
-    transition:
-      opacity 150ms,
-      visibility 150ms,
-      color 150ms;
-  }
-  .wisp-top[data-visible] {
-    opacity: 1;
-    visibility: visible;
-  }
-  .wisp-top:hover {
-    color: var(--wisp-accent);
-  }
-  @media print {
     .wisp-top {
-      display: none;
+      position: fixed;
+      z-index: 40;
+      inset-block-end: max(1rem, env(safe-area-inset-bottom));
+      inset-inline-end: max(1rem, env(safe-area-inset-right));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      padding: 0;
+      border: 1px solid var(--wisp-border);
+      border-radius: 4px;
+      background: var(--wisp-bg);
+      color: var(--wisp-muted);
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity 150ms,
+        visibility 150ms,
+        color 150ms;
     }
-  }
+    .wisp-top[data-visible] {
+      opacity: 1;
+      visibility: visible;
+    }
+    .wisp-top:hover {
+      color: var(--wisp-accent);
+    }
+    @media print {
+      .wisp-top {
+        display: none;
+      }
+    }
   }
 </style>
 
@@ -65,11 +65,9 @@ const { label = (/^zh\b/i.test(config.site.lang) ? '返回顶部' : 'Back to top
       tick = false;
       btn.toggleAttribute('data-visible', scrollY > innerHeight);
     };
-    addEventListener(
-      'scroll',
-      () => tick || ((tick = true), requestAnimationFrame(update)),
-      { passive: true },
-    );
+    addEventListener('scroll', () => tick || ((tick = true), requestAnimationFrame(update)), {
+      passive: true,
+    });
     update();
     btn.addEventListener('click', () => {
       const still = matchMedia('(prefers-reduced-motion: reduce)').matches;

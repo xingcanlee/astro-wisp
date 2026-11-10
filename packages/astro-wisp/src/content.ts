@@ -27,7 +27,11 @@ export interface LoaderOptions {
 
 /** 文章：`<base>/<slug>/index.{md,mdx}` 或 `<base>/<slug>.{md,mdx}`。 */
 export function postsLoader({ base = './src/content/posts' }: LoaderOptions = {}) {
-  return glob({ pattern: ['**/index.{md,mdx}', '*.{md,mdx}'], base, generateId: ({ entry }) => postId(entry) });
+  return glob({
+    pattern: ['**/index.{md,mdx}', '*.{md,mdx}'],
+    base,
+    generateId: ({ entry }) => postId(entry),
+  });
 }
 
 /** 独立页面（如 about.md）。 */
@@ -61,19 +65,27 @@ const pageFields = z.object({
   description: z.string().optional(),
 });
 
-type Extend<E> = E extends z.ZodObject<any> ? E : E extends (ctx: SchemaContext) => infer R ? R : never;
+type AnyObjectSchema = z.ZodObject<z.ZodRawShape>;
+type Extend<E> = E extends AnyObjectSchema
+  ? E
+  : E extends (ctx: SchemaContext) => infer R
+    ? R
+    : never;
 
 /** 文章 frontmatter。`extend` 可以是 zod object，也可以是 `({ image }) => z.object(...)`。 */
-export function postsSchema<E extends z.ZodObject<any> | ((ctx: SchemaContext) => z.ZodObject<any>) = z.ZodObject<{}>>(
-  opts: { extend?: E } = {},
-) {
+export function postsSchema<
+  E extends AnyObjectSchema | ((ctx: SchemaContext) => AnyObjectSchema) = AnyObjectSchema,
+>(opts: { extend?: E } = {}) {
   return (ctx: SchemaContext) => {
-    const ext: z.ZodObject<any> | undefined = typeof opts.extend === 'function' ? opts.extend(ctx) : opts.extend;
+    const ext: AnyObjectSchema | undefined =
+      typeof opts.extend === 'function' ? opts.extend(ctx) : opts.extend;
     const base = postFields(ctx);
     return (ext ? base.extend(ext.shape) : base) as ReturnType<typeof postFields> & Extend<E>;
   };
 }
 
-export function pagesSchema<E extends z.ZodObject<any> = z.ZodObject<{}>>(opts: { extend?: E } = {}) {
+export function pagesSchema<E extends AnyObjectSchema = AnyObjectSchema>(
+  opts: { extend?: E } = {},
+) {
   return (opts.extend ? pageFields.extend(opts.extend.shape) : pageFields) as typeof pageFields & E;
 }

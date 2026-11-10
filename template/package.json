@@ -20,7 +20,7 @@
     "katex",
     "mermaid"
   ],
-  "packageManager": "pnpm@10.33.2",
+  "packageManager": "pnpm@12.18.0",
   "engines": {
     "node": ">=22.23.4"
   },
@@ -34,21 +34,11 @@
   },
   "dependencies": {
     "astro": "^7.4.6",
-    "astro-wisp": "^0.4.0",
+    "astro-wisp": "^0.4.3",
     "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "typescript": "^6.0.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp"
-    ],
-    "overrides": {
-      "@napi-rs/wasm-runtime@1.2.4>@emnapi/runtime": "1.11.3",
-      "@napi-rs/wasm-runtime@1.2.4>@emnapi/core": "1.11.3"
-    }
   }
 }

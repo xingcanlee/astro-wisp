@@ -6,11 +6,13 @@ import { hueNamesOf, palette as defaultPalette, type Mode, type Palette } from '
  * （`pnpm tokens` 重新生成）；站点在 `wisp({ palette })` 中覆盖调色板时，集成在构建期调用同一组函数，
  * 产物写入 Astro 的 codegen 目录。
  */
-export const HEADER = '/* 自动生成，勿手改。来源：design/palette.json，运行 `pnpm tokens` 重新生成。 */\n';
+export const HEADER =
+  '/* 自动生成，勿手改。来源：design/palette.json，运行 `pnpm tokens` 重新生成。 */\n';
 
 const q = (f: string) => (/[\s]/.test(f) ? `"${f}"` : f);
 /** 由 Fonts API 提供的字体改为 `var(--font-wisp-*, 原族名)`（Fonts API 的族名带哈希）。 */
-const stack = (fs: string[]) => fs.map((f) => (FONT_STACK_VARS[f] ? `var(${FONT_STACK_VARS[f]}, ${q(f)})` : q(f))).join(', ');
+const stack = (fs: string[]) =>
+  fs.map((f) => (FONT_STACK_VARS[f] ? `var(${FONT_STACK_VARS[f]}, ${q(f)})` : q(f))).join(', ');
 
 function modeVars(p: Palette, mode: Mode): string {
   const lines: string[] = [];
@@ -25,7 +27,10 @@ function modeVars(p: Palette, mode: Mode): string {
 export function genTokens(p: Palette = defaultPalette): string {
   const { font, color } = p;
   const sem = Object.entries(color.semantic)
-    .map(([k, h]) => `  --wisp-sem-${k}: var(--wisp-hue-${h});\n  --wisp-sem-${k}-fill: var(--wisp-hue-${h}-fill);`)
+    .map(
+      ([k, h]) =>
+        `  --wisp-sem-${k}: var(--wisp-hue-${h});\n  --wisp-sem-${k}-fill: var(--wisp-hue-${h}-fill);`,
+    )
     .join('\n');
   return `${HEADER}
 :root,
@@ -50,8 +55,17 @@ ${sem}
 }
 
 export function genPele(p: Palette = defaultPalette): string {
-  const radius = (p as any).radius?.md ?? 8;
-  const series = hueNamesOf(p).map((h, i) => `  --pele-series-${i + 1}: var(--wisp-hue-${h});`).join('\n');
+  const radiusValue = p.radius;
+  const radius =
+    radiusValue &&
+    typeof radiusValue === 'object' &&
+    'md' in radiusValue &&
+    typeof radiusValue.md === 'number'
+      ? radiusValue.md
+      : 8;
+  const series = hueNamesOf(p)
+    .map((h, i) => `  --pele-series-${i + 1}: var(--wisp-hue-${h});`)
+    .join('\n');
   return `${HEADER}
 .pele {
   --pele-bg: transparent;

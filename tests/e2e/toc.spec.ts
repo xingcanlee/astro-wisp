@@ -4,6 +4,14 @@
  */
 import { test, expect } from '@playwright/test';
 
+type TocFirstFrame = { attr: string | undefined; display: string };
+
+declare global {
+  interface Window {
+    __tocFirst?: TocFirstFrame;
+  }
+}
+
 const POST = '/posts/kitchen-sink/';
 
 test.describe('desktop toc', () => {
@@ -28,15 +36,16 @@ test.describe('desktop toc', () => {
     await page.addInitScript(() => {
       requestAnimationFrame(() => {
         const l = document.getElementById('wisp-toc-list');
-        (window as any).__tocFirst = {
+        window.__tocFirst = {
           attr: document.documentElement.dataset.toc,
           display: l ? getComputedStyle(l).display : 'missing',
         };
       });
     });
     await page.reload({ waitUntil: 'load' });
-    await page.waitForFunction(() => (window as any).__tocFirst);
-    const first = await page.evaluate(() => (window as any).__tocFirst);
+    await page.waitForFunction(() => window.__tocFirst);
+    const first = await page.evaluate(() => window.__tocFirst);
+    if (!first) throw new Error('toc first-frame probe did not run');
     expect(first.attr).toBe('collapsed');
     expect(first.display).toBe('none');
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -65,7 +74,9 @@ test.describe('desktop toc', () => {
     await expect(cur).toHaveCount(1);
     const inside = await page.evaluate(() => {
       const box = document.querySelector('.wisp-post-aside-inner')!.getBoundingClientRect();
-      const r = document.querySelector('.wisp-toc-aside [aria-current="true"]')!.getBoundingClientRect();
+      const r = document
+        .querySelector('.wisp-toc-aside [aria-current="true"]')!
+        .getBoundingClientRect();
       return r.top >= box.top - 1 && r.bottom <= box.bottom + 1;
     });
     expect(inside).toBe(true);
@@ -83,7 +94,10 @@ test.describe('desktop toc', () => {
   });
 });
 
-for (const [name, width, height] of [['1280', 1280, 800], ['375', 375, 812]] as const) {
+for (const [name, width, height] of [
+  ['1280', 1280, 800],
+  ['375', 375, 812],
+] as const) {
   test.describe(`宽度 ${name}`, () => {
     test.use({ viewport: { width, height } });
     test('阅读进度条随滚动增加', async ({ page }) => {

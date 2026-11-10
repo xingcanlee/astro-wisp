@@ -29,10 +29,7 @@
         "src/content/shared/diagrams/transformer-block.page-2.wisp.svg": "sha256-4813021219f977ba1be499fb88953745bac826cae345c72a9c37d9821041e25e",
         "src/content/shared/diagrams/transformer-block.wisp.svg": "sha256-19bce55073908f4182e5a2ef77a34e25b71dd55ef9434923068b64ba91041073"
       },
-      "pages": [
-        "encoder",
-        "数据流"
-      ]
+      "pages": ["encoder", "数据流"]
     }
   }
 }

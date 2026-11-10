@@ -3,172 +3,174 @@
 @layer theme, base, components, utilities;
 
 @layer utilities {
-
-/*
+  /*
  * 外观：一张卡片。标题是卡片的顶栏（左对齐），中间是白底舞台（SVG），底部是浅底的说明 + 控制条。
  * 舞台用页面底色而不是 surface，组件内部的灰色轨道/格子才不会“灰上加灰”。
  */
-.wisp-explainer {
-  margin-block: 2.25rem;
-  margin-inline: 0;
-}
-.prose .wisp-explainer__title,
-.wisp-explainer__title {
-  margin: 0;
-  padding: 0.625rem 1rem;
-  border: 1px solid var(--wisp-border);
-  border-bottom: 0;
-  border-radius: 4px 4px 0 0;
-  background: var(--wisp-bg);
-  color: var(--wisp-fg);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1.5;
-  text-align: start;
-}
-
-.wisp-player {
-  overflow: hidden;
-  border: 1px solid var(--wisp-border);
-  border-radius: 4px;
-  background: var(--wisp-bg);
-  padding: 0;
-}
-.wisp-explainer__title + .wisp-player {
-  border-radius: 0 0 4px 4px;
-}
-.wisp-player__stage {
-  padding: 1.25rem 1rem;
-}
-.wisp-player:focus-visible,
-.wisp-player button:focus-visible,
-.wisp-player__range:focus-visible {
-  outline: 2px solid var(--wisp-accent);
-  outline-offset: 2px;
-}
-
-.wisp-explainer__scroll {
-  overflow-x: auto;
-}
-.wisp-explainer__svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin-inline: auto;
-}
-.wisp-explainer__cell-text {
-  font-family: var(--wisp-font-mono);
-  font-size: 16px;
-  font-variant-numeric: tabular-nums;
-}
-.wisp-explainer__label {
-  font-family: var(--wisp-font-sans);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.wisp-player__caption {
-  min-height: 3em;
-  margin-top: 0;
-  padding: 0.875rem 1rem 0;
-  border-top: 1px solid var(--wisp-border);
-  background: var(--wisp-surface);
-  color: var(--wisp-fg);
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-.wisp-player__controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
-  margin-top: 0;
-  padding: 0.75rem 1rem 1rem;
-  background: var(--wisp-surface);
-}
-.wisp-player__buttons,
-.wisp-player__speed {
-  display: inline-flex;
-  gap: 0.25rem;
-}
-.wisp-player button {
-  min-width: 2.5rem;
-  min-height: 2.5rem;
-  padding: 0 0.5rem;
-  border: 1px solid var(--wisp-border);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 3px;
-  background: var(--wisp-bg);
-  color: var(--wisp-fg);
-  font: inherit;
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-  transition: background-color 150ms, border-color 150ms, transform 120ms;
-}
-.wisp-player button .wisp-icon {
-  width: 1rem;
-  height: 1rem;
-}
-.wisp-player button:active:not(:disabled) {
-  transform: scale(0.94);
-}
-.wisp-player button:hover:not(:disabled) {
-  border-color: var(--wisp-accent);
-}
-.wisp-player .wisp-player__play:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--wisp-accent) 88%, var(--wisp-fg));
-}
-.wisp-player button:disabled {
-  color: var(--wisp-subtle);
-  cursor: not-allowed;
-}
-.wisp-player .wisp-player__play {
-  background: var(--wisp-accent);
-  border-color: var(--wisp-accent);
-  color: var(--wisp-accent-fg);
-}
-.wisp-player .wisp-player__play:disabled {
-  background: var(--wisp-bg);
-  color: var(--wisp-subtle);
-  border-color: var(--wisp-border);
-}
-.wisp-player__speed button[aria-pressed='true'] {
-  background: var(--wisp-selection);
-  border-color: var(--wisp-accent);
-}
-.wisp-player__range {
-  flex: 1 1 8rem;
-  min-width: 6rem;
-  min-height: 2.5rem;
-  accent-color: var(--wisp-accent);
-}
-.wisp-player__count {
-  color: var(--wisp-muted);
-  font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .wisp-player button {
-    transition: none;
+  .wisp-explainer {
+    margin-block: 2.25rem;
+    margin-inline: 0;
   }
-}
-/* 窄屏：进度条、页码、倍速并在第二行，控制条两行放下 */
-@media (max-width: 39.99rem) {
-  .wisp-player__buttons {
-    flex: 1 0 100%;
+  .prose .wisp-explainer__title,
+  .wisp-explainer__title {
+    margin: 0;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--wisp-border);
+    border-bottom: 0;
+    border-radius: 4px 4px 0 0;
+    background: var(--wisp-bg);
+    color: var(--wisp-fg);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: start;
+  }
+
+  .wisp-player {
+    overflow: hidden;
+    border: 1px solid var(--wisp-border);
+    border-radius: 4px;
+    background: var(--wisp-bg);
+    padding: 0;
+  }
+  .wisp-explainer__title + .wisp-player {
+    border-radius: 0 0 4px 4px;
+  }
+  .wisp-player__stage {
+    padding: 1.25rem 1rem;
+  }
+  .wisp-player:focus-visible,
+  .wisp-player button:focus-visible,
+  .wisp-player__range:focus-visible {
+    outline: 2px solid var(--wisp-accent);
+    outline-offset: 2px;
+  }
+
+  .wisp-explainer__scroll {
+    overflow-x: auto;
+  }
+  .wisp-explainer__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-inline: auto;
+  }
+  .wisp-explainer__cell-text {
+    font-family: var(--wisp-font-mono);
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+  }
+  .wisp-explainer__label {
+    font-family: var(--wisp-font-sans);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .wisp-player__caption {
+    min-height: 3em;
+    margin-top: 0;
+    padding: 0.875rem 1rem 0;
+    border-top: 1px solid var(--wisp-border);
+    background: var(--wisp-surface);
+    color: var(--wisp-fg);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  .wisp-player__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-top: 0;
+    padding: 0.75rem 1rem 1rem;
+    background: var(--wisp-surface);
+  }
+  .wisp-player__buttons,
+  .wisp-player__speed {
+    display: inline-flex;
+    gap: 0.25rem;
+  }
+  .wisp-player button {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    padding: 0 0.5rem;
+    border: 1px solid var(--wisp-border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    background: var(--wisp-bg);
+    color: var(--wisp-fg);
+    font: inherit;
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition:
+      background-color 150ms,
+      border-color 150ms,
+      transform 120ms;
+  }
+  .wisp-player button .wisp-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+  .wisp-player button:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+  .wisp-player button:hover:not(:disabled) {
+    border-color: var(--wisp-accent);
+  }
+  .wisp-player .wisp-player__play:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--wisp-accent) 88%, var(--wisp-fg));
+  }
+  .wisp-player button:disabled {
+    color: var(--wisp-subtle);
+    cursor: not-allowed;
+  }
+  .wisp-player .wisp-player__play {
+    background: var(--wisp-accent);
+    border-color: var(--wisp-accent);
+    color: var(--wisp-accent-fg);
+  }
+  .wisp-player .wisp-player__play:disabled {
+    background: var(--wisp-bg);
+    color: var(--wisp-subtle);
+    border-color: var(--wisp-border);
+  }
+  .wisp-player__speed button[aria-pressed='true'] {
+    background: var(--wisp-selection);
+    border-color: var(--wisp-accent);
   }
   .wisp-player__range {
-    flex-basis: 4.5rem;
-    min-width: 4.5rem;
+    flex: 1 1 8rem;
+    min-width: 6rem;
+    min-height: 2.5rem;
+    accent-color: var(--wisp-accent);
   }
-  .wisp-player__speed button {
-    min-width: 2.75rem;
-    padding-inline: 0.25rem;
+  .wisp-player__count {
+    color: var(--wisp-muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
   }
-}
+
+  @media (prefers-reduced-motion: reduce) {
+    .wisp-player button {
+      transition: none;
+    }
+  }
+  /* 窄屏：进度条、页码、倍速并在第二行，控制条两行放下 */
+  @media (max-width: 39.99rem) {
+    .wisp-player__buttons {
+      flex: 1 0 100%;
+    }
+    .wisp-player__range {
+      flex-basis: 4.5rem;
+      min-width: 4.5rem;
+    }
+    .wisp-player__speed button {
+      min-width: 2.75rem;
+      padding-inline: 0.25rem;
+    }
+  }
 }

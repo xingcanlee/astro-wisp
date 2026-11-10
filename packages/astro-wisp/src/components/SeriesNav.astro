@@ -20,12 +20,20 @@ export interface Props {
   title?: string;
 }
 
-const { items, currentId, variant = 'aside', title = (/^zh\b/i.test(config.site.lang) ? '系列文章' : 'Series') } = Astro.props;
+const {
+  items,
+  currentId,
+  variant = 'aside',
+  title = /^zh\b/i.test(config.site.lang) ? '系列文章' : 'Series',
+} = Astro.props;
 const headingId = variant === 'aside' ? 'wisp-series-title-aside' : 'wisp-series-title-inline';
 const currentIndex = items.findIndex((item) => item.id === currentId);
-const position = currentIndex >= 0
-  ? (/^zh\b/i.test(config.site.lang) ? `第 ${currentIndex + 1}/${items.length} 篇` : `${currentIndex + 1}/${items.length}`)
-  : '';
+const position =
+  currentIndex >= 0
+    ? /^zh\b/i.test(config.site.lang)
+      ? `第 ${currentIndex + 1}/${items.length} 篇`
+      : `${currentIndex + 1}/${items.length}`
+    : '';
 const inlineTitle = position ? `${title} · ${position}` : title;
 // 篇目标题以编号开头（「05 MLA …」）时拆成编号列 + 标题列，换行后标题悬挂对齐
 const split = (t: string) => {
@@ -34,168 +42,168 @@ const split = (t: string) => {
 };
 ---
 
-{
-  items.length > 0 &&
-    (variant === 'inline' ? (
-      <details class="wisp-series wisp-series-inline">
-        <summary>
-          <Icon name="chevron-right" class="wisp-series-chev" />
-          {inlineTitle}
-        </summary>
-        <ol>
-          {items.map((item) => (
-            <li>
-              <a
-                href={sitePath(import.meta.env.BASE_URL, `/posts/${item.id}/`)}
-                aria-current={item.id === currentId ? 'page' : undefined}
-              >
-                <span class="wisp-series-no">{split(item.title).no}</span>
-                <span class="wisp-series-text">{split(item.title).text}</span>
-              </a>
-            </li>
-          ))}
-        </ol>
-      </details>
-    ) : (
-      <nav class="wisp-series wisp-series-aside" aria-labelledby={headingId}>
-        <p id={headingId} class="wisp-series-title">
-          <span>{title}</span>
-          <span class="wisp-series-count">{currentIndex >= 0 ? `${currentIndex + 1} / ${items.length}` : items.length}</span>
-        </p>
-        <ol>
-          {items.map((item) => (
-            <li>
-              <a
-                href={sitePath(import.meta.env.BASE_URL, `/posts/${item.id}/`)}
-                aria-current={item.id === currentId ? 'page' : undefined}
-              >
-                <span class="wisp-series-no">{split(item.title).no}</span>
-                <span class="wisp-series-text">{split(item.title).text}</span>
-              </a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-    ))
-}
+{items.length > 0 &&
+  (variant === 'inline' ? (
+    <details class="wisp-series wisp-series-inline">
+      <summary>
+        <Icon name="chevron-right" class="wisp-series-chev" />
+        {inlineTitle}
+      </summary>
+      <ol>
+        {items.map((item) => (
+          <li>
+            <a
+              href={sitePath(import.meta.env.BASE_URL, `/posts/${item.id}/`)}
+              aria-current={item.id === currentId ? 'page' : undefined}
+            >
+              <span class="wisp-series-no">{split(item.title).no}</span>
+              <span class="wisp-series-text">{split(item.title).text}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </details>
+  ) : (
+    <nav class="wisp-series wisp-series-aside" aria-labelledby={headingId}>
+      <p id={headingId} class="wisp-series-title">
+        <span>{title}</span>
+        <span class="wisp-series-count">
+          {currentIndex >= 0 ? `${currentIndex + 1} / ${items.length}` : items.length}
+        </span>
+      </p>
+      <ol>
+        {items.map((item) => (
+          <li>
+            <a
+              href={sitePath(import.meta.env.BASE_URL, `/posts/${item.id}/`)}
+              aria-current={item.id === currentId ? 'page' : undefined}
+            >
+              <span class="wisp-series-no">{split(item.title).no}</span>
+              <span class="wisp-series-text">{split(item.title).text}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  ))}
 
 <style>
   @layer components {
-  .wisp-series {
-    font-size: 0.8125rem;
-    line-height: 1.5;
-  }
-  .wisp-series ol {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .wisp-series li {
-    margin: 0;
-  }
-  /* 编号列 + 标题列：两位编号用等宽数字，换行后标题悬挂在编号右侧 */
-  .wisp-series a {
-    display: grid;
-    grid-template-columns: 1.75rem minmax(0, 1fr);
-    align-items: baseline;
-    padding-block: 0.3125rem;
-    color: var(--wisp-muted);
-    transition: color 150ms;
-  }
-  .wisp-series-no {
-    color: var(--wisp-subtle);
-    font-size: 0.75rem;
-    font-variant-numeric: tabular-nums;
-    transition: color 150ms;
-  }
-  .wisp-series a:hover {
-    color: var(--wisp-fg);
-  }
-  .wisp-series a:hover .wisp-series-no {
-    color: var(--wisp-muted);
-  }
-  .wisp-series a[aria-current='page'] {
-    color: var(--wisp-fg);
-    font-weight: 600;
-  }
-  .wisp-series a[aria-current='page'] .wisp-series-no {
-    color: var(--wisp-accent);
-    font-weight: 600;
-  }
-
-  /* 侧栏：左侧一条发丝轨道，当前篇的那一段轨道换成强调色 */
-  .wisp-series-aside ol {
-    border-inline-start: 1px solid var(--wisp-border);
-  }
-  .wisp-series-aside a {
-    margin-inline-start: -1px;
-    padding-inline: 0.875rem 0.25rem;
-    border-inline-start: 1px solid transparent;
-  }
-  .wisp-series-aside a[aria-current='page'] {
-    border-inline-start-color: var(--wisp-accent);
-  }
-  .wisp-series-title {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin: 0 0 0.75rem;
-    color: var(--wisp-fg);
-    font-weight: 600;
-    font-size: 0.875rem;
-  }
-  .wisp-series-count {
-    flex: none;
-    color: var(--wisp-muted);
-    font-size: 0.75rem;
-    font-weight: 400;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .wisp-series-inline {
-    margin: 0 0 1.5rem;
-    border-block: 1px solid var(--wisp-border);
-  }
-  .wisp-series-inline summary {
-    display: flex;
-    align-items: center;
-    min-height: 2.75rem;
-    gap: 0.375rem;
-    cursor: pointer;
-    color: var(--wisp-muted);
-    font-size: 0.875rem;
-    font-weight: 500;
-    list-style: none;
-    transition: color 150ms;
-  }
-  .wisp-series-inline summary::-webkit-details-marker {
-    display: none;
-  }
-  .wisp-series-inline summary:hover,
-  .wisp-series-inline[open] summary {
-    color: var(--wisp-fg);
-  }
-  .wisp-series-inline[open] summary :global(.wisp-series-chev) {
-    transform: rotate(90deg);
-  }
-  .wisp-series-inline ol {
-    /* 长系列（几十篇）展开时限制高度，避免把正文推出一屏 */
-    max-height: 60vh;
-    overflow-y: auto;
-    padding-bottom: 0.75rem;
-  }
-  .wisp-series-inline a {
-    min-height: 2.25rem;
-    align-content: center;
-  }
-  .wisp-series :global(.wisp-series-chev) {
-    flex: none;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .wisp-series :global(.wisp-series-chev) {
-      transition: transform 150ms;
+    .wisp-series {
+      font-size: 0.8125rem;
+      line-height: 1.5;
     }
-  }
+    .wisp-series ol {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .wisp-series li {
+      margin: 0;
+    }
+    /* 编号列 + 标题列：两位编号用等宽数字，换行后标题悬挂在编号右侧 */
+    .wisp-series a {
+      display: grid;
+      grid-template-columns: 1.75rem minmax(0, 1fr);
+      align-items: baseline;
+      padding-block: 0.3125rem;
+      color: var(--wisp-muted);
+      transition: color 150ms;
+    }
+    .wisp-series-no {
+      color: var(--wisp-subtle);
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+      transition: color 150ms;
+    }
+    .wisp-series a:hover {
+      color: var(--wisp-fg);
+    }
+    .wisp-series a:hover .wisp-series-no {
+      color: var(--wisp-muted);
+    }
+    .wisp-series a[aria-current='page'] {
+      color: var(--wisp-fg);
+      font-weight: 600;
+    }
+    .wisp-series a[aria-current='page'] .wisp-series-no {
+      color: var(--wisp-accent);
+      font-weight: 600;
+    }
+
+    /* 侧栏：左侧一条发丝轨道，当前篇的那一段轨道换成强调色 */
+    .wisp-series-aside ol {
+      border-inline-start: 1px solid var(--wisp-border);
+    }
+    .wisp-series-aside a {
+      margin-inline-start: -1px;
+      padding-inline: 0.875rem 0.25rem;
+      border-inline-start: 1px solid transparent;
+    }
+    .wisp-series-aside a[aria-current='page'] {
+      border-inline-start-color: var(--wisp-accent);
+    }
+    .wisp-series-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin: 0 0 0.75rem;
+      color: var(--wisp-fg);
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .wisp-series-count {
+      flex: none;
+      color: var(--wisp-muted);
+      font-size: 0.75rem;
+      font-weight: 400;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .wisp-series-inline {
+      margin: 0 0 1.5rem;
+      border-block: 1px solid var(--wisp-border);
+    }
+    .wisp-series-inline summary {
+      display: flex;
+      align-items: center;
+      min-height: 2.75rem;
+      gap: 0.375rem;
+      cursor: pointer;
+      color: var(--wisp-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      list-style: none;
+      transition: color 150ms;
+    }
+    .wisp-series-inline summary::-webkit-details-marker {
+      display: none;
+    }
+    .wisp-series-inline summary:hover,
+    .wisp-series-inline[open] summary {
+      color: var(--wisp-fg);
+    }
+    .wisp-series-inline[open] summary :global(.wisp-series-chev) {
+      transform: rotate(90deg);
+    }
+    .wisp-series-inline ol {
+      /* 长系列（几十篇）展开时限制高度，避免把正文推出一屏 */
+      max-height: 60vh;
+      overflow-y: auto;
+      padding-bottom: 0.75rem;
+    }
+    .wisp-series-inline a {
+      min-height: 2.25rem;
+      align-content: center;
+    }
+    .wisp-series :global(.wisp-series-chev) {
+      flex: none;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .wisp-series :global(.wisp-series-chev) {
+        transition: transform 150ms;
+      }
+    }
   }
 </style>

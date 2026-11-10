@@ -1,8 +1,8 @@
 ---
 version: 1
-slug: "src-layouts-post-astro"
-primary_target: "src/layouts/Post.astro"
-related_targets: ["src/routes/index.astro"]
+slug: 'src-layouts-post-astro'
+primary_target: 'src/layouts/Post.astro'
+related_targets: ['src/routes/index.astro']
 ---
 
 # Surface brief: Wisp post reading surface (theme-wide frame)

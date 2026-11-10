@@ -17,20 +17,23 @@ export interface IconOptions {
 }
 
 export function iconSvg(name: string, opts: IconOptions = {}): string {
-  const data = getIconData(lucide as any, name);
+  const data = getIconData(lucide, name);
   if (!data) throw new Error(`[wisp] 未知 Lucide 图标：${name}`);
   const size = opts.size ?? '1em';
   const svg = iconToSVG(data, { width: String(size), height: String(size) });
   let body = svg.body;
-  if (opts.strokeWidth) body = body.replace(/stroke-width="[^"]*"/g, `stroke-width="${opts.strokeWidth}"`);
+  if (opts.strokeWidth)
+    body = body.replace(/stroke-width="[^"]*"/g, `stroke-width="${opts.strokeWidth}"`);
   const attrs: Record<string, string> = {
     ...svg.attributes,
     class: ['wisp-icon', opts.class].filter(Boolean).join(' '),
-    ...(opts.label ? { role: 'img', 'aria-label': opts.label } : { 'aria-hidden': 'true', focusable: 'false' }),
+    ...(opts.label
+      ? { role: 'img', 'aria-label': opts.label }
+      : { 'aria-hidden': 'true', focusable: 'false' }),
   };
   return iconToHTML(replaceIDs(body), attrs);
 }
 
 export function hasIcon(name: string): boolean {
-  return getIconData(lucide as any, name) != null;
+  return getIconData(lucide, name) != null;
 }

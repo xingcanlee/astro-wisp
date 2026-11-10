@@ -1,14 +1,87 @@
 {
   "style": "hand",
   "nodes": [
-    { "id": "q", "shape": "rect", "x": 0, "y": 56, "w": 128, "h": 56, "label": "查询 Q", "color": "q" },
-    { "id": "k", "shape": "rect", "x": 0, "y": 144, "w": 128, "h": 56, "label": "键 Kᵀ", "color": "k" },
-    { "id": "v", "shape": "rect", "x": 0, "y": 272, "w": 128, "h": 56, "label": "值 V", "color": "v" },
-    { "id": "s", "shape": "rect", "x": 256, "y": 96, "w": 144, "h": 56, "label": "缩放点积", "color": "weight" },
-    { "id": "mask", "shape": "rect", "x": 496, "y": 8, "w": 128, "h": 48, "label": "掩码 mask", "color": "mask" },
-    { "id": "softmax", "shape": "ellipse", "x": 496, "y": 96, "w": 128, "h": 56, "label": "softmax", "color": "activation" },
-    { "id": "bias", "shape": "diamond", "x": 704, "y": 0, "w": 128, "h": 64, "label": "偏置 b", "color": "bias" },
-    { "id": "out", "shape": "rect", "x": 704, "y": 232, "w": 128, "h": 56, "label": "输出 O", "color": "rose", "emphasis": true }
+    {
+      "id": "q",
+      "shape": "rect",
+      "x": 0,
+      "y": 56,
+      "w": 128,
+      "h": 56,
+      "label": "查询 Q",
+      "color": "q"
+    },
+    {
+      "id": "k",
+      "shape": "rect",
+      "x": 0,
+      "y": 144,
+      "w": 128,
+      "h": 56,
+      "label": "键 Kᵀ",
+      "color": "k"
+    },
+    {
+      "id": "v",
+      "shape": "rect",
+      "x": 0,
+      "y": 272,
+      "w": 128,
+      "h": 56,
+      "label": "值 V",
+      "color": "v"
+    },
+    {
+      "id": "s",
+      "shape": "rect",
+      "x": 256,
+      "y": 96,
+      "w": 144,
+      "h": 56,
+      "label": "缩放点积",
+      "color": "weight"
+    },
+    {
+      "id": "mask",
+      "shape": "rect",
+      "x": 496,
+      "y": 8,
+      "w": 128,
+      "h": 48,
+      "label": "掩码 mask",
+      "color": "mask"
+    },
+    {
+      "id": "softmax",
+      "shape": "ellipse",
+      "x": 496,
+      "y": 96,
+      "w": 128,
+      "h": 56,
+      "label": "softmax",
+      "color": "activation"
+    },
+    {
+      "id": "bias",
+      "shape": "diamond",
+      "x": 704,
+      "y": 0,
+      "w": 128,
+      "h": 64,
+      "label": "偏置 b",
+      "color": "bias"
+    },
+    {
+      "id": "out",
+      "shape": "rect",
+      "x": 704,
+      "y": 232,
+      "w": 128,
+      "h": 56,
+      "label": "输出 O",
+      "color": "rose",
+      "emphasis": true
+    }
   ],
   "edges": [
     { "from": "q", "to": "s" },

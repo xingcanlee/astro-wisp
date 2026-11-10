@@ -43,7 +43,12 @@ const escText = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 /** Pele 把 accTitle/accDescr 写成 <title>/<desc>（内容已转义），这里直接取出。 */
 function textOf(svg: string, tag: 'title' | 'desc'): string {
   const m = svg.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`));
-  return m ? m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
+  return m
+    ? m[1]
+        .replace(/<[^>]+>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    : '';
 }
 
 /** SVG 的原始宽度写成 --pele-w，CSS 据此限制最小缩放比例（见 figure.css）。 */
@@ -57,7 +62,8 @@ export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[
   return (tree: Root, file: VFile) => {
     const jobs: Array<{ parent: Parent; index: number; node: Code }> = [];
     visit(tree, 'code', (node, index, parent) => {
-      if (node.lang === 'mermaid' && parent && index !== undefined) jobs.push({ parent, index, node });
+      if (node.lang === 'mermaid' && parent && index !== undefined)
+        jobs.push({ parent, index, node });
     });
     // 倒序处理，插入节点不会影响前面的索引
     for (const [i, { parent, index, node }] of [...jobs.entries()].reverse()) {
@@ -88,7 +94,7 @@ export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[
           throw new Error(`Mermaid 渲染失败 (${loc}): ${e.message ?? err}`, { cause: err });
         }
         console.warn(`[wisp] Mermaid 渲染失败 (${loc}): ${first}`);
-        const detail = dev ? e.message ?? first : first;
+        const detail = dev ? (e.message ?? first) : first;
         const note: Html = {
           type: 'html',
           value: `<div class="wisp-pele-error" role="note">Mermaid 渲染失败：${escText(detail)}</div>`,

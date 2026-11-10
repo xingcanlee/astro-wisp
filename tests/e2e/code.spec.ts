@@ -8,8 +8,10 @@ test.beforeEach(async ({ page, context }) => {
   await page.evaluate(() => document.fonts.ready);
 });
 
-const folded = (page: import('@playwright/test').Page) => page.locator('.wisp-code[data-fold]').first();
-const lineHeight = (box: Locator) => box.locator('pre').evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
+const folded = (page: import('@playwright/test').Page) =>
+  page.locator('.wisp-code[data-fold]').first();
+const lineHeight = (box: Locator) =>
+  box.locator('pre').evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
 
 test('长代码块默认折叠，可见高度约为 previewLines 行', async ({ page }) => {
   const box = folded(page);
@@ -146,7 +148,10 @@ test('打印时折叠块完整显示', async ({ page }) => {
 test('折叠态下行号和横向滚动仍可用', async ({ page }) => {
   const box = folded(page);
   const pre = box.locator('pre');
-  const content = await pre.locator('.line').first().evaluate((el) => getComputedStyle(el, '::before').content);
+  const content = await pre
+    .locator('.line')
+    .first()
+    .evaluate((el) => getComputedStyle(el, '::before').content);
   expect(content).not.toBe('none');
   expect(await pre.evaluate((el) => getComputedStyle(el).overflowX)).toBe('auto');
 });

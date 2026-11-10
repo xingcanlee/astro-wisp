@@ -17,13 +17,11 @@ export const wispConfigSchema = z.object({
       lang: z.string().default('zh-CN'),
     })
     .prefault({}),
-  nav: z
-    .array(navItem)
-    .default([
-      { label: '归档', href: '/archive/' },
-      { label: '标签', href: '/tags/' },
-      { label: '关于', href: '/about/' },
-    ]),
+  nav: z.array(navItem).default([
+    { label: '归档', href: '/archive/' },
+    { label: '标签', href: '/tags/' },
+    { label: '关于', href: '/about/' },
+  ]),
   social: z.array(socialItem).default([{ kind: 'rss', href: '/rss.xml' }]),
   home: z
     .object({
@@ -50,9 +48,7 @@ export const wispConfigSchema = z.object({
     .prefault({}),
   mermaid: z.object({ strict: z.boolean().default(false) }).prefault({}),
   rss: z.object({ fullText: z.boolean().default(true) }).prefault({}),
-  taxonomy: z
-    .object({ slugMap: z.record(z.string(), z.string()).default({}) })
-    .prefault({}),
+  taxonomy: z.object({ slugMap: z.record(z.string(), z.string()).default({}) }).prefault({}),
   /**
    * 主题注入的路由。设为 false 后可以在 src/pages/ 中自己实现同一路径（Astro 不允许路由冲突）。
    */

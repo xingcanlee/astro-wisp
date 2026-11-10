@@ -20,7 +20,10 @@ test('KaTeX 公式存在', async ({ page }) => {
 test('代码块有行号（::before 计数器）', async ({ page }) => {
   const pre = page.locator('pre.wisp-ln').first();
   await expect(pre).toBeVisible();
-  const content = await pre.locator('.line').first().evaluate((el) => getComputedStyle(el, '::before').content);
+  const content = await pre
+    .locator('.line')
+    .first()
+    .evaluate((el) => getComputedStyle(el, '::before').content);
   expect(content).toMatch(/counter|\d/);
   expect(content).not.toBe('none');
 });
@@ -45,7 +48,11 @@ test('剪贴板不可用时给出复制失败反馈', async ({ page }) => {
   await page.evaluate(() => {
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
-      value: { writeText: async () => { throw new Error('blocked'); } },
+      value: {
+        writeText: async () => {
+          throw new Error('blocked');
+        },
+      },
     });
     (document as Document & { execCommand?: () => boolean }).execCommand = () => false;
   });
@@ -58,9 +65,11 @@ test('剪贴板不可用时给出复制失败反馈', async ({ page }) => {
 test('移动端交互入口有足够的触控高度', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.reload();
-  const heights = await page.locator('.wisp-toc-inline summary, .wisp-series-inline summary, .wisp-diagram-actions a, .wisp-copy, .wisp-theme-toggle').evaluateAll((els) =>
-    els.map((el) => Math.round(el.getBoundingClientRect().height)),
-  );
+  const heights = await page
+    .locator(
+      '.wisp-toc-inline summary, .wisp-series-inline summary, .wisp-diagram-actions a, .wisp-copy, .wisp-theme-toggle',
+    )
+    .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().height)));
   expect(heights.length).toBeGreaterThan(0);
   expect(Math.min(...heights)).toBeGreaterThanOrEqual(44);
 });
@@ -122,7 +131,9 @@ test('TOC 链接能跳转到对应标题', async ({ page }) => {
     if (!(await link.isVisible())) continue;
     const href = (await link.getAttribute('href'))!;
     await link.click();
-    await expect(page).toHaveURL(new RegExp(`${encodeURI(decodeURIComponent(href)).replace('#', '#')}$`));
+    await expect(page).toHaveURL(
+      new RegExp(`${encodeURI(decodeURIComponent(href)).replace('#', '#')}$`),
+    );
     const target = page.locator(`[id="${decodeURIComponent(href.slice(1))}"]`);
     await expect(target).toBeInViewport();
   }

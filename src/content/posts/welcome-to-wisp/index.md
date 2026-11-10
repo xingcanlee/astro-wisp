@@ -1,6 +1,6 @@
 ---
-title: "欢迎来到 Wisp"
-description: "Wisp 是一个安静、好读的技术博客主题，基于 Astro、Tailwind 和 MDX 构建。这篇文章介绍它的设计取向、写作方式和主要功能。"
+title: '欢迎来到 Wisp'
+description: 'Wisp 是一个安静、好读的技术博客主题，基于 Astro、Tailwind 和 MDX 构建。这篇文章介绍它的设计取向、写作方式和主要功能。'
 pubDate: 2026-01-12
 updatedDate: 2026-03-02
 tags: [Wisp, Astro]
@@ -31,8 +31,8 @@ Wisp 指的是一缕细烟，也指一丝很淡的痕迹。给这个主题起这
 每篇文章是一个目录，里面放 `index.md` 或 `index.mdx`，图表源文件放在 `diagrams/` 子目录中。也支持单文件形式，例如 `posts/some-note.md`。文章开头的 frontmatter 决定标题、摘要、日期、标签和分类：
 
 ```yaml
-title: "欢迎来到 Wisp"
-description: "一段不超过 200 字的摘要"
+title: '欢迎来到 Wisp'
+description: '一段不超过 200 字的摘要'
 pubDate: 2026-01-12
 tags: [Wisp, Astro]
 category: 随笔
@@ -43,14 +43,14 @@ featured: true
 
 ## 功能一览
 
-| 功能 | 说明 |
-|---|---|
-| 数学公式 | 行内公式如 $E = mc^2$，块级公式基于 KaTeX 渲染 |
-| 流程图 | Mermaid 代码块在构建期渲染为内联 SVG，页面里不需要 Mermaid 的运行时 |
-| 图表 | 支持 Excalidraw 和 draw.io 源文件，导出可移植的 SVG，并提供源文件下载 |
-| 交互讲解 | 用 React island 实现的逐步演示，只在需要它的文章中加载 |
-| 代码高亮 | Shiki 双主题，可选行号和复制按钮 |
-| 目录 | 宽屏时放在右侧，窄屏时折叠在文首 |
+| 功能     | 说明                                                                  |
+| -------- | --------------------------------------------------------------------- |
+| 数学公式 | 行内公式如 $E = mc^2$，块级公式基于 KaTeX 渲染                        |
+| 流程图   | Mermaid 代码块在构建期渲染为内联 SVG，页面里不需要 Mermaid 的运行时   |
+| 图表     | 支持 Excalidraw 和 draw.io 源文件，导出可移植的 SVG，并提供源文件下载 |
+| 交互讲解 | 用 React island 实现的逐步演示，只在需要它的文章中加载                |
+| 代码高亮 | Shiki 双主题，可选行号和复制按钮                                      |
+| 目录     | 宽屏时放在右侧，窄屏时折叠在文首                                      |
 
 ## 站点结构
 

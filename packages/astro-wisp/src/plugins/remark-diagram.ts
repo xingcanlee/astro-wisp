@@ -3,7 +3,13 @@ import type { Html, Image, Paragraph, PhrasingContent, Root, RootContent } from 
 import type { Plugin } from 'unified';
 import { visit } from 'unist-util-visit';
 import type { VFile } from 'vfile';
-import { isDiagramUrl, renderDiagram, styleOf, parseDiagramUrl, type DiagramEnv } from '../lib/render-diagram';
+import {
+  isDiagramUrl,
+  renderDiagram,
+  styleOf,
+  parseDiagramUrl,
+  type DiagramEnv,
+} from '../lib/render-diagram';
 
 export interface RemarkDiagramOptions {
   /** dev：产物缺失/过期时显示占位块；否则构建失败 */
@@ -24,8 +30,16 @@ interface AstroFileData {
 }
 
 /** MDX 中的 <Diagram> 元素（mdast-util-mdx-jsx），只声明用到的字段，避免依赖其类型包。 */
-interface JsxAttr { type: string; name?: string; value?: unknown }
-interface JsxElement { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement'; name: string | null; attributes: JsxAttr[] }
+interface JsxAttr {
+  type: string;
+  name?: string;
+  value?: unknown;
+}
+interface JsxElement {
+  type: 'mdxJsxFlowElement' | 'mdxJsxTextElement';
+  name: string | null;
+  attributes: JsxAttr[];
+}
 
 /** 注入给 Diagram.astro 的内部属性：引用方文件和页面内序号。 */
 export const FROM_ATTR = '__wispFrom';
@@ -37,7 +51,8 @@ function filePath(file: VFile): string | undefined {
   return isAbsolute(p) ? p : resolve(file.cwd ?? process.cwd(), p);
 }
 
-const isDiagramImage = (n: { type: string; url?: string }): n is Image => n.type === 'image' && isDiagramUrl(n.url ?? '');
+const isDiagramImage = (n: { type: string; url?: string }): n is Image =>
+  n.type === 'image' && isDiagramUrl(n.url ?? '');
 
 /**
  * remark-diagram：把指向 .excalidraw / .drawio 的图片替换为内联 SVG 的 <figure>（diagrams.md §5.1）。
@@ -67,7 +82,13 @@ export function remarkDiagram(options: RemarkDiagramOptions = {}): ReturnType<Pl
     const render = (node: Image): Html => {
       mark(node.url);
       const r = renderDiagram(
-        { src: node.url, from, alt: node.alt ?? undefined, caption: node.title ?? undefined, seq: ++seq },
+        {
+          src: node.url,
+          from,
+          alt: node.alt ?? undefined,
+          caption: node.title ?? undefined,
+          seq: ++seq,
+        },
         env,
       );
       return { type: 'html', value: r.html, position: node.position };
@@ -79,7 +100,9 @@ export function remarkDiagram(options: RemarkDiagramOptions = {}): ReturnType<Pl
       if (nodeType === 'mdxJsxFlowElement' || nodeType === 'mdxJsxTextElement') {
         const el = node as unknown as JsxElement;
         if (el.name !== 'Diagram') return;
-        const src = el.attributes.find((a) => a.type === 'mdxJsxAttribute' && a.name === 'src')?.value;
+        const src = el.attributes.find(
+          (a) => a.type === 'mdxJsxAttribute' && a.name === 'src',
+        )?.value;
         if (typeof src === 'string' && isDiagramUrl(src)) mark(src);
         else hasDiagram = true;
         el.attributes = el.attributes.filter((a) => a.name !== FROM_ATTR && a.name !== SEQ_ATTR);
@@ -95,7 +118,9 @@ export function remarkDiagram(options: RemarkDiagramOptions = {}): ReturnType<Pl
       let buf: PhrasingContent[] = [];
       const flush = () => {
         // 丢弃只剩空白/换行的片段
-        const meaningful = buf.some((c) => !(c.type === 'text' && !c.value.trim()) && c.type !== 'break');
+        const meaningful = buf.some(
+          (c) => !(c.type === 'text' && !c.value.trim()) && c.type !== 'break',
+        );
         if (meaningful) out.push({ type: 'paragraph', children: buf });
         buf = [];
       };

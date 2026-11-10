@@ -2,12 +2,12 @@
 
 ## 1. 三类图表的分工
 
-| 场景 | 工具 | 源文件 | 产物 |
-|---|---|---|---|
+| 场景                             | 工具           | 源文件                         | 产物                                 |
+| -------------------------------- | -------------- | ------------------------------ | ------------------------------------ |
 | 流程图、时序图、状态图等结构化图 | Mermaid → Pele | 正文中的 ` ```mermaid ` 代码块 | 构建期生成的内联 SVG，不单独保存文件 |
-| 概念图、示意图、手绘风格 | Excalidraw | `*.excalidraw`（JSON） | `*.wisp.svg`（可移植 SVG） |
-| 模型结构图、精确排版的架构图 | draw.io | `*.drawio`（XML） | `*.wisp.svg` |
-| 逐步演示、可交互的原理讲解 | React island | `.tsx` | 运行时组件，见 explainers.md |
+| 概念图、示意图、手绘风格         | Excalidraw     | `*.excalidraw`（JSON）         | `*.wisp.svg`（可移植 SVG）           |
+| 模型结构图、精确排版的架构图     | draw.io        | `*.drawio`（XML）              | `*.wisp.svg`                         |
+| 逐步演示、可交互的原理讲解       | React island   | `.tsx`                         | 运行时组件，见 explainers.md         |
 
 ## 2. 源文件格式
 
@@ -91,13 +91,13 @@
 
 导出得到的 SVG 中是十六进制颜色，`wisp-diagram build` 按 `palette.json` 映射：
 
-| 源颜色（作者在编辑器里选的） | 替换为 |
-|---|---|
-| hue 的 light stroke，如 `#1d4ed8` | `var(--wd-blue, #1d4ed8)` |
-| hue 的 light fill，如 `#dbeafe` | `var(--wd-blue-fill, #dbeafe)` |
-| `#1d1d1f` / `#000000` / `#1e1e1e`（Excalidraw 默认黑） | `var(--wd-fg, …)` |
-| `#ffffff` / 画布背景 | 删除背景矩形，或改为 `var(--wd-bg)` |
-| 其他颜色 | **lint 报错**，并给出 ΔE 最接近的令牌建议；加 `--fix` 时自动吸附到最近的令牌 |
+| 源颜色（作者在编辑器里选的）                           | 替换为                                                                       |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| hue 的 light stroke，如 `#1d4ed8`                      | `var(--wd-blue, #1d4ed8)`                                                    |
+| hue 的 light fill，如 `#dbeafe`                        | `var(--wd-blue-fill, #dbeafe)`                                               |
+| `#1d1d1f` / `#000000` / `#1e1e1e`（Excalidraw 默认黑） | `var(--wd-fg, …)`                                                            |
+| `#ffffff` / 画布背景                                   | 删除背景矩形，或改为 `var(--wd-bg)`                                          |
+| 其他颜色                                               | **lint 报错**，并给出 ΔE 最接近的令牌建议；加 `--fix` 时自动吸附到最近的令牌 |
 
 作者只能用调色板里的颜色作画，这样映射是确定的。为此提供两个素材库：`skills/wisp-diagram/assets/wisp.excalidrawlib`（随主题包分发） 和 `wisp-drawio-library.xml`（含预设颜色的形状、常用 ML 模块），以及 draw.io 的自定义调色板配置。
 
@@ -109,15 +109,15 @@
 
 ### 3.5 两种风格的参数
 
-| 参数 | hand（Excalidraw） | clean（draw.io） |
-|---|---|---|
-| 线宽 | 1.5（强调 2.5） | 1.5（强调 2.5） |
-| roughness | 1 | 不适用（sketch=0） |
-| 圆角 | Excalidraw 的 round | `rounded=1;arcSize=8` |
-| 填充 | solid，使用 hue fill | 使用 hue fill |
-| 文字 | 标签 14px，标题 18px，注释 12px | 同左 |
-| 网格 | 8px 对齐 | 8px 对齐 |
-| 阴影、渐变 | 禁止 | 禁止 |
+| 参数       | hand（Excalidraw）              | clean（draw.io）      |
+| ---------- | ------------------------------- | --------------------- |
+| 线宽       | 1.5（强调 2.5）                 | 1.5（强调 2.5）       |
+| roughness  | 1                               | 不适用（sketch=0）    |
+| 圆角       | Excalidraw 的 round             | `rounded=1;arcSize=8` |
+| 填充       | solid，使用 hue fill            | 使用 hue fill         |
+| 文字       | 标签 14px，标题 18px，注释 12px | 同左                  |
+| 网格       | 8px 对齐                        | 8px 对齐              |
+| 阴影、渐变 | 禁止                            | 禁止                  |
 
 ### 3.6 PNG 导出
 
@@ -147,7 +147,7 @@ src/content/posts/attention-explained/
 ### 5.1 标准图片语法（MD 和 MDX 都可用，推荐）
 
 ```md
-![自注意力计算流程](./diagrams/attention-flow.excalidraw "图 1：Q·Kᵀ → softmax → ·V")
+![自注意力计算流程](./diagrams/attention-flow.excalidraw '图 1：Q·Kᵀ → softmax → ·V')
 ![Transformer Block](./diagrams/transformer-block.drawio#page=encoder)
 ```
 
@@ -162,8 +162,13 @@ src/content/posts/attention-explained/
   <svg class="wisp-d" …>…</svg>
   <figcaption>图 1：Q·Kᵀ → softmax → ·V</figcaption>
   <div class="wisp-diagram-actions">
-    <a class="wisp-diagram-dl" href="/diagrams/attention-explained/attention-flow.excalidraw"
-       download title="下载源文件 attention-flow.excalidraw">下载源文件</a>
+    <a
+      class="wisp-diagram-dl"
+      href="/diagrams/attention-explained/attention-flow.excalidraw"
+      download
+      title="下载源文件 attention-flow.excalidraw"
+      >下载源文件</a
+    >
   </div>
 </figure>
 ```
@@ -175,7 +180,14 @@ src/content/posts/attention-explained/
 ```mdx
 import Diagram from 'astro-wisp/components/Diagram.astro';
 
-<Diagram src="./diagrams/transformer-block.drawio" page="encoder" alt="…" caption="…" wide download={false} />
+<Diagram
+  src="./diagrams/transformer-block.drawio"
+  page="encoder"
+  alt="…"
+  caption="…"
+  wide
+  download={false}
+/>
 ```
 
 `wide` 让图突破正文宽度。组件与 remark 插件共用同一个实现函数 `renderDiagram()`。
@@ -234,10 +246,22 @@ skills/wisp-diagram/
   "nodes": [
     { "id": "q", "shape": "rect", "x": 0, "y": 0, "w": 96, "h": 48, "label": "Q", "color": "q" },
     { "id": "k", "shape": "rect", "x": 0, "y": 80, "w": 96, "h": 48, "label": "Kᵀ", "color": "k" },
-    { "id": "s", "shape": "ellipse", "x": 160, "y": 40, "w": 120, "h": 48, "label": "softmax", "color": "activation" }
+    {
+      "id": "s",
+      "shape": "ellipse",
+      "x": 160,
+      "y": 40,
+      "w": 120,
+      "h": 48,
+      "label": "softmax",
+      "color": "activation"
+    }
   ],
-  "edges": [ { "from": "q", "to": "s" }, { "from": "k", "to": "s", "label": "QKᵀ/√d" } ],
-  "texts": [ { "x": 0, "y": -32, "text": "自注意力", "size": "title" } ]
+  "edges": [
+    { "from": "q", "to": "s" },
+    { "from": "k", "to": "s", "label": "QKᵀ/√d" }
+  ],
+  "texts": [{ "x": 0, "y": -32, "text": "自注意力", "size": "title" }]
 }
 ```
 
@@ -245,11 +269,11 @@ skills/wisp-diagram/
 
 ### 6.3 导出依赖
 
-| 源格式 | 导出方式 | 依赖 |
-|---|---|---|
-| excalidraw | Playwright（Python）打开一个本地页面，加载 `@excalidraw/excalidraw@0.18.1` 的 `exportToSvg` | Chromium；Excalidraw 及其依赖首次运行时从 jsDelivr 下载（锁定版本，import map 指向 `+esm` 构建）并缓存 |
-| drawio | 首选 `drawio -x -f svg --embed-svg-fonts false`（desktop CLI，Linux 无头环境要配合 `xvfb-run` 和 `--no-sandbox`）；其次 Docker 镜像 `rlespinasse/drawio-export`；最后在 Chromium 中加载 draw.io 官方 viewer | draw.io desktop、Docker 或 Chromium |
-| 后处理 | 可移植化（Python）→ svgo 4.1.0（浏览器构建，在 Chromium 中运行）→ a11y；`--embed-fonts` 用 fontTools 裁剪字体子集 | Chromium、fonttools |
+| 源格式     | 导出方式                                                                                                                                                                                                    | 依赖                                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| excalidraw | Playwright（Python）打开一个本地页面，加载 `@excalidraw/excalidraw@0.18.1` 的 `exportToSvg`                                                                                                                 | Chromium；Excalidraw 及其依赖首次运行时从 jsDelivr 下载（锁定版本，import map 指向 `+esm` 构建）并缓存 |
+| drawio     | 首选 `drawio -x -f svg --embed-svg-fonts false`（desktop CLI，Linux 无头环境要配合 `xvfb-run` 和 `--no-sandbox`）；其次 Docker 镜像 `rlespinasse/drawio-export`；最后在 Chromium 中加载 draw.io 官方 viewer | draw.io desktop、Docker 或 Chromium                                                                    |
+| 后处理     | 可移植化（Python）→ svgo 4.1.0（浏览器构建，在 Chromium 中运行）→ a11y；`--embed-fonts` 用 fontTools 裁剪字体子集                                                                                           | Chromium、fonttools                                                                                    |
 
 脚本自动探测可用的方式，按顺序回退；全部不可用时给出明确的安装提示。
 

@@ -16,39 +16,39 @@ $W new attention.skeleton.json -o attention.excalidraw [--seed N] [--build]
 
 ## 顶层字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
+| 字段    | 类型               | 说明                                             |
+| ------- | ------------------ | ------------------------------------------------ |
 | `style` | `"hand"`（可省略） | 骨架只支持手绘风格；规整风格请直接写 draw.io XML |
-| `nodes` | `Node[]` | 形状节点 |
-| `edges` | `Edge[]` | 连线（箭头） |
-| `texts` | `Text[]` | 独立文字（标题、注释、符号） |
+| `nodes` | `Node[]`           | 形状节点                                         |
+| `edges` | `Edge[]`           | 连线（箭头）                                     |
+| `texts` | `Text[]`           | 独立文字（标题、注释、符号）                     |
 
 ## Node
 
-| 字段 | 必填 | 说明 |
-|---|---|---|
-| `id` | 是 | 唯一，供 edges 引用；重复会报错 |
-| `shape` | 否 | `rect`（默认，圆角矩形）、`ellipse`、`diamond` |
-| `x` `y` `w` `h` | 是 | 数值，左上角坐标与宽高；取 8 的倍数 |
-| `label` | 否 | 节点内文字，`\n` 换行；水平垂直居中 |
-| `color` | 否 | hue 名、语义名或基础色（见下）；省略时为黑色描边、无填充 |
-| `labelColor` | 否 | 文字色，默认与描边同色 |
-| `size` | 否 | 文字字号：`label`(14，默认) / `title`(18) / `note`(12) |
-| `emphasis` | 否 | `true` 时线宽 2.5（默认 1.5） |
-| `dashed` | 否 | `true` 时虚线边框 |
+| 字段            | 必填 | 说明                                                     |
+| --------------- | ---- | -------------------------------------------------------- |
+| `id`            | 是   | 唯一，供 edges 引用；重复会报错                          |
+| `shape`         | 否   | `rect`（默认，圆角矩形）、`ellipse`、`diamond`           |
+| `x` `y` `w` `h` | 是   | 数值，左上角坐标与宽高；取 8 的倍数                      |
+| `label`         | 否   | 节点内文字，`\n` 换行；水平垂直居中                      |
+| `color`         | 否   | hue 名、语义名或基础色（见下）；省略时为黑色描边、无填充 |
+| `labelColor`    | 否   | 文字色，默认与描边同色                                   |
+| `size`          | 否   | 文字字号：`label`(14，默认) / `title`(18) / `note`(12)   |
+| `emphasis`      | 否   | `true` 时线宽 2.5（默认 1.5）                            |
+| `dashed`        | 否   | `true` 时虚线边框                                        |
 
 ## Edge
 
-| 字段 | 必填 | 说明 |
-|---|---|---|
-| `from` `to` | 是 | 节点 id；引用不存在的节点会报错 |
-| `id` | 否 | 默认 `edge-<序号>-<from>-<to>` |
-| `label` | 否 | 箭头中点处的标签（12px，与箭头同色） |
-| `color` | 否 | 默认 `fg`（黑）；常用 `muted`、语义色 |
-| `dashed` | 否 | 虚线 |
-| `emphasis` | 否 | 线宽 2.5 |
-| `arrow` | 否 | `end`（默认，终点箭头）、`both`（双向）、`none`（无箭头线段） |
-| `via` | 否 | 拐点列表 `[[x, y], …]`（绝对坐标）：箭头画成经过这些点的折线，用来走直角或绕开节点 |
+| 字段        | 必填 | 说明                                                                               |
+| ----------- | ---- | ---------------------------------------------------------------------------------- |
+| `from` `to` | 是   | 节点 id；引用不存在的节点会报错                                                    |
+| `id`        | 否   | 默认 `edge-<序号>-<from>-<to>`                                                     |
+| `label`     | 否   | 箭头中点处的标签（12px，与箭头同色）                                               |
+| `color`     | 否   | 默认 `fg`（黑）；常用 `muted`、语义色                                              |
+| `dashed`    | 否   | 虚线                                                                               |
+| `emphasis`  | 否   | 线宽 2.5                                                                           |
+| `arrow`     | 否   | `end`（默认，终点箭头）、`both`（双向）、`none`（无箭头线段）                      |
+| `via`       | 否   | 拐点列表 `[[x, y], …]`（绝对坐标）：箭头画成经过这些点的折线，用来走直角或绕开节点 |
 
 箭头怎么走（起止点都落在形状边缘外 6px 处）：
 
@@ -61,13 +61,13 @@ $W new attention.skeleton.json -o attention.excalidraw [--seed N] [--build]
 
 ## Text
 
-| 字段 | 必填 | 说明 |
-|---|---|---|
-| `x` `y` | 是 | 左上角 |
-| `text` | 是 | 文字，可含 `\n` |
-| `size` | 否 | `label`(14，默认) / `title`(18) / `note`(12) |
-| `color` | 否 | 默认 `fg`；`size: "note"` 时默认 `muted` |
-| `id` | 否 | 默认 `text-<序号>` |
+| 字段    | 必填 | 说明                                         |
+| ------- | ---- | -------------------------------------------- |
+| `x` `y` | 是   | 左上角                                       |
+| `text`  | 是   | 文字，可含 `\n`                              |
+| `size`  | 否   | `label`(14，默认) / `title`(18) / `note`(12) |
+| `color` | 否   | 默认 `fg`；`size: "note"` 时默认 `muted`     |
+| `id`    | 否   | 默认 `text-<序号>`                           |
 
 标题：放进文章的图**不写标题**（题注承担，alt 在引用处给出）；单独使用的图（README、幻灯片）写一个 `size: "title"` 的 text，build 会把它作为 `<title>`。
 
@@ -90,7 +90,17 @@ $W new attention.skeleton.json -o attention.excalidraw [--seed N] [--build]
   "nodes": [
     { "id": "q", "shape": "rect", "x": 0, "y": 64, "w": 96, "h": 48, "label": "Q", "color": "q" },
     { "id": "k", "shape": "rect", "x": 0, "y": 160, "w": 96, "h": 48, "label": "Kᵀ", "color": "k" },
-    { "id": "s", "shape": "ellipse", "x": 224, "y": 104, "w": 144, "h": 56, "label": "softmax", "color": "activation", "emphasis": true }
+    {
+      "id": "s",
+      "shape": "ellipse",
+      "x": 224,
+      "y": 104,
+      "w": 144,
+      "h": 56,
+      "label": "softmax",
+      "color": "activation",
+      "emphasis": true
+    }
   ],
   "edges": [
     { "from": "q", "to": "s" },

@@ -7,6 +7,20 @@
  */
 import { test, expect, type Page } from '@playwright/test';
 
+type FirstFrame = {
+  theme: string | undefined;
+  pref: string | undefined;
+  bg: string;
+  bodyBg: string | null;
+  token: string;
+};
+
+declare global {
+  interface Window {
+    __wispFirstFrame?: FirstFrame;
+  }
+}
+
 const BASE = ''; // 相对 baseURL
 const PATHS = ['/', '/posts/kitchen-sink/'];
 
@@ -16,7 +30,7 @@ async function firstFrame(page: Page, path: string) {
   await page.addInitScript(() => {
     requestAnimationFrame(() => {
       const html = document.documentElement;
-      (window as any).__wispFirstFrame = {
+      window.__wispFirstFrame = {
         theme: html.dataset.theme,
         pref: html.dataset.themePref,
         bg: getComputedStyle(html).backgroundColor,
@@ -26,20 +40,18 @@ async function firstFrame(page: Page, path: string) {
     });
   });
   await page.goto(BASE + path, { waitUntil: 'load' });
-  await page.waitForFunction(() => (window as any).__wispFirstFrame);
-  return page.evaluate(() => (window as any).__wispFirstFrame as {
-    theme: string;
-    pref: string;
-    bg: string;
-    bodyBg: string | null;
-    token: string;
-  });
+  await page.waitForFunction(() => window.__wispFirstFrame);
+  const frame = await page.evaluate(() => window.__wispFirstFrame);
+  if (!frame) throw new Error('first-frame probe did not run');
+  return frame;
 }
 
 /** rgb(a) / color(srgb …) → 相对亮度 0..1 */
 function luminance(css: string): number {
   const nums = css.match(/[\d.]+/g)!.map(Number);
-  const [r, g, b] = css.startsWith('color(') ? nums.slice(0, 3) : nums.slice(0, 3).map((v) => v / 255);
+  const [r, g, b] = css.startsWith('color(')
+    ? nums.slice(0, 3)
+    : nums.slice(0, 3).map((v) => v / 255);
   const lin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
   return 0.2126 * lin(r!) + 0.7152 * lin(g!) + 0.0722 * lin(b!);
 }

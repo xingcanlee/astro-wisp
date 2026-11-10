@@ -37,13 +37,13 @@ packages/astro-wisp/src/explainers/
 
 ## 2. Player 交互约定
 
-| 操作 | 鼠标 | 键盘（Player 获得焦点时） |
-|---|---|---|
-| 播放 / 暂停 / 重新播放 | ▶ 按钮 | Space |
-| 上一步 / 下一步 | ◀ ▶ 按钮 | ← / → |
-| 第一步 / 最后一步 | | Home / End |
-| 拖动进度 | range 滑块 | |
-| 速度 | 0.5× / 1× / 2× | |
+| 操作                   | 鼠标           | 键盘（Player 获得焦点时） |
+| ---------------------- | -------------- | ------------------------- |
+| 播放 / 暂停 / 重新播放 | ▶ 按钮         | Space                     |
+| 上一步 / 下一步        | ◀ ▶ 按钮       | ← / →                     |
+| 第一步 / 最后一步      |                | Home / End                |
+| 拖动进度               | range 滑块     |                           |
+| 速度                   | 0.5× / 1× / 2× |                           |
 
 - caption 区域设置 `aria-live="polite"`。
 - 界面文字（按钮名、进度朗读）随站点语言（`site.lang`，zh* → 中文，其余 → 英文），`lang` / `labels` 属性可覆盖。
@@ -57,17 +57,27 @@ packages/astro-wisp/src/explainers/
 ```mdx
 import MatMul from './MatMul';
 
-<MatMul client:visible a={[[1, 2], [3, 4]]} b={[[5, 6], [7, 8]]} />
+<MatMul
+  client:visible
+  a={[
+    [1, 2],
+    [3, 4],
+  ]}
+  b={[
+    [5, 6],
+    [7, 8],
+  ]}
+/>
 ```
 
 ## 4. 示例讲解（演示站，不进主题包）
 
-| 讲解 | 内容 | 状态 |
-|---|---|---|
-| MatMul | 逐元素累加，同时高亮 A 的一行和 B 的一列 | 已有（`src/content/posts/matrix-multiplication/`） |
-| Attention | QKᵀ → scale → mask → softmax → ·V，可切换 causal mask | 计划 |
-| Sort | 冒泡、快排对比（`record()` 的典型用法） | 计划 |
-| KVCache | 逐 token 生成时 cache 的增长 | 计划 |
+| 讲解      | 内容                                                  | 状态                                               |
+| --------- | ----------------------------------------------------- | -------------------------------------------------- |
+| MatMul    | 逐元素累加，同时高亮 A 的一行和 B 的一列              | 已有（`src/content/posts/matrix-multiplication/`） |
+| Attention | QKᵀ → scale → mask → softmax → ·V，可切换 causal mask | 计划                                               |
+| Sort      | 冒泡、快排对比（`record()` 的典型用法）               | 计划                                               |
+| KVCache   | 逐 token 生成时 cache 的增长                          | 计划                                               |
 
 ## 5. 性能边界
 

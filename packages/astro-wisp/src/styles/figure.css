@@ -91,20 +91,22 @@
  * Mermaid：图按原始尺寸的 75% 为下限缩放（16px 字 → 不小于 12px），放不下时在容器内横向滚动，
  * 而不是把整张图压到字看不清。--pele-w 由 remark-pele 写入（SVG 的原始宽度）。
  */
-.wisp-pele-body[style*="--pele-w"] {
+.wisp-pele-body[style*='--pele-w'] {
   overflow-x: auto;
   scrollbar-width: thin;
 }
-.wisp-pele-body[style*="--pele-w"] > svg {
+.wisp-pele-body[style*='--pele-w'] > svg {
   width: 100%;
   min-width: min(var(--pele-w), calc(var(--pele-w) * 0.75));
   max-width: var(--pele-w);
 }
 /* 横向可滚动时的边缘提示（经典 scroll shadow：local 背景遮罩 + scroll 背景阴影，纯 CSS） */
-.wisp-pele-body[style*="--pele-w"] {
+.wisp-pele-body[style*='--pele-w'] {
   background:
     linear-gradient(to right, var(--wisp-bg) 40%, transparent) left / 2rem 100% no-repeat local,
     linear-gradient(to left, var(--wisp-bg) 40%, transparent) right / 2rem 100% no-repeat local,
-    linear-gradient(to right, color-mix(in srgb, var(--wisp-fg) 9%, transparent), transparent) left / 0.75rem 100% no-repeat scroll,
-    linear-gradient(to left, color-mix(in srgb, var(--wisp-fg) 9%, transparent), transparent) right / 0.75rem 100% no-repeat scroll;
+    linear-gradient(to right, color-mix(in srgb, var(--wisp-fg) 9%, transparent), transparent)
+      left / 0.75rem 100% no-repeat scroll,
+    linear-gradient(to left, color-mix(in srgb, var(--wisp-fg) 9%, transparent), transparent)
+      right / 0.75rem 100% no-repeat scroll;
 }

@@ -2,18 +2,18 @@
 
 ## 1. 技术栈（2026-11 锁定的大版本）
 
-| 包 | 版本 | 用途 |
-|---|---|---|
-| astro | ^7.4 | 框架（要求 Node ≥ 22.23.4） |
-| @astrojs/mdx | ^8 | MDX |
-| @astrojs/react, react, react-dom | ^7 / ^19 | 交互组件 island |
-| @astrojs/rss, @astrojs/sitemap | ^4 / ^3 | RSS、Sitemap |
-| tailwindcss, @tailwindcss/vite, @tailwindcss/typography | ^4.3 / ^0.5 | 样式 |
-| remark-math, rehype-katex, katex | ^6 / ^7 / ^0.19 | 公式 |
-| pele | ^1.13（锁定次版本，布局输出可能随版本变化） | Mermaid → SVG |
-| motion | ^14 | 交互组件动画 |
-| @fontsource-variable/{inter,noto-sans-sc,jetbrains-mono} | ^5 | 字体文件来源：Inter / JetBrains Mono 经 Astro Fonts API（npm provider）注册，思源黑体直接引入 CSS（见 ADR D18） |
-| 开发依赖：svgo、subset-font、playwright、vitest、tsx | | 图表流水线、测试 |
+| 包                                                       | 版本                                        | 用途                                                                                                            |
+| -------------------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| astro                                                    | ^7.4                                        | 框架（要求 Node ≥ 22.23.4）                                                                                     |
+| @astrojs/mdx                                             | ^8                                          | MDX                                                                                                             |
+| @astrojs/react, react, react-dom                         | ^7 / ^19                                    | 交互组件 island                                                                                                 |
+| @astrojs/rss, @astrojs/sitemap                           | ^4 / ^3                                     | RSS、Sitemap                                                                                                    |
+| tailwindcss, @tailwindcss/vite, @tailwindcss/typography  | ^4.3 / ^0.5                                 | 样式                                                                                                            |
+| remark-math, rehype-katex, katex                         | ^6 / ^7 / ^0.19                             | 公式                                                                                                            |
+| pele                                                     | ^1.13（锁定次版本，布局输出可能随版本变化） | Mermaid → SVG                                                                                                   |
+| motion                                                   | ^14                                         | 交互组件动画                                                                                                    |
+| @fontsource-variable/{inter,noto-sans-sc,jetbrains-mono} | ^5                                          | 字体文件来源：Inter / JetBrains Mono 经 Astro Fonts API（npm provider）注册，思源黑体直接引入 CSS（见 ADR D18） |
+| 开发依赖：svgo、subset-font、playwright、vitest、tsx     |                                             | 图表流水线、测试                                                                                                |
 
 > 实施者注意：Astro 7 的 API 以官方文档为准（content layer、`astro.config` 中的 markdown 配置、`render()`）。本文档中的代码是意图示例，不是可以直接复制的 API 契约；遇到不一致时按官方文档实现，并在 PR 说明中注明。
 
@@ -71,20 +71,21 @@ export const collections = {
 // postsLoader()：glob({ pattern: ['**/index.{md,mdx}', '*.{md,mdx}'], base: './src/content/posts' })
 // postsSchema() 的字段：
 const posts = defineCollection({
-  schema: ({ image }) => z.object({
-    title: z.string().max(80),
-    description: z.string().max(200),
-    pubDate: z.coerce.date(),
-    updatedDate: z.coerce.date().optional(),
-    tags: z.array(z.string()).default([]),
-    category: z.string().optional(),
-    draft: z.boolean().default(false),
-    featured: z.boolean().default(false),
-    cover: image().optional(),
-    lang: z.string().optional(),
-    toc: z.boolean().default(true),
-    series: z.object({ id: z.string().min(1), order: z.number().int().min(1) }).optional(),
-  }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string().max(80),
+      description: z.string().max(200),
+      pubDate: z.coerce.date(),
+      updatedDate: z.coerce.date().optional(),
+      tags: z.array(z.string()).default([]),
+      category: z.string().optional(),
+      draft: z.boolean().default(false),
+      featured: z.boolean().default(false),
+      cover: image().optional(),
+      lang: z.string().optional(),
+      toc: z.boolean().default(true),
+      series: z.object({ id: z.string().min(1), order: z.number().int().min(1) }).optional(),
+    }),
 });
 ```
 
@@ -111,19 +112,19 @@ rehype:  rehype-katex → (Shiki 内置高亮 + Wisp transformers) → rehype-he
 
 路由由集成通过 `injectRoute` 注入，入口文件在 `packages/astro-wisp/src/routes/`。每组路由都可以用 `routes.<键>: false` 关闭，站点再在 `src/pages/` 中自己实现（Astro 不允许同一路径重复定义）。
 
-| 路由 | 开关 | 说明 |
-|---|---|---|
-| `/` | `home` | 精选（featured，最多 `home.featuredCount` 篇）+ 最新列表第 1 页 |
-| `/page/[n]/` | `home` | 分页：Astro `paginate()`，每页 `home.pageSize` 篇，第 1 页即 `/` |
-| `/posts/[...id]/` | `posts` | 详情页：TOC、上一篇/下一篇、更新时间 |
-| `/archive/` | `archive` | 按年份分组 |
-| `/tags/` `/tags/[tag]/` | `tags` | 标签列表（含文章数）、某标签下的文章 |
-| `/categories/` `/categories/[cat]/` | `categories` | 同上 |
-| `/about/` | `about` | 渲染 `pages` 集合中的 `about` |
-| `/404` | `notFound` | |
-| `/rss.xml` | `rss` | 默认输出全文（container API + MDX 渲染器），`rss.fullText=false` 时只输出摘要 |
-| `/sitemap-index.xml` | — | 集成自动注册 `@astrojs/sitemap`（需要 `site`） |
-| `/diagrams/<post-id>/<file>` | `features.diagramDownload` | 图表源文件下载，见 diagrams.md §5 |
+| 路由                                | 开关                       | 说明                                                                          |
+| ----------------------------------- | -------------------------- | ----------------------------------------------------------------------------- |
+| `/`                                 | `home`                     | 精选（featured，最多 `home.featuredCount` 篇）+ 最新列表第 1 页               |
+| `/page/[n]/`                        | `home`                     | 分页：Astro `paginate()`，每页 `home.pageSize` 篇，第 1 页即 `/`              |
+| `/posts/[...id]/`                   | `posts`                    | 详情页：TOC、上一篇/下一篇、更新时间                                          |
+| `/archive/`                         | `archive`                  | 按年份分组                                                                    |
+| `/tags/` `/tags/[tag]/`             | `tags`                     | 标签列表（含文章数）、某标签下的文章                                          |
+| `/categories/` `/categories/[cat]/` | `categories`               | 同上                                                                          |
+| `/about/`                           | `about`                    | 渲染 `pages` 集合中的 `about`                                                 |
+| `/404`                              | `notFound`                 |                                                                               |
+| `/rss.xml`                          | `rss`                      | 默认输出全文（container API + MDX 渲染器），`rss.fullText=false` 时只输出摘要 |
+| `/sitemap-index.xml`                | —                          | 集成自动注册 `@astrojs/sitemap`（需要 `site`）                                |
+| `/diagrams/<post-id>/<file>`        | `features.diagramDownload` | 图表源文件下载，见 diagrams.md §5                                             |
 
 ## 6. 主题切换脚本
 
@@ -132,8 +133,10 @@ rehype:  rehype-katex → (Shiki 内置高亮 + Wisp transformers) → rehype-he
 ```html
 <script is:inline>
   (() => {
-    const k = 'wisp-theme', s = localStorage.getItem(k) ?? 'system';
-    const dark = s === 'dark' || (s === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+    const k = 'wisp-theme',
+      s = localStorage.getItem(k) ?? 'system';
+    const dark =
+      s === 'dark' || (s === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     document.documentElement.dataset.themePref = s;
   })();
@@ -151,15 +154,32 @@ export default defineConfig({
   integrations: [
     wisp({
       site: { title: 'Wisp', description: '…', author: '…', lang: 'zh-CN' },
-      nav: [{ label: '归档', href: '/archive/' }, { label: '标签', href: '/tags/' }, { label: '关于', href: '/about/' }],
-      social: [{ kind: 'github', href: '…' }, { kind: 'rss', href: '/rss.xml' }],
+      nav: [
+        { label: '归档', href: '/archive/' },
+        { label: '标签', href: '/tags/' },
+        { label: '关于', href: '/about/' },
+      ],
+      social: [
+        { kind: 'github', href: '…' },
+        { kind: 'rss', href: '/rss.xml' },
+      ],
       home: { featuredCount: 3, pageSize: 10 },
-      features: { codeCopy: true, lineNumbers: true, math: true, mermaid: true, toc: true, diagramDownload: true },
+      features: {
+        codeCopy: true,
+        lineNumbers: true,
+        math: true,
+        mermaid: true,
+        toc: true,
+        diagramDownload: true,
+      },
       mermaid: { strict: false },
       rss: { fullText: true },
       taxonomy: { slugMap: {} },
       // 扩展点（§8）
-      components: {}, customCss: [], palette: undefined, routes: {},
+      components: {},
+      customCss: [],
+      palette: undefined,
+      routes: {},
     }),
   ],
 });
@@ -171,17 +191,17 @@ export default defineConfig({
 
 参照 Starlight 的做法，全部基于 Astro / Vite 提供的能力：
 
-| 能力 | 实现 |
-|---|---|
-| 页面 | `injectRoute`；`routes` 开关 |
-| 运行时配置 | Vite 虚拟模块 `virtual:wisp/config`（服务端）；`virtual:wisp/locale`（只有语言，供客户端 island 使用，避免把配置和项目路径打进浏览器 bundle） |
-| 组件 / 布局覆盖 | 每个可覆盖项对应虚拟模块 `virtual:wisp/components/<Name>`，默认 re-export 主题文件，`components` 中配置后改为站点文件。主题内部互相引用一律经过虚拟模块 |
-| 类型 | `astro:config:done` 中 `injectTypes` 注入 `virtual.d.ts` |
-| 调色板覆盖 | `astro:config:setup` 中合并调色板、检查对比度，生成 CSS 写入 `createCodegenDir()`；`virtual:wisp/theme-css` 指向生成文件或包内默认文件 |
-| 站点样式 | `virtual:wisp/user-css` 依次 import `customCss`，在 Base 布局最后引入 |
-| 依赖的集成 | `updateConfig({ integrations })` 补齐 MDX、Sitemap；Tailwind 以 Vite 插件注册 |
-| 字体 | `updateConfig({ fonts })` 注册 Fonts API 字体族（与站点的 fonts 拼接）；Base 布局 `<Font>` 输出 Inter / JetBrains Mono 并预加载 Inter latin，Post 布局在有手绘图时输出 Excalifont。Fonts API 的族名带哈希，令牌用 `var(--font-wisp-*, 原族名)` 引用。npm provider 的薄包装（`src/fonts.ts`）：从主题依赖解析包、多入口合并（Inter 正体 + 斜体）、`file://` → 路径（适配 Astro 7.4 的抓取器）、按文件名补子集供 preload 过滤 |
-| SSR 打包 | `vite.ssr.noExternal`：`@astrojs/mdx`（RSS 静态导入其服务端渲染器）、`@fontsource-variable/*`（布局在服务端 import 思源黑体的 CSS） |
+| 能力            | 实现                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 页面            | `injectRoute`；`routes` 开关                                                                                                                                                                                                                                                                                                                                                                                                |
+| 运行时配置      | Vite 虚拟模块 `virtual:wisp/config`（服务端）；`virtual:wisp/locale`（只有语言，供客户端 island 使用，避免把配置和项目路径打进浏览器 bundle）                                                                                                                                                                                                                                                                               |
+| 组件 / 布局覆盖 | 每个可覆盖项对应虚拟模块 `virtual:wisp/components/<Name>`，默认 re-export 主题文件，`components` 中配置后改为站点文件。主题内部互相引用一律经过虚拟模块                                                                                                                                                                                                                                                                     |
+| 类型            | `astro:config:done` 中 `injectTypes` 注入 `virtual.d.ts`                                                                                                                                                                                                                                                                                                                                                                    |
+| 调色板覆盖      | `astro:config:setup` 中合并调色板、检查对比度，生成 CSS 写入 `createCodegenDir()`；`virtual:wisp/theme-css` 指向生成文件或包内默认文件                                                                                                                                                                                                                                                                                      |
+| 站点样式        | `virtual:wisp/user-css` 依次 import `customCss`，在 Base 布局最后引入                                                                                                                                                                                                                                                                                                                                                       |
+| 依赖的集成      | `updateConfig({ integrations })` 补齐 MDX、Sitemap；Tailwind 以 Vite 插件注册                                                                                                                                                                                                                                                                                                                                               |
+| 字体            | `updateConfig({ fonts })` 注册 Fonts API 字体族（与站点的 fonts 拼接）；Base 布局 `<Font>` 输出 Inter / JetBrains Mono 并预加载 Inter latin，Post 布局在有手绘图时输出 Excalifont。Fonts API 的族名带哈希，令牌用 `var(--font-wisp-*, 原族名)` 引用。npm provider 的薄包装（`src/fonts.ts`）：从主题依赖解析包、多入口合并（Inter 正体 + 斜体）、`file://` → 路径（适配 Astro 7.4 的抓取器）、按文件名补子集供 preload 过滤 |
+| SSR 打包        | `vite.ssr.noExternal`：`@astrojs/mdx`（RSS 静态导入其服务端渲染器）、`@fontsource-variable/*`（布局在服务端 import 思源黑体的 CSS）                                                                                                                                                                                                                                                                                         |
 
 ### 样式分层
 
@@ -189,12 +209,12 @@ export default defineConfig({
 @layer theme, base, components, utilities;   ← layers.css，Base 布局最先引入
 ```
 
-| 层 | 内容 |
-|---|---|
-| （不分层） | 令牌（`--wisp-*`、`--pele-*`、`--wd-*` 自定义属性）、`@font-face`、站点 `customCss` |
-| `utilities` | Tailwind 工具类；`@tailwindcss/typography` 的 `.prose`；主题的正文内容样式：prose 覆盖、代码块、figure、Lightbox、KaTeX、图表、讲解组件 |
-| `components` | 主题的页面骨架与组件样式（含所有 `.astro` 中的 `<style>`） |
-| `base` | Tailwind preflight 与主题的元素级基础样式 |
+| 层           | 内容                                                                                                                                    |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| （不分层）   | 令牌（`--wisp-*`、`--pele-*`、`--wd-*` 自定义属性）、`@font-face`、站点 `customCss`                                                     |
+| `utilities`  | Tailwind 工具类；`@tailwindcss/typography` 的 `.prose`；主题的正文内容样式：prose 覆盖、代码块、figure、Lightbox、KaTeX、图表、讲解组件 |
+| `components` | 主题的页面骨架与组件样式（含所有 `.astro` 中的 `<style>`）                                                                              |
+| `base`       | Tailwind preflight 与主题的元素级基础样式                                                                                               |
 
 正文内容样式必须与 typography 插件同层，才能按特异性 / 顺序覆盖插件默认值（重构前它们不分层，效果相同；已用全页截图逐像素对比确认）。组件样式在 `components`，所以站点页面里的 Tailwind 工具类能覆盖主题组件；`customCss` 不分层，总能覆盖一切。
 
@@ -204,13 +224,13 @@ export default defineConfig({
 
 ## 9. JS 预算
 
-| 脚本 | 加载页面 | 大小 |
-|---|---|---|
-| 主题初始化（内联） | 全部 | < 0.5KB |
-| ThemeToggle | 全部 | < 1KB |
-| 代码复制 | 含代码块的文章 | < 1KB |
-| TOC 当前章节高亮 | 文章页 | < 1KB |
-| React + 讲解组件 | 只有用到交互组件的文章，`client:visible` | 约 60KB 起 |
+| 脚本               | 加载页面                                 | 大小       |
+| ------------------ | ---------------------------------------- | ---------- |
+| 主题初始化（内联） | 全部                                     | < 0.5KB    |
+| ThemeToggle        | 全部                                     | < 1KB      |
+| 代码复制           | 含代码块的文章                           | < 1KB      |
+| TOC 当前章节高亮   | 文章页                                   | < 1KB      |
+| React + 讲解组件   | 只有用到交互组件的文章，`client:visible` | 约 60KB 起 |
 
 ## 10. 质量门禁
 

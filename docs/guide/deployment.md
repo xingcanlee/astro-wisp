@@ -9,7 +9,7 @@ Wisp 构建为纯静态站点，输出目录为 `dist/`，可以部署到任何�
 3. 运行：
 
    ```bash
-   pnpm check      # 类型、单元测试、对比度
+   pnpm check      # 类型、ESLint、Prettier、单元测试、对比度和图表清单
    pnpm diagram check  # 图表源文件与 .wisp.svg 一致
    pnpm build      # 应当零警告通过
    pnpm preview    # 本地检查 dist/
@@ -21,16 +21,16 @@ Wisp 构建为纯静态站点，输出目录为 `dist/`，可以部署到任何�
 
 所有平台都使用同样的构建命令：
 
-| 项目 | 值 |
-|---|---|
-| 构建命令 | `pnpm build` |
-| 发布目录 | `dist` |
-| Node.js | ≥ 22.23.4 |
-| 包管理器 | pnpm（使用锁文件 `pnpm-lock.yaml`） |
+| 项目     | 值                                          |
+| -------- | ------------------------------------------- |
+| 构建命令 | `pnpm build`                                |
+| 发布目录 | `dist`                                      |
+| Node.js  | ≥ 22.23.4                                   |
+| 包管理器 | pnpm 12.18.0（使用锁文件 `pnpm-lock.yaml`） |
 
 构建环境只需要 Node 和 pnpm。`pnpm diagram build` 不需要在部署环境中运行，因为生成的 `.wisp.svg` 已经提交进仓库；构建时只复制源文件和读取已提交的 SVG。CI 中运行 `pnpm diagram check` 即可确认它们与源文件一致。
 
-各平台指定 Node 版本的方式不同，请以平台文档为准。例如 Netlify 可以用环境变量 `NODE_VERSION=22.23.4`。本仓库的 `package.json` 目前没有 `packageManager` 字段，如果平台需要明确的 pnpm 版本，可以在平台设置中指定。
+各平台指定 Node 版本的方式不同，请以平台文档为准。例如 Netlify 可以用环境变量 `NODE_VERSION=22.23.4`。仓库通过 `package.json#packageManager` 声明 pnpm 版本，平台若不自动读取该字段，可在构建设置中显式指定 `12.18.0`。
 
 ## Netlify
 
@@ -82,12 +82,12 @@ GitHub Pages 通过 Actions 部署。在 `.github/workflows/` 中使用官方的
 
 Astro 的 `site` 对以下功能有影响：
 
-| 功能 | 影响 |
-|---|---|
-| Sitemap（`/sitemap-index.xml`） | 所有 URL 使用 `site` 作为前缀 |
-| RSS（`/rss.xml`） | 频道链接和条目链接的绝对地址 |
-| canonical 与 Open Graph | 页面的规范地址 |
-| 在 draw.io 中打开 | `.drawio` 的链接会生成为 `https://app.diagrams.net/#U<绝对地址>`，地址由 `site` 决定 |
+| 功能                            | 影响                                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------ |
+| Sitemap（`/sitemap-index.xml`） | 所有 URL 使用 `site` 作为前缀                                                        |
+| RSS（`/rss.xml`）               | 频道链接和条目链接的绝对地址                                                         |
+| canonical 与 Open Graph         | 页面的规范地址                                                                       |
+| 在 draw.io 中打开               | `.drawio` 的链接会生成为 `https://app.diagrams.net/#U<绝对地址>`，地址由 `site` 决定 |
 
 默认值 `https://example.com` 只用于开发和示例。忘记修改时，RSS 和 Sitemap 会指向错误的域名。
 

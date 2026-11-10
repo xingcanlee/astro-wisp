@@ -24,7 +24,7 @@
 }
 /* 标题栏：与代码同底，只用一条发丝线分开，像手册里清单的题注行 */
 .wisp-code::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0 0 auto 0;
   height: var(--wisp-code-bar);
@@ -54,8 +54,8 @@
 .wisp-pre span {
   color: var(--shiki-light);
 }
-[data-theme="dark"] .wisp-pre,
-[data-theme="dark"] .wisp-pre span {
+[data-theme='dark'] .wisp-pre,
+[data-theme='dark'] .wisp-pre span {
   color: var(--shiki-dark);
 }
 
@@ -63,7 +63,7 @@
 .wisp-pre .tok-low {
   color: color-mix(in srgb, var(--shiki-light) 70%, var(--wisp-fg));
 }
-[data-theme="dark"] .wisp-pre .tok-low {
+[data-theme='dark'] .wisp-pre .tok-low {
   color: color-mix(in srgb, var(--shiki-dark) 70%, var(--wisp-fg));
 }
 
@@ -128,7 +128,10 @@
   line-height: 1;
   cursor: pointer;
   opacity: 0.7;
-  transition: opacity 150ms, color 150ms, transform 160ms;
+  transition:
+    opacity 150ms,
+    color 150ms,
+    transform 160ms;
 }
 .wisp-copy:active {
   transform: scale(0.9);
@@ -193,7 +196,7 @@
 }
 /* 折叠态底部渐变遮罩：从透明到代码块背景 */
 .wisp-code[data-folded] .wisp-fold::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: auto 0 100% 0;
   height: 2.5rem;
@@ -231,5 +234,7 @@
 .wisp-pre,
 .prose :not(pre) > code {
   font-variant-ligatures: none;
-  font-feature-settings: "calt" 0, "liga" 0;
+  font-feature-settings:
+    'calt' 0,
+    'liga' 0;
 }

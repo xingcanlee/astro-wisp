@@ -34,7 +34,7 @@ jobs:
         run: uv run --project packages/astro-wisp/skills/wisp-diagram/scripts pytest packages/astro-wisp/skills/wisp-diagram/scripts/tests
       - name: Skill tests (wisp-writer)
         run: uv run --with pytest pytest packages/astro-wisp/skills/wisp-writer/scripts/tests
-      - name: Check (astro check + tsc + vitest + contrast + diagram check)
+      - name: Quality checks (types + lint + format + tests + assets)
         run: pnpm check
       - name: Lint posts (wisp-writer)
         run: uv run packages/astro-wisp/skills/wisp-writer/scripts/check_post.py --all

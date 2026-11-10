@@ -1,8 +1,8 @@
 ---
-title: "开始写作"
-description: "介绍如何在 Wisp 站点中发布第一篇文章。"
+title: '开始写作'
+description: '介绍如何在 Wisp 站点中发布第一篇文章。'
 pubDate: 2026-11-06
-tags: ["Wisp"]
+tags: ['Wisp']
 featured: true
 ---
 

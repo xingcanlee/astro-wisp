@@ -4,6 +4,7 @@
 骨架字段说明见 `excalidraw-skeleton.md`，draw.io 样式见 `drawio-cheatsheet.md`。
 
 通用约定：
+
 - 语义色固定：Q = 蓝（`q`）、K = 琥珀（`k`）、V = 绿（`v`）、权重 = 紫（`weight`）、激活/softmax = 青（`activation`）、梯度/损失 = 玫红（`grad`/`error`）、偏置 = 橙（`bias`）、掩码/输入 = 灰（`mask`）。
 - 最终输出节点用 `"emphasis": true`（线宽 2.5），可选/未选中的路径用 `"dashed": true`。
 - **总宽不超过 700px**（正文栏约 710px），节点摆在行、列上：正对的矩形之间箭头是水平 / 竖直的直线，错开时是中心连线上的斜线，需要拐弯用 `via`。箭头不会自动绕开其他节点，布局时要保证连线不穿过第三个节点。
@@ -20,27 +21,102 @@ Q 与 K 做缩放点积，softmax 归一化成注意力权重，再对 V 加权�
 {
   "style": "hand",
   "nodes": [
-    {"id": "q", "shape": "rect", "x": 0, "y": 0, "w": 176, "h": 56, "label": "查询 Q", "color": "q"},
-    {"id": "k", "shape": "rect", "x": 232, "y": 0, "w": 176, "h": 56, "label": "键 Kᵀ", "color": "k"},
-    {"id": "v", "shape": "rect", "x": 464, "y": 0, "w": 176, "h": 56, "label": "值 V", "color": "v"},
-    {"id": "score", "shape": "rect", "x": 96, "y": 128, "w": 216, "h": 64, "label": "缩放点积\nQ·Kᵀ/√d", "color": "weight"},
-    {"id": "softmax", "shape": "ellipse", "x": 96, "y": 264, "w": 216, "h": 64, "label": "softmax", "color": "activation"},
-    {"id": "mask", "shape": "rect", "x": 368, "y": 272, "w": 128, "h": 48, "label": "掩码 mask", "color": "mask", "dashed": true},
-    {"id": "out", "shape": "rect", "x": 336, "y": 400, "w": 304, "h": 64, "label": "输出 O", "color": "rose", "emphasis": true},
-    {"id": "bias", "shape": "diamond", "x": 416, "y": 528, "w": 144, "h": 72, "label": "偏置 b", "color": "bias", "dashed": true}
+    {
+      "id": "q",
+      "shape": "rect",
+      "x": 0,
+      "y": 0,
+      "w": 176,
+      "h": 56,
+      "label": "查询 Q",
+      "color": "q"
+    },
+    {
+      "id": "k",
+      "shape": "rect",
+      "x": 232,
+      "y": 0,
+      "w": 176,
+      "h": 56,
+      "label": "键 Kᵀ",
+      "color": "k"
+    },
+    {
+      "id": "v",
+      "shape": "rect",
+      "x": 464,
+      "y": 0,
+      "w": 176,
+      "h": 56,
+      "label": "值 V",
+      "color": "v"
+    },
+    {
+      "id": "score",
+      "shape": "rect",
+      "x": 96,
+      "y": 128,
+      "w": 216,
+      "h": 64,
+      "label": "缩放点积\nQ·Kᵀ/√d",
+      "color": "weight"
+    },
+    {
+      "id": "softmax",
+      "shape": "ellipse",
+      "x": 96,
+      "y": 264,
+      "w": 216,
+      "h": 64,
+      "label": "softmax",
+      "color": "activation"
+    },
+    {
+      "id": "mask",
+      "shape": "rect",
+      "x": 368,
+      "y": 272,
+      "w": 128,
+      "h": 48,
+      "label": "掩码 mask",
+      "color": "mask",
+      "dashed": true
+    },
+    {
+      "id": "out",
+      "shape": "rect",
+      "x": 336,
+      "y": 400,
+      "w": 304,
+      "h": 64,
+      "label": "输出 O",
+      "color": "rose",
+      "emphasis": true
+    },
+    {
+      "id": "bias",
+      "shape": "diamond",
+      "x": 416,
+      "y": 528,
+      "w": 144,
+      "h": 72,
+      "label": "偏置 b",
+      "color": "bias",
+      "dashed": true
+    }
   ],
   "edges": [
-    {"from": "q", "to": "score"},
-    {"from": "k", "to": "score"},
-    {"from": "score", "to": "softmax"},
-    {"from": "mask", "to": "softmax", "color": "muted", "dashed": true},
-    {"from": "softmax", "to": "out", "via": [[204, 432]]},
-    {"from": "v", "to": "out", "color": "v", "label": "加权求和"},
-    {"from": "bias", "to": "out", "color": "muted", "dashed": true}
+    { "from": "q", "to": "score" },
+    { "from": "k", "to": "score" },
+    { "from": "score", "to": "softmax" },
+    { "from": "mask", "to": "softmax", "color": "muted", "dashed": true },
+    { "from": "softmax", "to": "out", "via": [[204, 432]] },
+    { "from": "v", "to": "out", "color": "v", "label": "加权求和" },
+    { "from": "bias", "to": "out", "color": "muted", "dashed": true }
   ],
   "texts": [
-    {"x": 216, "y": 352, "text": "注意力权重", "size": "note", "color": "fg"},
-    {"x": 0, "y": 568, "text": "注：虚线是可选步骤（掩码、偏置）", "size": "note"}
+    { "x": 216, "y": 352, "text": "注意力权重", "size": "note", "color": "fg" },
+    { "x": 0, "y": 568, "text": "注：虚线是可选步骤（掩码、偏置）", "size": "note" }
   ]
 }
 ```
@@ -135,22 +211,79 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
 {
   "style": "hand",
   "nodes": [
-    {"id": "a", "shape": "rect", "x": 0, "y": 48, "w": 128, "h": 96, "label": "A\nm × k", "color": "blue"},
-    {"id": "b", "shape": "rect", "x": 224, "y": 48, "w": 128, "h": 96, "label": "B\nk × n", "color": "amber"},
-    {"id": "c", "shape": "rect", "x": 448, "y": 48, "w": 128, "h": 96, "label": "C\nm × n", "color": "green", "emphasis": true},
-    {"id": "row", "shape": "rect", "x": 0, "y": 176, "w": 128, "h": 40, "label": "A 的第 i 行", "color": "blue", "size": "note"},
-    {"id": "col", "shape": "rect", "x": 224, "y": 176, "w": 128, "h": 40, "label": "B 的第 j 列", "color": "amber", "size": "note"},
-    {"id": "dot", "shape": "ellipse", "x": 96, "y": 288, "w": 192, "h": 56, "label": "点积 → C[i][j]", "color": "activation"}
+    {
+      "id": "a",
+      "shape": "rect",
+      "x": 0,
+      "y": 48,
+      "w": 128,
+      "h": 96,
+      "label": "A\nm × k",
+      "color": "blue"
+    },
+    {
+      "id": "b",
+      "shape": "rect",
+      "x": 224,
+      "y": 48,
+      "w": 128,
+      "h": 96,
+      "label": "B\nk × n",
+      "color": "amber"
+    },
+    {
+      "id": "c",
+      "shape": "rect",
+      "x": 448,
+      "y": 48,
+      "w": 128,
+      "h": 96,
+      "label": "C\nm × n",
+      "color": "green",
+      "emphasis": true
+    },
+    {
+      "id": "row",
+      "shape": "rect",
+      "x": 0,
+      "y": 176,
+      "w": 128,
+      "h": 40,
+      "label": "A 的第 i 行",
+      "color": "blue",
+      "size": "note"
+    },
+    {
+      "id": "col",
+      "shape": "rect",
+      "x": 224,
+      "y": 176,
+      "w": 128,
+      "h": 40,
+      "label": "B 的第 j 列",
+      "color": "amber",
+      "size": "note"
+    },
+    {
+      "id": "dot",
+      "shape": "ellipse",
+      "x": 96,
+      "y": 288,
+      "w": 192,
+      "h": 56,
+      "label": "点积 → C[i][j]",
+      "color": "activation"
+    }
   ],
   "edges": [
-    {"from": "row", "to": "dot", "dashed": true, "color": "blue"},
-    {"from": "col", "to": "dot", "dashed": true, "color": "amber"}
+    { "from": "row", "to": "dot", "dashed": true, "color": "blue" },
+    { "from": "col", "to": "dot", "dashed": true, "color": "amber" }
   ],
   "texts": [
-    {"x": 160, "y": 80, "text": "×", "size": "title"},
-    {"x": 384, "y": 80, "text": "=", "size": "title"},
-    {"x": 0, "y": 0, "text": "矩阵乘法", "size": "title"},
-    {"x": 0, "y": 368, "text": "注：C 的每个元素是 A 的一行与 B 的一列的点积", "size": "note"}
+    { "x": 160, "y": 80, "text": "×", "size": "title" },
+    { "x": 384, "y": 80, "text": "=", "size": "title" },
+    { "x": 0, "y": 0, "text": "矩阵乘法", "size": "title" },
+    { "x": 0, "y": 368, "text": "注：C 的每个元素是 A 的一行与 B 的一列的点积", "size": "note" }
   ]
 }
 ```
@@ -163,27 +296,96 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
 {
   "style": "hand",
   "nodes": [
-    {"id": "tok", "shape": "rect", "x": 0, "y": 96, "w": 112, "h": 56, "label": "新词元 t", "color": "mask"},
-    {"id": "qt", "shape": "rect", "x": 192, "y": 32, "w": 96, "h": 48, "label": "Qₜ", "color": "q"},
-    {"id": "kt", "shape": "rect", "x": 192, "y": 168, "w": 96, "h": 48, "label": "Kₜ", "color": "k"},
-    {"id": "vt", "shape": "rect", "x": 192, "y": 248, "w": 96, "h": 48, "label": "Vₜ", "color": "v"},
-    {"id": "cache", "shape": "rect", "x": 376, "y": 160, "w": 160, "h": 136, "label": "KV 缓存\nK₁..Kₜ\nV₁..Vₜ", "color": "slate"},
-    {"id": "attn", "shape": "rect", "x": 376, "y": 32, "w": 160, "h": 56, "label": "注意力", "color": "weight"},
-    {"id": "out", "shape": "rect", "x": 568, "y": 32, "w": 112, "h": 56, "label": "输出 oₜ", "color": "rose", "emphasis": true}
+    {
+      "id": "tok",
+      "shape": "rect",
+      "x": 0,
+      "y": 96,
+      "w": 112,
+      "h": 56,
+      "label": "新词元 t",
+      "color": "mask"
+    },
+    {
+      "id": "qt",
+      "shape": "rect",
+      "x": 192,
+      "y": 32,
+      "w": 96,
+      "h": 48,
+      "label": "Qₜ",
+      "color": "q"
+    },
+    {
+      "id": "kt",
+      "shape": "rect",
+      "x": 192,
+      "y": 168,
+      "w": 96,
+      "h": 48,
+      "label": "Kₜ",
+      "color": "k"
+    },
+    {
+      "id": "vt",
+      "shape": "rect",
+      "x": 192,
+      "y": 248,
+      "w": 96,
+      "h": 48,
+      "label": "Vₜ",
+      "color": "v"
+    },
+    {
+      "id": "cache",
+      "shape": "rect",
+      "x": 376,
+      "y": 160,
+      "w": 160,
+      "h": 136,
+      "label": "KV 缓存\nK₁..Kₜ\nV₁..Vₜ",
+      "color": "slate"
+    },
+    {
+      "id": "attn",
+      "shape": "rect",
+      "x": 376,
+      "y": 32,
+      "w": 160,
+      "h": 56,
+      "label": "注意力",
+      "color": "weight"
+    },
+    {
+      "id": "out",
+      "shape": "rect",
+      "x": 568,
+      "y": 32,
+      "w": 112,
+      "h": 56,
+      "label": "输出 oₜ",
+      "color": "rose",
+      "emphasis": true
+    }
   ],
   "edges": [
-    {"from": "tok", "to": "qt"},
-    {"from": "tok", "to": "kt"},
-    {"from": "tok", "to": "vt"},
-    {"from": "kt", "to": "cache", "label": "追加", "color": "k"},
-    {"from": "vt", "to": "cache", "color": "v"},
-    {"from": "qt", "to": "attn"},
-    {"from": "cache", "to": "attn", "label": "读取全部 K、V", "dashed": true},
-    {"from": "attn", "to": "out"}
+    { "from": "tok", "to": "qt" },
+    { "from": "tok", "to": "kt" },
+    { "from": "tok", "to": "vt" },
+    { "from": "kt", "to": "cache", "label": "追加", "color": "k" },
+    { "from": "vt", "to": "cache", "color": "v" },
+    { "from": "qt", "to": "attn" },
+    { "from": "cache", "to": "attn", "label": "读取全部 K、V", "dashed": true },
+    { "from": "attn", "to": "out" }
   ],
   "texts": [
-    {"x": 0, "y": 0, "text": "KV 缓存", "size": "title"},
-    {"x": 0, "y": 328, "text": "注：历史词元的 K、V 只算一次，每步只为新词元计算 Q、K、V", "size": "note"}
+    { "x": 0, "y": 0, "text": "KV 缓存", "size": "title" },
+    {
+      "x": 0,
+      "y": 328,
+      "text": "注：历史词元的 K、V 只算一次，每步只为新词元计算 Q、K、V",
+      "size": "note"
+    }
   ]
 }
 ```
@@ -196,26 +398,93 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
 {
   "style": "hand",
   "nodes": [
-    {"id": "tok", "shape": "rect", "x": 0, "y": 136, "w": 96, "h": 56, "label": "词元 x", "color": "mask"},
-    {"id": "router", "shape": "diamond", "x": 160, "y": 120, "w": 144, "h": 88, "label": "路由器", "color": "activation"},
-    {"id": "e1", "shape": "rect", "x": 384, "y": 0, "w": 128, "h": 56, "label": "专家 1", "color": "weight", "emphasis": true},
-    {"id": "e2", "shape": "rect", "x": 384, "y": 88, "w": 128, "h": 56, "label": "专家 2", "color": "weight", "dashed": true},
-    {"id": "e3", "shape": "rect", "x": 384, "y": 176, "w": 128, "h": 56, "label": "专家 3", "color": "weight", "emphasis": true},
-    {"id": "e4", "shape": "rect", "x": 384, "y": 264, "w": 128, "h": 56, "label": "专家 4", "color": "weight", "dashed": true},
-    {"id": "sum", "shape": "ellipse", "x": 560, "y": 128, "w": 120, "h": 72, "label": "加权求和", "color": "rose"}
+    {
+      "id": "tok",
+      "shape": "rect",
+      "x": 0,
+      "y": 136,
+      "w": 96,
+      "h": 56,
+      "label": "词元 x",
+      "color": "mask"
+    },
+    {
+      "id": "router",
+      "shape": "diamond",
+      "x": 160,
+      "y": 120,
+      "w": 144,
+      "h": 88,
+      "label": "路由器",
+      "color": "activation"
+    },
+    {
+      "id": "e1",
+      "shape": "rect",
+      "x": 384,
+      "y": 0,
+      "w": 128,
+      "h": 56,
+      "label": "专家 1",
+      "color": "weight",
+      "emphasis": true
+    },
+    {
+      "id": "e2",
+      "shape": "rect",
+      "x": 384,
+      "y": 88,
+      "w": 128,
+      "h": 56,
+      "label": "专家 2",
+      "color": "weight",
+      "dashed": true
+    },
+    {
+      "id": "e3",
+      "shape": "rect",
+      "x": 384,
+      "y": 176,
+      "w": 128,
+      "h": 56,
+      "label": "专家 3",
+      "color": "weight",
+      "emphasis": true
+    },
+    {
+      "id": "e4",
+      "shape": "rect",
+      "x": 384,
+      "y": 264,
+      "w": 128,
+      "h": 56,
+      "label": "专家 4",
+      "color": "weight",
+      "dashed": true
+    },
+    {
+      "id": "sum",
+      "shape": "ellipse",
+      "x": 560,
+      "y": 128,
+      "w": 120,
+      "h": 72,
+      "label": "加权求和",
+      "color": "rose"
+    }
   ],
   "edges": [
-    {"from": "tok", "to": "router"},
-    {"from": "router", "to": "e1", "label": "0.6"},
-    {"from": "router", "to": "e2", "dashed": true, "color": "muted"},
-    {"from": "router", "to": "e3", "label": "0.4"},
-    {"from": "router", "to": "e4", "dashed": true, "color": "muted"},
-    {"from": "e1", "to": "sum"},
-    {"from": "e3", "to": "sum"}
+    { "from": "tok", "to": "router" },
+    { "from": "router", "to": "e1", "label": "0.6" },
+    { "from": "router", "to": "e2", "dashed": true, "color": "muted" },
+    { "from": "router", "to": "e3", "label": "0.4" },
+    { "from": "router", "to": "e4", "dashed": true, "color": "muted" },
+    { "from": "e1", "to": "sum" },
+    { "from": "e3", "to": "sum" }
   ],
   "texts": [
-    {"x": 0, "y": -48, "text": "MoE 路由（top-2）", "size": "title"},
-    {"x": 0, "y": 352, "text": "注：实线专家被选中，虚线专家本次不参与计算", "size": "note"}
+    { "x": 0, "y": -48, "text": "MoE 路由（top-2）", "size": "title" },
+    { "x": 0, "y": 352, "text": "注：实线专家被选中，虚线专家本次不参与计算", "size": "note" }
   ]
 }
 ```
@@ -229,29 +498,112 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
 {
   "style": "hand",
   "nodes": [
-    {"id": "doc", "shape": "rect", "x": 0, "y": 0, "w": 112, "h": 56, "label": "文档", "color": "slate"},
-    {"id": "chunk", "shape": "rect", "x": 160, "y": 0, "w": 112, "h": 56, "label": "切块", "color": "slate"},
-    {"id": "embed", "shape": "rect", "x": 320, "y": 0, "w": 112, "h": 56, "label": "向量化", "color": "weight"},
-    {"id": "db", "shape": "rect", "x": 480, "y": 0, "w": 128, "h": 56, "label": "向量库", "color": "violet", "emphasis": true},
-    {"id": "query", "shape": "rect", "x": 0, "y": 152, "w": 112, "h": 56, "label": "用户问题", "color": "q"},
-    {"id": "qembed", "shape": "rect", "x": 160, "y": 152, "w": 112, "h": 56, "label": "向量化", "color": "weight"},
-    {"id": "retrieve", "shape": "ellipse", "x": 320, "y": 152, "w": 144, "h": 56, "label": "相似度检索", "color": "activation"},
-    {"id": "llm", "shape": "rect", "x": 560, "y": 152, "w": 112, "h": 56, "label": "大模型", "color": "rose", "emphasis": true},
-    {"id": "ans", "shape": "rect", "x": 560, "y": 264, "w": 112, "h": 48, "label": "回答", "color": "green"}
+    {
+      "id": "doc",
+      "shape": "rect",
+      "x": 0,
+      "y": 0,
+      "w": 112,
+      "h": 56,
+      "label": "文档",
+      "color": "slate"
+    },
+    {
+      "id": "chunk",
+      "shape": "rect",
+      "x": 160,
+      "y": 0,
+      "w": 112,
+      "h": 56,
+      "label": "切块",
+      "color": "slate"
+    },
+    {
+      "id": "embed",
+      "shape": "rect",
+      "x": 320,
+      "y": 0,
+      "w": 112,
+      "h": 56,
+      "label": "向量化",
+      "color": "weight"
+    },
+    {
+      "id": "db",
+      "shape": "rect",
+      "x": 480,
+      "y": 0,
+      "w": 128,
+      "h": 56,
+      "label": "向量库",
+      "color": "violet",
+      "emphasis": true
+    },
+    {
+      "id": "query",
+      "shape": "rect",
+      "x": 0,
+      "y": 152,
+      "w": 112,
+      "h": 56,
+      "label": "用户问题",
+      "color": "q"
+    },
+    {
+      "id": "qembed",
+      "shape": "rect",
+      "x": 160,
+      "y": 152,
+      "w": 112,
+      "h": 56,
+      "label": "向量化",
+      "color": "weight"
+    },
+    {
+      "id": "retrieve",
+      "shape": "ellipse",
+      "x": 320,
+      "y": 152,
+      "w": 144,
+      "h": 56,
+      "label": "相似度检索",
+      "color": "activation"
+    },
+    {
+      "id": "llm",
+      "shape": "rect",
+      "x": 560,
+      "y": 152,
+      "w": 112,
+      "h": 56,
+      "label": "大模型",
+      "color": "rose",
+      "emphasis": true
+    },
+    {
+      "id": "ans",
+      "shape": "rect",
+      "x": 560,
+      "y": 264,
+      "w": 112,
+      "h": 48,
+      "label": "回答",
+      "color": "green"
+    }
   ],
   "edges": [
-    {"from": "doc", "to": "chunk"},
-    {"from": "chunk", "to": "embed"},
-    {"from": "embed", "to": "db"},
-    {"from": "query", "to": "qembed"},
-    {"from": "qembed", "to": "retrieve"},
-    {"from": "db", "to": "retrieve", "label": "候选片段", "dashed": true},
-    {"from": "retrieve", "to": "llm"},
-    {"from": "llm", "to": "ans"}
+    { "from": "doc", "to": "chunk" },
+    { "from": "chunk", "to": "embed" },
+    { "from": "embed", "to": "db" },
+    { "from": "query", "to": "qembed" },
+    { "from": "qembed", "to": "retrieve" },
+    { "from": "db", "to": "retrieve", "label": "候选片段", "dashed": true },
+    { "from": "retrieve", "to": "llm" },
+    { "from": "llm", "to": "ans" }
   ],
   "texts": [
-    {"x": 0, "y": -48, "text": "RAG 流水线", "size": "title"},
-    {"x": 0, "y": 344, "text": "注：上排为离线建库，下排为在线问答", "size": "note"}
+    { "x": 0, "y": -48, "text": "RAG 流水线", "size": "title" },
+    { "x": 0, "y": 344, "text": "注：上排为离线建库，下排为在线问答", "size": "note" }
   ]
 }
 ```
@@ -264,34 +616,89 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
 {
   "style": "hand",
   "nodes": [
-    {"id": "data", "shape": "rect", "x": 0, "y": 96, "w": 112, "h": 56, "label": "数据批次", "color": "slate"},
-    {"id": "fwd", "shape": "rect", "x": 208, "y": 96, "w": 128, "h": 56, "label": "前向传播", "color": "active"},
-    {"id": "loss", "shape": "ellipse", "x": 400, "y": 96, "w": 112, "h": 56, "label": "损失", "color": "error"},
-    {"id": "bwd", "shape": "rect", "x": 400, "y": 216, "w": 112, "h": 56, "label": "反向传播", "color": "grad"},
-    {"id": "opt", "shape": "rect", "x": 208, "y": 216, "w": 128, "h": 56, "label": "优化器", "color": "bias"},
-    {"id": "w", "shape": "rect", "x": 0, "y": 216, "w": 112, "h": 56, "label": "权重 W", "color": "weight", "emphasis": true}
+    {
+      "id": "data",
+      "shape": "rect",
+      "x": 0,
+      "y": 96,
+      "w": 112,
+      "h": 56,
+      "label": "数据批次",
+      "color": "slate"
+    },
+    {
+      "id": "fwd",
+      "shape": "rect",
+      "x": 208,
+      "y": 96,
+      "w": 128,
+      "h": 56,
+      "label": "前向传播",
+      "color": "active"
+    },
+    {
+      "id": "loss",
+      "shape": "ellipse",
+      "x": 400,
+      "y": 96,
+      "w": 112,
+      "h": 56,
+      "label": "损失",
+      "color": "error"
+    },
+    {
+      "id": "bwd",
+      "shape": "rect",
+      "x": 400,
+      "y": 216,
+      "w": 112,
+      "h": 56,
+      "label": "反向传播",
+      "color": "grad"
+    },
+    {
+      "id": "opt",
+      "shape": "rect",
+      "x": 208,
+      "y": 216,
+      "w": 128,
+      "h": 56,
+      "label": "优化器",
+      "color": "bias"
+    },
+    {
+      "id": "w",
+      "shape": "rect",
+      "x": 0,
+      "y": 216,
+      "w": 112,
+      "h": 56,
+      "label": "权重 W",
+      "color": "weight",
+      "emphasis": true
+    }
   ],
   "edges": [
-    {"from": "data", "to": "fwd"},
-    {"from": "fwd", "to": "loss"},
-    {"from": "loss", "to": "bwd", "label": "梯度", "color": "grad"},
-    {"from": "bwd", "to": "opt", "color": "grad"},
-    {"from": "opt", "to": "w", "label": "更新"},
-    {"from": "w", "to": "fwd", "dashed": true, "color": "weight", "label": "下一步"}
+    { "from": "data", "to": "fwd" },
+    { "from": "fwd", "to": "loss" },
+    { "from": "loss", "to": "bwd", "label": "梯度", "color": "grad" },
+    { "from": "bwd", "to": "opt", "color": "grad" },
+    { "from": "opt", "to": "w", "label": "更新" },
+    { "from": "w", "to": "fwd", "dashed": true, "color": "weight", "label": "下一步" }
   ],
   "texts": [
-    {"x": 0, "y": 0, "text": "训练循环", "size": "title"},
-    {"x": 0, "y": 312, "text": "注：每个批次重复一遍，直到损失收敛", "size": "note"}
+    { "x": 0, "y": 0, "text": "训练循环", "size": "title" },
+    { "x": 0, "y": 312, "text": "注：每个批次重复一遍，直到损失收敛", "size": "note" }
   ]
 }
 ```
 
 ## 选型提示
 
-| 想表达 | 推荐图式 |
-|---|---|
-| 一个算子内部的数据流 | 自注意力、矩阵乘法 |
-| 一层网络的结构堆叠 | Transformer Block（draw.io） |
-| 推理时的状态/缓存 | KV 缓存 |
-| 条件分支、稀疏计算 | MoE 路由 |
-| 端到端系统流程 | RAG、训练循环（流程简单时优先 Mermaid） |
+| 想表达               | 推荐图式                                |
+| -------------------- | --------------------------------------- |
+| 一个算子内部的数据流 | 自注意力、矩阵乘法                      |
+| 一层网络的结构堆叠   | Transformer Block（draw.io）            |
+| 推理时的状态/缓存    | KV 缓存                                 |
+| 条件分支、稀疏计算   | MoE 路由                                |
+| 端到端系统流程       | RAG、训练循环（流程简单时优先 Mermaid） |

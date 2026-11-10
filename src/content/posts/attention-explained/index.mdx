@@ -1,6 +1,6 @@
 ---
-title: "自注意力机制讲解"
-description: "从直觉到公式，逐步讲清楚 Transformer 中自注意力的计算过程：查询、键、值如何配合，为什么要除以 √d，并附上一段 PyTorch 实现。"
+title: '自注意力机制讲解'
+description: '从直觉到公式，逐步讲清楚 Transformer 中自注意力的计算过程：查询、键、值如何配合，为什么要除以 √d，并附上一段 PyTorch 实现。'
 pubDate: 2026-03-18
 tags: [LLM, Transformer, 注意力]
 category: 机器学习
@@ -32,7 +32,7 @@ $$
 
 这里 softmax 作用在每一行上，所以输出的第 $i$ 行是第 $i$ 个位置对所有值的加权平均。
 
-![自注意力计算流程](./diagrams/attention-flow.excalidraw "图 1：自注意力")
+![自注意力计算流程](./diagrams/attention-flow.excalidraw '图 1：自注意力')
 
 上面的流程用 Mermaid 也可以直接画出来：
 

@@ -18,7 +18,7 @@ export function slugify(name: string, slugMap: Record<string, string> = {}): str
     .trim()
     .toLowerCase()
     .replace(/[\s_]+/g, '-')
-    .replace(/[\/\\?#%&=+:;,.'"`!@$^*()[\]{}<>|~]+/g, '')
+    .replace(/[/\\?#%&=+:;,.'"`!@$^*()[\]{}<>|~]+/g, '')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 }
@@ -33,7 +33,8 @@ export function buildTaxonomy<P>(
   for (const { names, post } of items) {
     for (const name of new Set(names)) {
       const slug = slugify(name, slugMap);
-      if (!slug) throw new Error(`[wisp] ${kind} "${name}" 的 slug 为空，请在 taxonomy.slugMap 中指定`);
+      if (!slug)
+        throw new Error(`[wisp] ${kind} "${name}" 的 slug 为空，请在 taxonomy.slugMap 中指定`);
       const existing = bySlug.get(slug);
       if (existing && existing.name !== name) {
         throw new Error(
@@ -48,11 +49,17 @@ export function buildTaxonomy<P>(
       }
     }
   }
-  return [...bySlug.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
+  return [...bySlug.values()].sort(
+    (a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'),
+  );
 }
 
 export function collectTags(posts: PostEntry[], slugMap: Record<string, string> = {}) {
-  return buildTaxonomy(posts.map((p) => ({ names: p.data.tags, post: p })), slugMap, '标签');
+  return buildTaxonomy(
+    posts.map((p) => ({ names: p.data.tags, post: p })),
+    slugMap,
+    '标签',
+  );
 }
 
 export function collectCategories(posts: PostEntry[], slugMap: Record<string, string> = {}) {

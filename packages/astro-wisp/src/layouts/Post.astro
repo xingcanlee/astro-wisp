@@ -50,7 +50,9 @@ const {
 } = Astro.props;
 const { title, description, pubDate, updatedDate, tags, category, lang, toc, cover } = post.data;
 // 排除 GFM 脚注区的隐藏标题（id=footnote-label）
-const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3 && h.slug !== 'footnote-label');
+const tocHeadings = headings.filter(
+  (h) => h.depth >= 2 && h.depth <= 3 && h.slug !== 'footnote-label',
+);
 const zh = /^zh\b/i.test(lang ?? config.site.lang);
 const tocTitle = zh ? '目录' : 'Contents';
 const seriesTitle = zh ? '系列文章' : 'Series';
@@ -61,7 +63,12 @@ const seriesIndex = series.findIndex((item) => item.id === post.id);
 const seriesName = showSeries ? series[0]!.title.split(/[：:]/)[0]!.trim() : '';
 const seriesHref = showSeries ? sitePath(import.meta.env.BASE_URL, `/posts/${series[0]!.id}/`) : '';
 // 进度是篇数计数（总览篇也算一篇），不是章节号，所以不补零
-const seriesPos = seriesIndex >= 0 ? (zh ? `${seriesIndex + 1} / ${series.length} 篇` : `${seriesIndex + 1} of ${series.length}`) : '';
+const seriesPos =
+  seriesIndex >= 0
+    ? zh
+      ? `${seriesIndex + 1} / ${series.length} 篇`
+      : `${seriesIndex + 1} of ${series.length}`
+    : '';
 // 章节号：标题以编号开头（如「05 MLA 的两个技巧」）时拆出来，单独排成章节号
 const numbered = /^(\d{1,3})[\s　]+(.+)$/.exec(title);
 const chapterNo = numbered?.[1];
@@ -155,178 +162,184 @@ const tocInit = `try{document.documentElement.dataset.toc=localStorage.getItem('
 <style>
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
-  /* 窄屏：单栏，正文栏宽居中；系列与目录折叠在正文前 */
-  .wisp-post {
-    width: 100%;
-    max-width: calc(var(--wisp-measure) + 2 * var(--wisp-pad));
-    margin-inline: auto;
-    padding-inline: var(--wisp-pad);
-    padding-top: 2.5rem;
-  }
-  @media (min-width: 48rem) {
+    /* 窄屏：单栏，正文栏宽居中；系列与目录折叠在正文前 */
     .wisp-post {
-      padding-top: 3.5rem;
+      width: 100%;
+      max-width: calc(var(--wisp-measure) + 2 * var(--wisp-pad));
+      margin-inline: auto;
+      padding-inline: var(--wisp-pad);
+      padding-top: 2.5rem;
     }
-  }
-  .wisp-post-article {
-    min-width: 0;
-  }
+    @media (min-width: 48rem) {
+      .wisp-post {
+        padding-top: 3.5rem;
+      }
+    }
+    .wisp-post-article {
+      min-width: 0;
+    }
 
-  /* 章首：章节号 + 标题 + 元信息，下方一条发丝线收住，像手册的章首页 */
-  .wisp-post-header {
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--wisp-border);
-  }
-  .wisp-post-header h1 {
-    margin: 0 0 1.25rem;
-    font-size: clamp(1.75rem, 1.25rem + 1.8vw, 2.25rem);
-    font-weight: 700;
-    line-height: 1.3;
-    letter-spacing: 0;
-    text-wrap: pretty;
-  }
-  /* 章节号：大号细体强调色数字，独占一行；与目录、系列栏里的编号同源 */
-  .wisp-chapter-no {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--wisp-accent);
-    font-size: 1.5em;
-    font-weight: 300;
-    line-height: 1;
-    font-variant-numeric: tabular-nums lining-nums;
-  }
-  .wisp-chapter-title {
-    display: block;
-  }
-  .wisp-post-header :global(.wisp-post-tags) {
-    margin-top: 0.625rem;
-    font-size: 0.8125rem;
-  }
+    /* 章首：章节号 + 标题 + 元信息，下方一条发丝线收住，像手册的章首页 */
+    .wisp-post-header {
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--wisp-border);
+    }
+    .wisp-post-header h1 {
+      margin: 0 0 1.25rem;
+      font-size: clamp(1.75rem, 1.25rem + 1.8vw, 2.25rem);
+      font-weight: 700;
+      line-height: 1.3;
+      letter-spacing: 0;
+      text-wrap: pretty;
+    }
+    /* 章节号：大号细体强调色数字，独占一行；与目录、系列栏里的编号同源 */
+    .wisp-chapter-no {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--wisp-accent);
+      font-size: 1.5em;
+      font-weight: 300;
+      line-height: 1;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+    .wisp-chapter-title {
+      display: block;
+    }
+    .wisp-post-header :global(.wisp-post-tags) {
+      margin-top: 0.625rem;
+      font-size: 0.8125rem;
+    }
 
-  .wisp-post-aside,
-  .wisp-post-series-aside {
-    display: none;
-  }
+    .wisp-post-aside,
+    .wisp-post-series-aside {
+      display: none;
+    }
 
-  /*
+    /*
    * 侧栏共用：吸顶、限高、独立滚动。
    * 滚动条平时不画（页面只留主滚动条一根），指针移入或键盘聚焦到栏内时才出现细滑块；
    * 「还有内容」由上下缘的渐隐表达：哪一头有没显示的内容，哪一头才渐隐（data-fade 由下方脚本维护）。
    * 无 JS 时保持底部渐隐。
    */
-  .wisp-post-aside-inner,
-  .wisp-post-series-aside-inner {
-    --wisp-fade-top: 0rem;
-    --wisp-fade-bottom: 3rem;
-    position: sticky;
-    top: calc(var(--wisp-header-h) + 2rem);
-    max-height: calc(100dvh - var(--wisp-header-h) - 3rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-    scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
-    padding-bottom: 2rem;
-    mask-image: linear-gradient(
-      to bottom,
-      transparent,
-      black var(--wisp-fade-top),
-      black calc(100% - var(--wisp-fade-bottom)),
-      transparent
-    );
-    max-width: var(--wisp-side);
-  }
-  .wisp-post-aside-inner:hover,
-  .wisp-post-aside-inner:focus-within,
-  .wisp-post-series-aside-inner:hover,
-  .wisp-post-series-aside-inner:focus-within {
-    scrollbar-color: var(--wisp-scroll-thumb) transparent;
-  }
-  .wisp-post-aside-inner[data-fade],
-  .wisp-post-series-aside-inner[data-fade] {
-    --wisp-fade-bottom: 0rem;
-  }
-  .wisp-post-aside-inner[data-fade~='top'],
-  .wisp-post-series-aside-inner[data-fade~='top'] {
-    --wisp-fade-top: 2rem;
-  }
-  .wisp-post-aside-inner[data-fade~='bottom'],
-  .wisp-post-series-aside-inner[data-fade~='bottom'] {
-    --wisp-fade-bottom: 3rem;
-  }
-  /* 回落：只支持 ::-webkit-scrollbar 的浏览器，同样平时隐藏滑块 */
-  @supports not (scrollbar-color: auto) {
-    .wisp-post-aside-inner:not(:hover):not(:focus-within)::-webkit-scrollbar-thumb,
-    .wisp-post-series-aside-inner:not(:hover):not(:focus-within)::-webkit-scrollbar-thumb {
-      background: transparent;
+    .wisp-post-aside-inner,
+    .wisp-post-series-aside-inner {
+      --wisp-fade-top: 0rem;
+      --wisp-fade-bottom: 3rem;
+      position: sticky;
+      top: calc(var(--wisp-header-h) + 2rem);
+      max-height: calc(100dvh - var(--wisp-header-h) - 3rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+      padding-bottom: 2rem;
+      mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        black var(--wisp-fade-top),
+        black calc(100% - var(--wisp-fade-bottom)),
+        transparent
+      );
+      max-width: var(--wisp-side);
     }
-  }
+    .wisp-post-aside-inner:hover,
+    .wisp-post-aside-inner:focus-within,
+    .wisp-post-series-aside-inner:hover,
+    .wisp-post-series-aside-inner:focus-within {
+      scrollbar-color: var(--wisp-scroll-thumb) transparent;
+    }
+    .wisp-post-aside-inner[data-fade],
+    .wisp-post-series-aside-inner[data-fade] {
+      --wisp-fade-bottom: 0rem;
+    }
+    .wisp-post-aside-inner[data-fade~='top'],
+    .wisp-post-series-aside-inner[data-fade~='top'] {
+      --wisp-fade-top: 2rem;
+    }
+    .wisp-post-aside-inner[data-fade~='bottom'],
+    .wisp-post-series-aside-inner[data-fade~='bottom'] {
+      --wisp-fade-bottom: 3rem;
+    }
+    /* 回落：只支持 ::-webkit-scrollbar 的浏览器，同样平时隐藏滑块 */
+    @supports not (scrollbar-color: auto) {
+      .wisp-post-aside-inner:not(:hover):not(:focus-within)::-webkit-scrollbar-thumb,
+      .wisp-post-series-aside-inner:not(:hover):not(:focus-within)::-webkit-scrollbar-thumb {
+        background: transparent;
+      }
+    }
 
-  /* 目录贴外框右缘，系列贴外框左缘：两侧栏的外边线与页头对齐 */
-  .wisp-post-aside-inner {
-    margin-inline-start: auto;
-  }
+    /* 目录贴外框右缘，系列贴外框左缘：两侧栏的外边线与页头对齐 */
+    .wisp-post-aside-inner {
+      margin-inline-start: auto;
+    }
 
-  /* ≥ 60rem 且有目录：正文 + 右侧目录两栏，左边线与页头品牌对齐，右边线与页头右缘对齐 */
-  @media (min-width: 60rem) {
-    .wisp-post.wisp-has-toc {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(12rem, var(--wisp-side));
-      column-gap: var(--wisp-gutter);
-      max-width: calc(var(--wisp-shell) + 2 * var(--wisp-pad));
+    /* ≥ 60rem 且有目录：正文 + 右侧目录两栏，左边线与页头品牌对齐，右边线与页头右缘对齐 */
+    @media (min-width: 60rem) {
+      .wisp-post.wisp-has-toc {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(12rem, var(--wisp-side));
+        column-gap: var(--wisp-gutter);
+        max-width: calc(var(--wisp-shell) + 2 * var(--wisp-pad));
+      }
+      .wisp-post.wisp-has-toc .wisp-post-article {
+        grid-column: 1;
+        grid-row: 1;
+        max-width: var(--wisp-measure);
+      }
+      .wisp-post.wisp-has-toc .wisp-post-aside {
+        display: block;
+        grid-column: 2;
+        grid-row: 1;
+      }
+      .wisp-post.wisp-has-toc .wisp-post-toc-inline {
+        display: none;
+      }
     }
-    .wisp-post.wisp-has-toc .wisp-post-article {
-      grid-column: 1;
-      grid-row: 1;
-      max-width: var(--wisp-measure);
-    }
-    .wisp-post.wisp-has-toc .wisp-post-aside {
-      display: block;
-      grid-column: 2;
-      grid-row: 1;
-    }
-    .wisp-post.wisp-has-toc .wisp-post-toc-inline {
-      display: none;
-    }
-  }
 
-  /* ≥ 80rem：三栏。系列 | 正文 | 目录，两侧栏等宽，正文居中在页头正下方 */
-  @media (min-width: 80rem) {
-    .wisp-post.wisp-has-toc,
-    .wisp-post.wisp-has-series {
-      display: grid;
-      grid-template-columns: minmax(12rem, 1fr) minmax(0, var(--wisp-measure)) minmax(12rem, 1fr);
-      column-gap: var(--wisp-gutter);
-      max-width: calc(var(--wisp-shell) + 2 * var(--wisp-pad));
+    /* ≥ 80rem：三栏。系列 | 正文 | 目录，两侧栏等宽，正文居中在页头正下方 */
+    @media (min-width: 80rem) {
+      .wisp-post.wisp-has-toc,
+      .wisp-post.wisp-has-series {
+        display: grid;
+        grid-template-columns: minmax(12rem, 1fr) minmax(0, var(--wisp-measure)) minmax(12rem, 1fr);
+        column-gap: var(--wisp-gutter);
+        max-width: calc(var(--wisp-shell) + 2 * var(--wisp-pad));
+      }
+      .wisp-post.wisp-has-toc .wisp-post-article,
+      .wisp-post.wisp-has-series .wisp-post-article {
+        grid-column: 2;
+        grid-row: 1;
+        max-width: none;
+      }
+      .wisp-post.wisp-has-toc .wisp-post-aside {
+        grid-column: 3;
+      }
+      .wisp-post-series-aside {
+        display: block;
+        grid-column: 1;
+        grid-row: 1;
+      }
+      .wisp-post-series-inline {
+        display: none;
+      }
     }
-    .wisp-post.wisp-has-toc .wisp-post-article,
-    .wisp-post.wisp-has-series .wisp-post-article {
-      grid-column: 2;
-      grid-row: 1;
-      max-width: none;
-    }
-    .wisp-post.wisp-has-toc .wisp-post-aside {
-      grid-column: 3;
-    }
-    .wisp-post-series-aside {
-      display: block;
-      grid-column: 1;
-      grid-row: 1;
-    }
-    .wisp-post-series-inline {
-      display: none;
-    }
-  }
   }
 </style>
 
 <script>
   // 侧栏：打开文章时把系列栏滚到当前篇；并标记上下哪一头还有没显示的内容（渐隐只画在那一头）
-  const boxes = [...document.querySelectorAll<HTMLElement>('.wisp-post-aside-inner, .wisp-post-series-aside-inner')];
+  const boxes = [
+    ...document.querySelectorAll<HTMLElement>(
+      '.wisp-post-aside-inner, .wisp-post-series-aside-inner',
+    ),
+  ];
   const mark = (box: HTMLElement) => {
     const max = box.scrollHeight - box.clientHeight;
-    const fade = [box.scrollTop > 4 && 'top', box.scrollTop < max - 4 && 'bottom'].filter(Boolean).join(' ');
+    const fade = [box.scrollTop > 4 && 'top', box.scrollTop < max - 4 && 'bottom']
+      .filter(Boolean)
+      .join(' ');
     if (box.dataset.fade !== fade) box.dataset.fade = fade;
   };
   const reveal = (box: HTMLElement) => {

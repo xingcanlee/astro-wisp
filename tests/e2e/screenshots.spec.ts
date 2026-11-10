@@ -33,7 +33,10 @@ for (const theme of ['light', 'dark'] as const) {
 
   test(`post ${theme}`, async ({ page }) => {
     await open(page, '/posts/attention-explained/', theme, 1280, 1600);
-    const y = await page.locator('.katex-display').first().evaluate((el) => el.getBoundingClientRect().top + scrollY - 140);
+    const y = await page
+      .locator('.katex-display')
+      .first()
+      .evaluate((el) => el.getBoundingClientRect().top + scrollY - 140);
     await page.evaluate((top) => window.scrollTo(0, top), y);
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${OUT}/post-${theme}.png` });
@@ -41,7 +44,10 @@ for (const theme of ['light', 'dark'] as const) {
 
   test(`diagram ${theme}`, async ({ page }) => {
     await open(page, '/posts/attention-explained/', theme);
-    await page.locator('figure.wisp-diagram').first().screenshot({ path: `${OUT}/diagram-${theme}.png` });
+    await page
+      .locator('figure.wisp-diagram')
+      .first()
+      .screenshot({ path: `${OUT}/diagram-${theme}.png` });
   });
 
   test(`mobile ${theme}`, async ({ page }) => {
@@ -51,7 +57,10 @@ for (const theme of ['light', 'dark'] as const) {
 
   test(`toc ${theme}`, async ({ page }) => {
     await open(page, '/posts/kitchen-sink/', theme);
-    const y = await page.locator('h2').nth(5).evaluate((el) => el.getBoundingClientRect().top + scrollY - 80);
+    const y = await page
+      .locator('h2')
+      .nth(5)
+      .evaluate((el) => el.getBoundingClientRect().top + scrollY - 80);
     await page.evaluate((top) => window.scrollTo(0, top), y);
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${OUT}/toc-${theme}.png` });
@@ -60,7 +69,10 @@ for (const theme of ['light', 'dark'] as const) {
 
 test('drawio light', async ({ page }) => {
   await open(page, '/posts/kitchen-sink/', 'light');
-  await page.locator('figure.wisp-diagram[data-page]').first().screenshot({ path: `${OUT}/drawio-light.png` });
+  await page
+    .locator('figure.wisp-diagram[data-page]')
+    .first()
+    .screenshot({ path: `${OUT}/drawio-light.png` });
 });
 
 test('explainer dark', async ({ page }) => {

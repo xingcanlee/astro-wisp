@@ -21,12 +21,18 @@ export default function rehypeA11y() {
         return 'skip';
       }
       const cls: unknown = node.properties?.className;
-      const classes = Array.isArray(cls) ? cls.map(String) : typeof cls === 'string' ? cls.split(/\s+/) : [];
+      const classes = Array.isArray(cls)
+        ? cls.map(String)
+        : typeof cls === 'string'
+          ? cls.split(/\s+/)
+          : [];
 
       if (node.tagName === 'li' && classes.includes('task-list-item')) {
-        const input = node.children.find(
-          (c): c is Element => c.type === 'element' && c.tagName === 'input' && c.properties?.type === 'checkbox',
-        ) ?? findCheckbox(node);
+        const input =
+          node.children.find(
+            (c): c is Element =>
+              c.type === 'element' && c.tagName === 'input' && c.properties?.type === 'checkbox',
+          ) ?? findCheckbox(node);
         if (input && !input.properties['ariaLabel']) {
           const label = textOf(node).trim().slice(0, 120);
           if (label) input.properties['ariaLabel'] = label;

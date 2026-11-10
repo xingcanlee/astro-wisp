@@ -9,12 +9,12 @@
 
 ### 1.1 CSS 变量命名
 
-| 前缀 | 用途 | 示例 |
-|---|---|---|
-| `--wisp-*` | 基础色 | `--wisp-bg` `--wisp-fg` `--wisp-muted` `--wisp-accent` `--wisp-border` `--wisp-code-bg` |
-| `--wisp-hue-<name>` / `--wisp-hue-<name>-fill` | 8 色分类色（stroke / fill） | `--wisp-hue-blue` `--wisp-hue-blue-fill` |
-| `--wisp-sem-<name>` / `--wisp-sem-<name>-fill` | 语义色，是对 hue 的引用 | `--wisp-sem-q: var(--wisp-hue-blue)` |
-| `--wisp-font-*` | 字体栈 | `--wisp-font-sans` `--wisp-font-mono` `--wisp-font-hand` |
+| 前缀                                           | 用途                        | 示例                                                                                    |
+| ---------------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------- |
+| `--wisp-*`                                     | 基础色                      | `--wisp-bg` `--wisp-fg` `--wisp-muted` `--wisp-accent` `--wisp-border` `--wisp-code-bg` |
+| `--wisp-hue-<name>` / `--wisp-hue-<name>-fill` | 8 色分类色（stroke / fill） | `--wisp-hue-blue` `--wisp-hue-blue-fill`                                                |
+| `--wisp-sem-<name>` / `--wisp-sem-<name>-fill` | 语义色，是对 hue 的引用     | `--wisp-sem-q: var(--wisp-hue-blue)`                                                    |
+| `--wisp-font-*`                                | 字体栈                      | `--wisp-font-sans` `--wisp-font-mono` `--wisp-font-hand`                                |
 
 生成结构：
 
@@ -30,8 +30,8 @@
 ### 1.2 Tailwind v4 接入
 
 ```css
-@import "tailwindcss";
-@import "./tokens.css";
+@import 'tailwindcss';
+@import './tokens.css';
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
@@ -51,12 +51,12 @@
 
 ### 1.3 第三方样式的映射
 
-| 对象 | 映射方式 |
-|---|---|
-| Shiki | 双主题 + `defaultColor: false`，`[data-theme=dark] .shiki { color: var(--shiki-dark); background: var(--wisp-code-bg) }`，背景统一使用 `--wisp-code-bg` |
-| KaTeX | 继承 `currentColor`，只调整字号（1.05em）和块级公式的外边距 |
-| Pele | `.pele { --pele-bg: transparent; --pele-fg: var(--wisp-fg); --pele-muted: var(--wisp-muted); --pele-line: var(--wisp-muted); --pele-surface: var(--wisp-surface); --pele-surface-alt: var(--wisp-surface-2); --pele-border: var(--wisp-border); --pele-accent: var(--wisp-accent); --pele-font: var(--wisp-font-sans); --pele-radius: 8px; --pele-series-1..8: hue 顺序 }` |
-| 图表 SVG | 见 [diagrams.md](./diagrams.md) §3 |
+| 对象     | 映射方式                                                                                                                                                                                                                                                                                                                                                                   |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shiki    | 双主题 + `defaultColor: false`，`[data-theme=dark] .shiki { color: var(--shiki-dark); background: var(--wisp-code-bg) }`，背景统一使用 `--wisp-code-bg`                                                                                                                                                                                                                    |
+| KaTeX    | 继承 `currentColor`，只调整字号（1.05em）和块级公式的外边距                                                                                                                                                                                                                                                                                                                |
+| Pele     | `.pele { --pele-bg: transparent; --pele-fg: var(--wisp-fg); --pele-muted: var(--wisp-muted); --pele-line: var(--wisp-muted); --pele-surface: var(--wisp-surface); --pele-surface-alt: var(--wisp-surface-2); --pele-border: var(--wisp-border); --pele-accent: var(--wisp-accent); --pele-font: var(--wisp-font-sans); --pele-radius: 8px; --pele-series-1..8: hue 顺序 }` |
+| 图表 SVG | 见 [diagrams.md](./diagrams.md) §3                                                                                                                                                                                                                                                                                                                                         |
 
 Shiki 主题首选 `github-light` / `github-dark`。注释颜色必须在 `--wisp-code-bg` 上达到 4.5:1，不达标时用 transformer 或 CSS 覆盖 `.token-comment`。
 
@@ -64,12 +64,12 @@ Shiki 主题首选 `github-light` / `github-dark`。注释颜色必须在 `--wis
 
 中文排版、布局、组件外观、动效、可访问性底线都已并入 [`DESIGN.md`](../DESIGN.md)：
 
-| 原章节 | DESIGN.md 中的位置 |
-|---|---|
+| 原章节      | DESIGN.md 中的位置                                                |
+| ----------- | ----------------------------------------------------------------- |
 | §2 中文排版 | Typography（Named Rules：禁止负字距、中文没有斜体、现代中文排版） |
-| §3 布局 | Layout |
-| §4 组件外观 | Components |
-| §5 动效 | Components → Home、Running head；Do's and Don'ts |
-| §6 可访问性 | Colors（对比度）、Do's（焦点环、reduced motion） |
+| §3 布局     | Layout                                                            |
+| §4 组件外观 | Components                                                        |
+| §5 动效     | Components → Home、Running head；Do's and Don'ts                  |
+| §6 可访问性 | Colors（对比度）、Do's（焦点环、reduced motion）                  |
 
 `scripts/check-contrast.ts` 仍对 palette.json 做自动对比度检查，作为 CI 的一部分。

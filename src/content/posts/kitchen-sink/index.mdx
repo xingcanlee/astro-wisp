@@ -1,6 +1,6 @@
 ---
-title: "Kitchen Sink：全部元素示例"
-description: "一篇汇总 Wisp 支持的全部 Markdown 与 MDX 元素的示例文章，包括标题层级、列表、表格、代码块、公式、各类 Mermaid 图以及图表和交互组件的引用写法。"
+title: 'Kitchen Sink：全部元素示例'
+description: '一篇汇总 Wisp 支持的全部 Markdown 与 MDX 元素的示例文章，包括标题层级、列表、表格、代码块、公式、各类 Mermaid 图以及图表和交互组件的引用写法。'
 pubDate: 2026-08-30
 tags: [示例]
 category: 随笔
@@ -16,7 +16,7 @@ import MatMul from '../matrix-multiplication/MatMul.tsx';
 
 #### 第四级标题
 
-正文中的**粗体**用于强调关键词，中文强调使用 *强调*，它不会变成斜体。西文强调如 *emphasis* 会保持斜体。这里有一个[链接示例](https://astro.build)，行内代码是 `npm run build`。
+正文中的**粗体**用于强调关键词，中文强调使用 _强调_，它不会变成斜体。西文强调如 _emphasis_ 会保持斜体。这里有一个[链接示例](https://astro.build)，行内代码是 `npm run build`。
 
 段间距为一行，不做首行缩进。中英文之间不需要手动加空格，浏览器会自动处理 Astro 与中文之间的间距。
 
@@ -49,11 +49,11 @@ import MatMul from '../matrix-multiplication/MatMul.tsx';
 
 ## 表格
 
-| 语言 | 类型系统 | 内存管理 | 典型场景 |
-|---|---|---|---|
-| TypeScript | 结构化、可选 | 垃圾回收 | 前端与全栈应用 |
-| Rust | 静态、强类型 | 所有权 | 系统编程、高性能服务 |
-| Python | 动态（可选类型注解） | 引用计数加垃圾回收 | 数据处理、科学计算 |
+| 语言       | 类型系统             | 内存管理           | 典型场景             |
+| ---------- | -------------------- | ------------------ | -------------------- |
+| TypeScript | 结构化、可选         | 垃圾回收           | 前端与全栈应用       |
+| Rust       | 静态、强类型         | 所有权             | 系统编程、高性能服务 |
+| Python     | 动态（可选类型注解） | 引用计数加垃圾回收 | 数据处理、科学计算   |
 
 ## 引用
 
@@ -68,6 +68,7 @@ import MatMul from '../matrix-multiplication/MatMul.tsx';
 脚注用于补充说明，不打断正文的阅读节奏。[^a] 也可以在一段话中引用多个脚注。[^b]
 
 [^a]: 这是第一个脚注的内容，它会在页面底部显示。
+
 [^b]: 第二个脚注的内容可以稍长一些，包含对前面论述的限定条件。
 
 ## 代码
@@ -320,13 +321,23 @@ pie title 一篇文章的时间分配
 
 图表引用在图表导出流程完成后启用，写法见 diagrams.md §5.1：
 
-![自注意力计算流程](./diagrams/attention-flow.excalidraw "图 1：自注意力")
+![自注意力计算流程](./diagrams/attention-flow.excalidraw '图 1：自注意力')
 
-![Transformer 数据流：y = Wx + b](../../shared/diagrams/transformer-block.drawio#page=2 "图 2：draw.io 多页文件的第二页")
+![Transformer 数据流：y = Wx + b](../../shared/diagrams/transformer-block.drawio#page=2 '图 2：draw.io 多页文件的第二页')
 
 交互讲解组件的引用写法见 explainers.md：
 
-<MatMul client:visible a={[[1,2],[3,4]]} b={[[5,6],[7,8]]} />
+<MatMul
+  client:visible
+  a={[
+    [1, 2],
+    [3, 4],
+  ]}
+  b={[
+    [5, 6],
+    [7, 8],
+  ]}
+/>
 
 ## 结语
 

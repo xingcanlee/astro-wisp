@@ -27,13 +27,25 @@ export interface MatrixProps {
 }
 
 const labelH = (label?: string) => (label ? LABEL_H : 0);
-export const matrixWidth = (values: unknown[][], cellSize = CELL) => (values[0]?.length ?? 0) * cellSize;
-export const matrixHeight = (values: unknown[][], cellSize = CELL, label?: string) => values.length * cellSize + labelH(label);
+export const matrixWidth = (values: unknown[][], cellSize = CELL) =>
+  (values[0]?.length ?? 0) * cellSize;
+export const matrixHeight = (values: unknown[][], cellSize = CELL, label?: string) =>
+  values.length * cellSize + labelH(label);
 
 /**
  * 二维格子（矩阵、DP 表、注意力权重……；1 行即数组）。(x, y) 是左上角，有 label 时格子在标签下方 LABEL_H 处。
  */
-export default function Matrix({ x, y, values, tone, label, cellSize = CELL, format = formatNumber, highlight, soft }: MatrixProps) {
+export default function Matrix({
+  x,
+  y,
+  values,
+  tone,
+  label,
+  cellSize = CELL,
+  format = formatNumber,
+  highlight,
+  soft,
+}: MatrixProps) {
   const w = matrixWidth(values, cellSize);
   const top = y + labelH(label);
   const cols = values[0]?.length ?? 0;
