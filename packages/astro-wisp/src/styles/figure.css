@@ -52,7 +52,7 @@
 }
 
 /*
- * 宽内容（图表、宽表格、交互组件）：突破正文 42em，最多 min(100vw - 40px, 64rem)，相对正文居中。
+ * 宽内容（图表、宽表格、交互组件）：突破正文栏，最多 min(100vw - 40px, 64rem)，相对正文居中。
  * 正文更宽时（理论上不会发生）不缩窄。
  */
 .wisp-wide {
@@ -75,9 +75,9 @@
   }
 }
 /* 三栏且左栏空着（只有目录、没有系列）时，宽内容向左突破到左栏 */
-@media (min-width: 72rem) {
+@media (min-width: 80rem) {
   .wisp-has-toc:not(.wisp-has-series) .wisp-wide {
-    --wisp-wide-w: calc(100% + 12rem + var(--wisp-gutter, 3rem));
+    --wisp-wide-w: calc(100% + 12rem + var(--wisp-gutter, 4rem));
     margin-inline: calc(100% - var(--wisp-wide-w)) 0;
   }
   /* 系列栏占据正文左侧时，宽内容留在正文列内，避免覆盖导航。 */
