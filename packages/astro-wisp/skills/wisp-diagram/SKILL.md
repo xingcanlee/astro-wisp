@@ -56,7 +56,7 @@ draw.io 导出按 cli → docker → browser 顺序自动回退。`new`、`build
 
 原则：能用 Mermaid 讲清楚就别画图；手绘风格不超过约 12 个节点；同一篇文章里风格统一。
 
-**先定画布再动笔：宽 640px。** Wisp 的正文栏约 650px，图比它宽就会被等比缩小、字跟着变小。所以主流向从上到下，并列的分支排成 2–3 列（每列约 190–300px），长流程往下长而不是往右长。lint 会对超过 720px 的图给出 `width` 警告。
+**先定画布再动笔：宽 640px。** Wisp 的正文栏约 710px，图比它宽就会被等比缩小、字跟着变小。所以主流向从上到下，并列的分支排成 2–3 列（每列约 190–300px），长流程往下长而不是往右长。lint 会对超过 720px 的图给出 `width` 警告。
 
 ## 2. 工作流（5 步）
 
@@ -142,7 +142,7 @@ $W export diagrams/attention.wisp.svg --theme dark  -o /tmp/attention.dark.png
 | 圆角 | 矩形/容器圆角：Excalidraw `round`，draw.io `rounded=1;arcSize=8` |
 | 填充 | 纯色填充，使用 hue 的 fill；**禁止渐变** |
 | 阴影 | **禁止** |
-| 宽度 | 自然宽度 **640–680px**（正文栏宽）；超过 720px lint 警告，超过 1000px 字已看不清 |
+| 宽度 | 自然宽度 **640–700px**（正文栏宽）；超过 720px lint 警告，超过 1000px 字已看不清 |
 | 流向 | 从上到下；连线横平竖直，拐弯走直角（骨架用 `via`，draw.io 用 `edgeStyle=orthogonalEdgeStyle`） |
 | 公式 | 只在 draw.io 里用：页面 `math="1"`，标签写 `\(...\)`（见 drawio-cheatsheet「公式」）；Excalidraw 用 Unicode（Kᵀ、√d、Σ） |
 | 字体 | Excalidraw 用 Excalifont（中文回落 Noto Sans SC，**不用小赖体**）；draw.io 用 `Inter` |

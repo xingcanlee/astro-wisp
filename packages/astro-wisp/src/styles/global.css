@@ -134,9 +134,9 @@
  * 页头、页脚、文章三栏网格、首页都用同一个外框（.wisp-shell），左右边线全站对齐。
  */
 :root {
-  --wisp-measure: 38rem;
-  --wisp-side: 15rem;
-  --wisp-gutter: 3rem;
+  --wisp-measure: 42rem;
+  --wisp-side: 14rem;
+  --wisp-gutter: 4rem;
   --wisp-shell: calc(var(--wisp-measure) + 2 * var(--wisp-side) + 2 * var(--wisp-gutter));
   --wisp-pad: 20px;
   --wisp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);

@@ -13,7 +13,8 @@ from .jsjson import js_number, js_string, stringify
 from .xmlfmt import Node, parse as parse_xml
 
 MAX_SOURCE_BYTES = 2 * 1024 * 1024
-#: 正文栏约 650px：图比这宽就会被等比缩小。超过 WIDE 提醒，超过 TOO_WIDE 时 14px 的字已不到 9px
+#: 正文栏约 710px：图比这宽就会被等比缩小。超过 WIDE 提醒，超过 TOO_WIDE 时 14px 的字已不到 9px
+COLUMN_PX = 710
 WIDE_PX = 720
 TOO_WIDE_PX = 1000
 FONT_TOLERANCE = 1
@@ -84,10 +85,10 @@ def _is_num(v: Any) -> bool:
 def _width_issue(width: float, where: str = "") -> LintIssue | None:
     if width <= WIDE_PX:
         return None
-    pct = _js_round(650 / width * 100)
+    pct = _js_round(COLUMN_PX / width * 100)
     tail = ("; text will be unreadable — lay it out top-to-bottom or split it" if width > TOO_WIDE_PX
-            else "; aim for 640–680px so it renders at natural size")
-    return LintIssue("warn", "width", f"{where}content is {js_number(_js_round(width))}px wide; the ~650px text column scales it to {js_number(pct)}%{tail}")
+            else "; aim for 640–700px so it renders at natural size")
+    return LintIssue("warn", "width", f"{where}content is {js_number(_js_round(width))}px wide; the ~710px text column scales it to {js_number(pct)}%{tail}")
 
 
 def _truthy(v: Any) -> bool:

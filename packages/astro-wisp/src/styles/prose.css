@@ -25,7 +25,7 @@
   --tw-prose-th-borders: var(--wisp-border);
   --tw-prose-td-borders: var(--wisp-border);
 
-  max-width: var(--wisp-measure, 38rem);
+  max-width: var(--wisp-measure, 42rem);
   font-size: 1rem;
   line-height: 1.8;
   letter-spacing: 0;
@@ -103,7 +103,7 @@
   color: var(--wisp-muted);
   font-size: 0.875em;
 }
-@media (min-width: 72rem) {
+@media (min-width: 80rem) {
   .wisp-post-body > h2::before {
     position: absolute;
     inset-inline-end: calc(100% + 0.75rem);
