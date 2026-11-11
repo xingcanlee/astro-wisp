@@ -3,9 +3,7 @@ title: '00 输入是问题'
 description: '把输入先看成一个需要回答的问题。'
 pubDate: 2026-10-02
 category: 示例
-series:
-  id: reading-path
-  order: 2
+series: { id: reading-path, order: 2 }
 ---
 
 先写清楚输入是什么，后面的计算才有可检查的起点。

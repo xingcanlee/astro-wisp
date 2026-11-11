@@ -3,9 +3,7 @@ title: '阅读路径：从输入到输出'
 description: '一个用于检查系列导航的短篇示例系列。'
 pubDate: 2026-10-01
 category: 示例
-series:
-  id: reading-path
-  order: 1
+series: { id: reading-path, order: 1 }
 ---
 
 这是一篇系列总览，先把阅读路径列出来，再从输入、分数和输出三个小步骤展开。

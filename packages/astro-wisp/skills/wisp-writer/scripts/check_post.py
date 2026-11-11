@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _wisp  # noqa: E402
 
-KNOWN_KEYS = {"title", "description", "pubDate", "updatedDate", "tags", "category", "draft", "featured", "cover", "lang", "toc"}
+KNOWN_KEYS = {"title", "description", "pubDate", "updatedDate", "tags", "category", "draft", "featured", "cover", "lang", "toc", "series"}
 BOOL_KEYS = ("draft", "featured", "toc")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$")
 CJK = r"㐀-䶿一-鿿豈-﫿"

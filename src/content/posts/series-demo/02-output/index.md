@@ -3,9 +3,7 @@ title: '02 输出回到序列'
 description: '把处理后的结果放回原来的阅读顺序。'
 pubDate: 2026-10-04
 category: 示例
-series:
-  id: reading-path
-  order: 4
+series: { id: reading-path, order: 4 }
 ---
 
 最后一步把相关信息合并回序列，读者仍然从第一个位置读到最后一个位置。

@@ -3,9 +3,7 @@ title: '01 分数决定关注'
 description: '用一个分数表达输入之间的相关程度。'
 pubDate: 2026-10-03
 category: 示例
-series:
-  id: reading-path
-  order: 3
+series: { id: reading-path, order: 3 }
 ---
 
 有了输入的位置，就可以比较它们之间的相关程度。
