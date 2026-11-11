@@ -68,3 +68,40 @@ for (const theme of ['light', 'dark'] as const) {
     });
   }
 }
+
+test('横向滚动容器：只有确实溢出的才是 Tab 停靠点，名称在反复 resize 后不叠加', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/posts/kitchen-sink/');
+  await page.evaluate(() => document.fonts.ready);
+  const SEL = '.wisp-post-body :is(.wisp-pre, .wisp-table, .katex-display)';
+  const state = () =>
+    page.$$eval(SEL, (els) =>
+      els.map((e) => ({
+        overflow: e.scrollWidth > e.clientWidth + 1,
+        tab: e.getAttribute('tabindex'),
+        label: e.getAttribute('aria-label') ?? '',
+      })),
+    );
+  const check = async () => {
+    const all = await state();
+    expect(all.length).toBeGreaterThan(0);
+    for (const s of all) {
+      expect(s.tab).toBe(s.overflow ? '0' : null);
+      // 「可横向滚动」最多出现一次，且只在溢出时出现
+      expect(s.label.split('可横向滚动').length - 1).toBe(s.overflow ? 1 : 0);
+    }
+    return all;
+  };
+  await check();
+  for (const w of [390, 900, 390, 700, 390]) {
+    await page.setViewportSize({ width: w, height: 800 });
+    await page.waitForTimeout(100);
+  }
+  const narrow = await check();
+  expect(narrow.some((s) => s.overflow)).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.waitForTimeout(100);
+  await check();
+});

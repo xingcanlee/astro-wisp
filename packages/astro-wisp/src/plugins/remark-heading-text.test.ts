@@ -33,3 +33,31 @@ describe('remarkHeadingText 插件', () => {
     expect(await textsOf('## 标题\n\n$$\nx=1\n$$\n\n段落 $y$')).toEqual(['标题']);
   });
 });
+
+async function idsOf(md: string): Promise<Array<string | undefined>> {
+  const processor = unified().use(remarkParse).use(remarkMath).use(remarkHeadingText);
+  const file = new VFile(md);
+  const tree = processor.parse(file);
+  await processor.run(tree, file);
+  return tree.children
+    .filter((n) => n.type === 'heading')
+    .map((n) => (n.data as { hProperties?: { id?: string } } | undefined)?.hProperties?.id);
+}
+
+describe('含公式标题的 id', () => {
+  it('由源码生成：公式只贡献 ASCII 字母数字，字体命令去掉', async () => {
+    expect(
+      await idsOf(
+        '## mHC：把 $\\mathcal{H}^{res}$ 关进一个集合\n\n## 含公式 $H^{res}$ 的标题\n\n## 从 $\\alpha_t$ 到 $\\beta$',
+      ),
+    ).toEqual(['mhc把-hres-关进一个集合', '含公式-hres-的标题', '从-alphat-到-beta']);
+  });
+
+  it('没有字母数字的公式整体丢掉；重复时加序号', async () => {
+    expect(await idsOf('## 步骤 $+$ 一\n\n## 步骤 $-$ 一')).toEqual(['步骤-一', '步骤-一-1']);
+  });
+
+  it('不含公式的标题不写 id（仍由 Astro 生成，已有深链接不变）', async () => {
+    expect(await idsOf('## 普通标题\n\n## 带 `code` 的标题')).toEqual([undefined, undefined]);
+  });
+});

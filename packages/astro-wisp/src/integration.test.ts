@@ -1,10 +1,15 @@
 import { mkdtempSync, readFileSync } from 'node:fs';
+import type { Root as HastRoot } from 'hast';
+import { raw } from 'hast-util-raw';
+import { toHtml } from 'hast-util-to-html';
+import { unified as astroUnified } from '@astrojs/markdown-remark';
+import type { RehypePlugins, RemarkPlugins } from '@astrojs/markdown-remark';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { HookParameters } from 'astro';
 import { describe, expect, it } from 'vitest';
-import wisp, { OVERRIDABLE_COMPONENTS, OVERRIDABLE_LAYOUTS } from './integration';
+import wisp, { OVERRIDABLE_COMPONENTS, OVERRIDABLE_LAYOUTS, pipelineDigest } from './integration';
 import { defineWispConfig } from './config';
 
 type SetupOptions = HookParameters<'astro:config:setup'>;
@@ -15,6 +20,10 @@ type VirtualPlugin = {
 };
 type SetupUpdate = {
   integrations: Array<{ name: string }>;
+  markdown: {
+    processor: { options: { remarkPlugins: RemarkPlugins; rehypePlugins: RehypePlugins } };
+    shikiConfig: Record<string, unknown>;
+  };
   fonts: Array<{ cssVariable: string }>;
   vite: { plugins: VirtualPlugin[] };
 };
@@ -178,5 +187,89 @@ describe('astro-wisp 集成', () => {
     expect(c.customCss).toEqual([]);
     expect(c.palette).toBeUndefined();
     expect(() => defineWispConfig({ routes: { about: 'no' as never } })).toThrow(/routes\.about/);
+  });
+});
+
+/**
+ * `.md` 与 `.mdx` 走同一条 Wisp 管线（同一个 processor 的插件），这里在两条路径的用户 rehype 插件末尾
+ * 截下 hast 比较。内容覆盖：表格、块级公式、Mermaid、带标题的图片、脚注引用、代码块、中文加粗、含公式的标题。
+ */
+const PARITY_SOURCE = [
+  '段落一，引用文献[^a]。**加粗。**后文，**文字**（括号），文**`code`**字。',
+  '',
+  '## 含公式 $H^{res}$ 的标题',
+  '',
+  '| 列 A | 列 B |',
+  '| ---- | ---- |',
+  '| `a b-c` | 1 |',
+  '',
+  '$$',
+  'E = mc^2',
+  '$$',
+  '',
+  '```mermaid',
+  'flowchart TD',
+  '  A[开始] --> B[结束]',
+  '```',
+  '',
+  "![相位图](https://example.com/phase.png '图 1：相位图')",
+  '',
+  '```ts',
+  'const a = 1;',
+  '```',
+  '',
+  '[^a]: 一条注释。',
+  '',
+].join('\n');
+
+async function renderBoth(source: string) {
+  const { updates } = setup({ mermaid: { strict: true } });
+  const { processor, shikiConfig } = updates[0]!.markdown;
+  const captured: Record<'md' | 'mdx', string> = { md: '', mdx: '' };
+  const capture = (key: 'md' | 'mdx') => () => (tree: HastRoot) => {
+    // .md 在用户插件之后才跑 rehype-raw（Mermaid 等是 raw 节点）；先解析成元素再序列化，两边才可比
+    // 块之间的换行文本节点两边不同（MDX 不保留），比较时去掉
+    captured[key] = toHtml(raw(structuredClone(tree)) as HastRoot).replace(/>\s+</g, '><');
+  };
+  const withCapture = (key: 'md' | 'mdx') =>
+    astroUnified({
+      remarkPlugins: processor.options.remarkPlugins,
+      rehypePlugins: [...processor.options.rehypePlugins, capture(key)],
+    });
+  const shared = { syntaxHighlight: 'shiki' as const, shikiConfig };
+  const md = await withCapture('md').createRenderer(shared as never);
+  await md.render(source, { fileURL: new URL('file:///site/src/content/posts/p.md') } as never);
+  const mdx = await withCapture('mdx').createMdxRenderer!(
+    shared as never,
+    { srcDir: new URL('file:///site/src/') } as never,
+  );
+  await mdx.process(source, '/site/src/content/posts/p.mdx', {});
+  return captured;
+}
+
+describe('Markdown 管线：.md 与 .mdx 一致', () => {
+  it('同一段源码在两条路径上产出相同的 HTML', async () => {
+    const { md, mdx } = await renderBoth(PARITY_SOURCE);
+    // 抽查关键产物确实存在，避免两边一起缺失时也算“一致”
+    expect(md).toContain('class="wisp-table"');
+    expect(md).toContain('data-wisp-tab');
+    expect(md).toContain('--pele-w:');
+    expect(md).toContain('wisp-figure');
+    expect(md).toContain('wisp-notes');
+    expect(md).toContain('<span class="wisp-tok">b-c</span>');
+    expect(md).toContain('id="含公式-hres-的标题"');
+    expect(md).toContain('<strong>加粗。</strong>后文');
+    expect(md).toContain('<strong>文字</strong>（括号）');
+    expect(md).toContain('文<strong><code>code</code></strong>字');
+    expect(mdx).toBe(md);
+  }, 30_000);
+
+  it('管线指纹进入 astro 配置摘要：主题插件变化会让内容层缓存的 .md 渲染结果失效', () => {
+    const { updates } = setup();
+    const digest = pipelineDigest();
+    expect(digest).toMatch(/^[0-9a-f]{16}$/);
+    // Astro 用 JSON 序列化（content/utils 的 safeStringify）判断配置是否变化；插件函数会被丢掉，
+    // 指纹必须以普通值的形式出现在里面
+    expect(JSON.stringify(updates[0]!.markdown)).toContain(digest);
   });
 });

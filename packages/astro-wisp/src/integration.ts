@@ -1,4 +1,5 @@
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +9,7 @@ import type { RehypePlugins, RemarkPlugins } from '@astrojs/markdown-remark';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
+import remarkCjkFriendly from 'remark-cjk-friendly';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkPele from './plugins/remark-pele';
@@ -16,6 +18,8 @@ import remarkReadingTime from './plugins/remark-reading-time';
 import remarkHasMath from './plugins/remark-has-math';
 import remarkHeadingText from './plugins/remark-heading-text';
 import rehypeA11y from './plugins/rehype-a11y';
+import rehypeCitations from './plugins/rehype-citations';
+import rehypeFigure from './plugins/rehype-figure';
 import { copyDiagramSources, diagramDevMiddleware } from './lib/diagram-assets';
 import { wispShikiConfig } from './shiki';
 import {
@@ -44,6 +48,54 @@ export function rehypeKatexKatexDir(): string | undefined {
     return undefined;
   }
 }
+/** 已安装依赖的版本：从入口文件向上找到它自己的 package.json（不依赖包的 exports 是否导出 package.json）。 */
+function installedVersion(name: string): string {
+  try {
+    let dir = dirname(fileURLToPath(import.meta.resolve(name)));
+    for (;;) {
+      const file = join(dir, 'package.json');
+      if (existsSync(file)) {
+        const pkg = JSON.parse(readFileSync(file, 'utf8')) as { name?: string; version?: string };
+        if (pkg.name === name) return pkg.version ?? '';
+      }
+      const up = dirname(dir);
+      if (up === dir) return '';
+      dir = up;
+    }
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Markdown 管线的指纹：主题的 remark/rehype 插件与 Shiki transformer 源码、主题版本、产出 HTML 的依赖版本。
+ *
+ * 为什么需要：内容层（glob loader）把 `.md` 渲染好的 HTML 缓存在 `.astro/data-store.json`，只有文件内容或
+ * astro 配置的 JSON 摘要变化时才重新渲染；`markdown.processor` 里的插件是函数，进不了摘要。于是升级主题
+ * （新增 / 修改插件）后 `.md` 文章还是旧管线的产物，而 `.mdx` 每次由 Vite 重新编译——两者渲染结果不一致。
+ * 把这个指纹作为插件选项放进 processor，主题或依赖一变，摘要随之变化，内容层整体失效并重新渲染。
+ */
+export function pipelineDigest(): string {
+  const h = createHash('sha256');
+  const files = [
+    ...['./plugins/', './lib/'].flatMap((dir) =>
+      readdirSync(here(dir))
+        .filter((f) => f.endsWith('.ts') && !/\.(test|fixture)\.ts$/.test(f))
+        .sort()
+        .map((f) => `${dir}${f}`),
+    ),
+    './shiki.ts',
+    '../package.json',
+  ];
+  for (const f of files) h.update(f).update(readFileSync(here(f)));
+  for (const dep of ['pele', 'katex', 'rehype-katex', 'remark-math', 'remark-cjk-friendly'])
+    h.update(`${dep}@${installedVersion(dep)}`);
+  return h.digest('hex').slice(0, 16);
+}
+
+/** 只携带指纹的空插件（见 pipelineDigest）。 */
+const wispPipeline = (_options: { digest: string }) => undefined;
+
 const astroFiles = (dir: string) =>
   readdirSync(here(dir))
     .filter((f) => f.endsWith('.astro'))
@@ -186,7 +238,12 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
         }
 
         // ---- Markdown 管线 ----
-        const remarkPlugins: RemarkPlugins = [];
+        const remarkPlugins: RemarkPlugins = [
+          // 第一项：不做任何转换，只让管线指纹进入 astro 配置摘要（见 pipelineDigest）
+          [wispPipeline, { digest: pipelineDigest() }],
+          // 中文强调：`**文字。**后文` 这类紧挨全角标点的 ** / * 也能闭合（CommonMark 的分界规则不认 CJK）
+          remarkCjkFriendly,
+        ];
         const rehypePlugins: RehypePlugins = [];
         if (config.features.math) remarkPlugins.push(remarkMath);
         if (config.features.mermaid)
@@ -203,7 +260,10 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
         ]);
         remarkPlugins.push(remarkReadingTime, remarkHasMath, remarkHeadingText);
         if (config.features.math) rehypePlugins.push(rehypeKatex);
-        rehypePlugins.push(rehypeA11y);
+        // 带标题的独立图片 → figure + 题注（Astro 的图片优化在用户 rehype 插件之后运行，不受影响）
+        rehypePlugins.push(rehypeFigure, rehypeA11y);
+        // GFM 脚注 → 引用：可见的「参考与注释」标题、Lucide 回链图标、按语言的 aria-label
+        rehypePlugins.push([rehypeCitations, { lang: config.site.lang }]);
 
         // ---- 依赖的集成：已由站点自行注册时不重复添加 ----
         const has = (name: string) => astroConfig.integrations.some((i) => i.name === name);
@@ -223,7 +283,13 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
           },
           vite: {
             resolve: katexDir
-              ? { alias: [{ find: /^katex(\/.*)?$/, replacement: `${katexDir}$1` }] }
+              ? {
+                  alias: [
+                    // 裸 `katex` 必须指到 ESM 入口：指到目录时 dev 的 SSR 会加载 UMD 的 dist/katex.js 并报错
+                    { find: /^katex$/, replacement: `${katexDir}/dist/katex.mjs` },
+                    { find: /^katex\/(.*)$/, replacement: `${katexDir}/$1` },
+                  ],
+                }
               : undefined,
             ssr: {
               noExternal: [

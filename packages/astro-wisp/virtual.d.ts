@@ -12,6 +12,10 @@ declare module 'virtual:wisp/components/BackToTop' {
   const C: typeof import('astro-wisp/components/BackToTop.astro').default;
   export default C;
 }
+declare module 'virtual:wisp/components/Citations' {
+  const C: typeof import('astro-wisp/components/Citations.astro').default;
+  export default C;
+}
 declare module 'virtual:wisp/components/CopyButton' {
   const C: typeof import('astro-wisp/components/CopyButton.astro').default;
   export default C;
