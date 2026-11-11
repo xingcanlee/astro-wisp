@@ -41,9 +41,20 @@ const terms = await getCategories();
     .terms a:hover {
       color: var(--wisp-accent);
     }
+    /* 触屏：链接命中高度 ≥32px，行间距仍 ≥8px */
+    @media (pointer: coarse) {
+      .terms {
+        row-gap: 0.5rem;
+      }
+      .terms a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2rem;
+      }
+    }
     .n {
       margin-inline-start: 0.35em;
-      color: var(--wisp-subtle);
+      color: var(--wisp-muted);
       font-size: 0.875rem;
       font-variant-numeric: tabular-nums;
     }

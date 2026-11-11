@@ -11,31 +11,47 @@ const groups = groupByYear(posts);
 const seriesName = new Map(
   summarizeSeries(posts).map((s) => [s.id, s.title.split(/[：:]/)[0]!.trim()]),
 );
+// 系列篇的「05 标题」拆成编号列 + 标题（与首页目录、系列栏同一规则）；
+// 只要有一篇带编号，所有行都留出编号列，标题左缘对齐
+const split = (t: string) => {
+  const m = /^(\d{1,3})[\s　]+(.+)$/.exec(t);
+  return m ? { no: m[1]!, text: m[2]! } : { no: '', text: t };
+};
+const numbered = posts.some((p) => split(p.data.title).no);
 const short = (d: Date) =>
   `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 ---
 
 <Page title="归档" description={`共 ${posts.length} 篇文章`} prose={false}>
   {groups.map(({ year, posts }) => (
-    <section class="year">
+    <section class:list={['year', { numbered }]}>
       <h2>
         {year} <span class="count">{posts.length}</span>
       </h2>
       <ul>
-        {posts.map((p) => (
-          <li>
-            <time
-              datetime={toISODate(p.data.pubDate)}
-              title={formatDate(p.data.pubDate, p.data.lang ?? config.site.lang)}
-            >
-              {short(p.data.pubDate)}
-            </time>
-            <a href={sitePath(import.meta.env.BASE_URL, `/posts/${p.id}/`)} lang={p.data.lang}>
-              {p.data.title}
-            </a>
-            <span class="part">{p.data.series ? seriesName.get(p.data.series.id) : ''}</span>
-          </li>
-        ))}
+        {posts.map((p) => {
+          const { no, text } = split(p.data.title);
+          return (
+            <li>
+              <time
+                datetime={toISODate(p.data.pubDate)}
+                title={formatDate(p.data.pubDate, p.data.lang ?? config.site.lang)}
+              >
+                {short(p.data.pubDate)}
+              </time>
+              <a href={sitePath(import.meta.env.BASE_URL, `/posts/${p.id}/`)} lang={p.data.lang}>
+                {numbered ? (
+                  <>
+                    <span class="no">{no}</span> <span class="title">{text}</span>
+                  </>
+                ) : (
+                  p.data.title
+                )}
+              </a>
+              <span class="part">{p.data.series ? seriesName.get(p.data.series.id) : ''}</span>
+            </li>
+          );
+        })}
       </ul>
     </section>
   ))}
@@ -91,6 +107,33 @@ const short = (d: Date) =>
     }
     a:hover {
       color: var(--wisp-accent);
+    }
+    /* 编号列：表格数字、muted，标题悬挂对齐（与首页目录同宽同字号） */
+    .numbered a {
+      display: grid;
+      grid-template-columns: 1.5rem minmax(0, 1fr);
+      column-gap: 0.5rem;
+      align-items: baseline;
+    }
+    .no {
+      color: var(--wisp-muted);
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
+      transition: color 150ms;
+    }
+    a:hover .no {
+      color: var(--wisp-accent);
+    }
+    /* 触屏：标题链接的命中区铺满整行（≥44px），外观不变 */
+    @media (pointer: coarse) {
+      li {
+        position: relative;
+      }
+      a::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
     }
     @media (max-width: 39.99rem) {
       li {

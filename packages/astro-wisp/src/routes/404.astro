@@ -13,8 +13,9 @@ const recent = (await getPosts()).slice(0, 3);
     <h1>404</h1>
     <p class="nf-lead">这个页面不存在，可能已被移动或删除。</p>
     <p>
-      <a class="wisp-link" href={sitePath(import.meta.env.BASE_URL, '/')}>
-        <Icon name="arrow-left" /> 回到首页
+      <a class="wisp-link nf-home" href={sitePath(import.meta.env.BASE_URL, '/')}>
+        <Icon name="arrow-left" />
+        <span>回到首页</span>
       </a>
     </p>
     {recent.length > 0 && (
@@ -36,15 +37,34 @@ const recent = (await getPosts()).slice(0, 3);
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
     .nf {
-      padding-top: 4rem;
+      padding-top: 3.5rem;
     }
     h1 {
       margin: 0;
-      font-size: 2rem;
+      font-size: clamp(1.75rem, 1.2rem + 2vw, 2.375rem);
+      font-weight: 700;
+      line-height: 1.25;
     }
     .nf-lead {
       margin: 0.5rem 0 1rem;
       color: var(--wisp-muted);
+    }
+    /* 下划线只画在文字下，不跨过图标和空白 */
+    .nf-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      text-decoration-line: none;
+    }
+    .nf-home span {
+      text-decoration-line: underline;
+      text-decoration-thickness: inherit;
+      text-underline-offset: 0.25em;
+    }
+    @media (pointer: coarse) {
+      .nf-home {
+        min-height: 2.75rem;
+      }
     }
     .nf-recent {
       margin-top: 3.5rem;
@@ -53,7 +73,6 @@ const recent = (await getPosts()).slice(0, 3);
       margin: 0 0 1.5rem;
       font-size: 0.875rem;
       font-weight: 500;
-      letter-spacing: 0.04em;
       color: var(--wisp-muted);
     }
     ul {

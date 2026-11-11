@@ -31,9 +31,17 @@ for (const path of OK) {
   });
 }
 
-test('/page/2/ 仅在文章数超过一页时存在（存在则 200）', async ({ request }) => {
+test('/page/n/ 与首页的分页导航一致：首页链到第 2 页时它才存在（有系列时一页都不生成）', async ({
+  request,
+  page,
+}) => {
+  await page.goto('/');
+  const linksPage2 = (await page.locator('.wisp-pagination a[href$="/page/2/"]').count()) > 0;
   const res = await request.get('/page/2/');
-  expect([200, 404]).toContain(res.status());
+  expect(res.status()).toBe(linksPage2 ? 200 : 404);
+  // sitemap 只列出实际生成的页面
+  const sitemap = await request.get('/sitemap-0.xml');
+  if (sitemap.ok() && !linksPage2) expect(await sitemap.text()).not.toContain('/page/');
 });
 
 test('不存在的路径 404 并渲染自定义 404 页', async ({ page }) => {

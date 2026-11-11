@@ -3,20 +3,17 @@ import type { GetStaticPaths, Page } from 'astro';
 import Base from 'virtual:wisp/components/Base';
 import PostCard from 'virtual:wisp/components/PostCard';
 import Pagination from 'virtual:wisp/components/Pagination';
-import { getPosts, type PostEntry } from '../../utils/posts';
+import { getPosts, homePagedPosts, type PostEntry } from '../../utils/posts';
 import { getReadingTimes } from '../../utils/reading';
 import config from 'virtual:wisp/config';
 
 export const getStaticPaths = (async ({ paginate }) => {
-  // 首页会单独展示精选文章，因此分页也排除它们，避免第 2 页重复出现。
-  const all = await getPosts();
-  const featured = all.filter((p) => p.data.featured).slice(0, config.home.featuredCount);
-  const featuredIds = new Set(featured.map((p) => p.id));
+  // 有系列时首页是总目录、没有分页列表，homePagedPosts 返回空 → 不生成任何 /page/n/。
+  // 没有系列时排除首页精选区的文章，避免第 2 页重复出现。
   // Astro 内置分页；第 1 页就是首页（/，带精选区），这里只生成第 2 页起。
-  return paginate(
-    all.filter((p) => !featuredIds.has(p.id)),
-    { pageSize: config.home.pageSize },
-  ).slice(1);
+  return paginate(homePagedPosts(await getPosts(), config.home.featuredCount), {
+    pageSize: config.home.pageSize,
+  }).slice(1);
 }) satisfies GetStaticPaths;
 
 interface Props {
@@ -48,10 +45,14 @@ const times = await getReadingTimes(posts);
     .list-page {
       padding-top: 3.5rem;
     }
+    /* 与 Page 布局的页头同一规格 */
     .list-title {
-      margin: 0 0 2.5rem;
-      font-size: 2rem;
+      margin: 0 0 2.75rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--wisp-border);
+      font-size: clamp(1.75rem, 1.2rem + 2vw, 2.375rem);
       font-weight: 700;
+      line-height: 1.25;
     }
     .list {
       display: flex;

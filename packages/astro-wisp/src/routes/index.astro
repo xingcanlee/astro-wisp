@@ -12,7 +12,7 @@ import Base from 'virtual:wisp/components/Base';
 import PostCard from 'virtual:wisp/components/PostCard';
 import Pagination from 'virtual:wisp/components/Pagination';
 import Icon from 'virtual:wisp/components/Icon';
-import { getPosts, summarizeSeries } from '../utils/posts';
+import { getPosts, homePagedPosts, summarizeSeries } from '../utils/posts';
 import { getReadingTimes } from '../utils/reading';
 import { formatDate, toISODate } from '../utils/date';
 import { sitePath } from '../utils/paths';
@@ -44,12 +44,17 @@ const solo = all.filter((p) => !p.data.series);
 const featuredSolo = solo.filter((p) => p.data.featured).slice(0, config.home.featuredCount);
 const featuredIds = new Set(featuredSolo.map((p) => p.id));
 const soloRest = solo.filter((p) => !featuredIds.has(p.id));
-const soloShown = [...featuredSolo, ...soloRest].slice(0, config.home.pageSize);
+// 没有系列时，第 1 页 = 精选 + 前 pageSize 篇其余文章，与 /page/2/ 起的切分（排除精选、每页 pageSize）首尾相接
+const soloShown =
+  series.length > 0
+    ? [...featuredSolo, ...soloRest].slice(0, config.home.pageSize)
+    : [...featuredSolo, ...soloRest.slice(0, config.home.pageSize)];
 const soloTimes = await getReadingTimes(soloShown);
-// 没有系列时保留分页（/page/n/ 的切分与此一致：排除精选）
-const featuredAll = new Set(all.filter((p) => p.data.featured).slice(0, config.home.featuredCount));
-const latest = all.filter((p) => !featuredAll.has(p));
-const totalPages = Math.max(1, Math.ceil(latest.length / config.home.pageSize));
+// 没有系列时保留分页（与 /page/n/ 同一个切分：排除精选）；有系列时 /page/n/ 不存在，也不显示分页
+const totalPages = Math.max(
+  1,
+  Math.ceil(homePagedPosts(all, config.home.featuredCount).length / config.home.pageSize),
+);
 
 const recent = all.slice(0, 5);
 const lastUpdated = all[0]?.data.pubDate;
@@ -126,7 +131,6 @@ const colophon = zh
                       <span class="part-item-title">
                         {item.id === s.firstId && !no ? (zh ? '总览' : 'Overview') : text}
                       </span>
-                      <span class="part-leader" aria-hidden="true" />
                       <span class="part-item-time">{minutes(seriesTimes.get(item.id))}</span>
                     </a>
                   </li>
@@ -310,7 +314,10 @@ const colophon = zh
       font-variant-numeric: tabular-nums;
     }
 
-    /* 篇目：编号 | 标题 | 点线引导 | 阅读时长；窄屏时宽屏两列 */
+    /* 篇目：编号 | 标题 | 点线引导 | 阅读时长；≥80rem 分两栏。
+       标题换行时像印刷目录：编号对齐首行，标题悬挂；点线从标题最后一行的末尾一直引到时长，
+       时长与最后一行同基线。点线是标题的 ::after：一条零净宽的行内块，向右伸出一整栏宽，
+       在标题格的右缘被裁掉，所以它总是恰好填满最后一行剩下的空间，不会单独掉到下一行。 */
     .part-list {
       margin: 0;
       padding: 0;
@@ -326,37 +333,38 @@ const colophon = zh
       break-inside: avoid;
     }
     .part-list a {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1.5rem minmax(0, 1fr) auto;
       align-items: baseline;
-      gap: 0.5rem;
+      column-gap: 0.5rem;
       padding-block: 0.4375rem;
       color: var(--wisp-fg);
       font-size: 0.9375rem;
       line-height: 1.5;
     }
     .part-item-no {
-      flex: none;
-      width: 1.5rem;
-      color: var(--wisp-subtle);
+      color: var(--wisp-muted);
       font-size: 0.8125rem;
       font-variant-numeric: tabular-nums;
       transition: color 150ms;
     }
     .part-item-title {
       min-width: 0;
+      overflow-x: clip;
       transition: color 150ms;
       text-wrap: pretty;
     }
-    .part-leader {
-      flex: 1 1 1.5rem;
-      min-width: 1.5rem;
-      align-self: flex-end;
-      margin-bottom: 0.4375rem;
+    .part-item-title::after {
+      content: '';
+      display: inline-block;
+      width: 100%;
+      margin-inline: 0.5rem calc(-100% - 0.5rem);
+      vertical-align: baseline;
       border-bottom: 1px dotted var(--wisp-subtle);
       opacity: 0.6;
     }
     .part-item-time {
-      flex: none;
+      align-self: last baseline;
       color: var(--wisp-muted);
       font-size: 0.8125rem;
       font-variant-numeric: tabular-nums;
@@ -366,6 +374,12 @@ const colophon = zh
     }
     .part-list a:hover .part-item-no {
       color: var(--wisp-accent);
+    }
+    /* 触屏：行高不变，上下内边距加大到 ≥44px 的命中高度 */
+    @media (pointer: coarse) {
+      .part-list a {
+        padding-block: 0.6875rem;
+      }
     }
 
     /* ---------- 其他文章 ---------- */
@@ -415,6 +429,17 @@ const colophon = zh
     }
     .home-revisions a:hover {
       color: var(--wisp-accent);
+    }
+    /* 触屏：标题链接的命中区铺满整行（≥44px），外观不变 */
+    @media (pointer: coarse) {
+      .home-revisions li {
+        position: relative;
+      }
+      .home-revisions a::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
     }
     @media (max-width: 39.99rem) {
       .home-revisions li {
