@@ -7,7 +7,8 @@ from conftest import FIX, fx, snap
 from wisp_diagram_lib.cli import cmd_lint, cmd_normalize
 from wisp_diagram_lib.drawio import compress_diagram, decompress_diagram, list_pages, normalize_drawio
 from wisp_diagram_lib.excalidraw import normalize_excalidraw
-from wisp_diagram_lib.lint import apply_fixes, lint_drawio, lint_excalidraw
+from wisp_diagram_lib.lint import MAX_HUES, apply_fixes, lint_drawio, lint_excalidraw
+from wisp_diagram_lib.palette import palette
 
 
 class TestDrawio:
@@ -47,7 +48,7 @@ class TestLintExcalidraw:
 
     def test_reports_rules(self):
         assert [i.element_id for i in self.by("palette-color")] == ["a3"]
-        assert self.by("palette-color")[0].fix.to == "#1d4ed8"
+        assert self.by("palette-color")[0].fix.to == "#2f5783"
         assert [i.element_id for i in self.by("font-size")] == ["c4"]
         assert [i.element_id for i in self.by("grid")] == ["a3"]
 
@@ -87,7 +88,7 @@ class TestLintDrawio:
     def test_messages_match_ts(self):
         # 与 T5a 的 TS 实现输出逐字一致（ΔE 用同一套 lab65 CIEDE2000 计算）
         msgs = [i.message for i in self.issues]
-        assert "style fillColor: #ff00ff is not in the palette; nearest is #7c3aed (--wd-violet, ΔE 21.8)" in msgs
+        assert "style fillColor: #ff00ff is not in the palette; nearest is #8b9098 (--wd-subtle, ΔE 27.3)" in msgs
         assert "fontSize=20 is not one of 14/18/12 (±1)" in msgs
         assert "x=13 not aligned to 8px grid" in msgs
 
@@ -118,7 +119,9 @@ class TestCli:
 
 
 def test_lint_width_and_math():
-    node = lambda x, v: (f'<mxCell id="n{x}" value="{v}" style="rounded=1;fillColor=#e2e8f0;strokeColor=#475569;" vertex="1" parent="1">'
+    slate = palette()["color"]["hue"]["slate"]
+    sf, ss = slate["fill"]["light"], slate["stroke"]["light"]
+    node = lambda x, v: (f'<mxCell id="n{x}" value="{v}" style="rounded=1;fillColor={sf};strokeColor={ss};" vertex="1" parent="1">'
                          f'<mxGeometry x="{x}" y="0" width="160" height="40" as="geometry"/></mxCell>')
     page = lambda math, body: (f'<mxfile><diagram id="a" name="A"><mxGraphModel math="{math}"><root><mxCell id="0"/><mxCell id="1" parent="0"/>'
                                f'{body}</root></mxGraphModel></diagram></mxfile>')
@@ -130,3 +133,36 @@ def test_lint_width_and_math():
     wide = {"elements": [{"id": "a", "type": "rectangle", "x": 0, "y": 0, "width": 96, "height": 48},
                          {"id": "b", "type": "arrow", "x": 96, "y": 24, "width": 704, "height": 0, "points": [[0, 0], [704, 0]]}]}
     assert [(i.level, i.rule) for i in lint_excalidraw(wide)] == [("warn", "width")]
+
+
+def test_lint_hue_count():
+    hue = palette()["color"]["hue"]
+    names = [h for h in hue if not h.startswith("$") and h != "slate"]
+
+    def rect(i, h, fill=True):
+        return {"id": f"r{i}", "type": "rectangle", "x": i * 8, "y": 0, "width": 8, "height": 8,
+                "strokeColor": hue[h]["stroke"]["light"], "backgroundColor": hue[h]["fill"]["light"] if fill else "transparent"}
+
+    rules = lambda els: [i.rule for i in lint_excalidraw({"elements": els})]
+    ok = [rect(i, h) for i, h in enumerate(names[:MAX_HUES])] + [rect(9, "slate")]
+    assert "hue-count" not in rules(ok)  # slate 是中性色，不计
+    too_many = [rect(i, h, fill=i % 2 == 0) for i, h in enumerate(names[: MAX_HUES + 1])]
+    issues = [i for i in lint_excalidraw({"elements": too_many}) if i.rule == "hue-count"]
+    assert len(issues) == 1 and issues[0].level == "warn" and f"{MAX_HUES + 1} hues" in issues[0].message
+
+    def cell(i, h):
+        return (f'<mxCell id="c{i}" style="rounded=1;fillColor={hue[h]["fill"]["light"]};strokeColor={hue[h]["stroke"]["light"]};" '
+                f'vertex="1" parent="1"><mxGeometry x="{i * 8}" y="0" width="8" height="8" as="geometry"/></mxCell>')
+
+    def doc(*pages):
+        body = "".join(f'<diagram id="p{n}" name="P{n}"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>{"".join(cells)}'
+                       "</root></mxGraphModel></diagram>" for n, cells in enumerate(pages))
+        return f"<mxfile>{body}</mxfile>"
+
+    # 按页计数：两页各用 3 种不同的 hue 不报警
+    a = [cell(i, h) for i, h in enumerate(names[:3])]
+    b = [cell(i, h) for i, h in enumerate(names[3:6])]
+    assert [i for i in lint_drawio(doc(a, b)) if i.rule == "hue-count"] == []
+    c = [cell(i, h) for i, h in enumerate(names[:4])]
+    msgs = [i.message for i in lint_drawio(doc(a, c)) if i.rule == "hue-count"]
+    assert len(msgs) == 1 and msgs[0].startswith("page 2: 4 hues")

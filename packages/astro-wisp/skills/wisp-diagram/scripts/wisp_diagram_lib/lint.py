@@ -18,6 +18,9 @@ COLUMN_PX = 710
 WIDE_PX = 720
 TOO_WIDE_PX = 1000
 FONT_TOLERANCE = 1
+#: 一张图里最多几种 hue（slate 是中性灰，不计）。颜色只给语义角色，超过就是在用颜色区分兄弟节点
+MAX_HUES = 3
+NEUTRAL_HUES = ("slate",)
 
 
 @dataclass
@@ -31,7 +34,7 @@ class LintFix:
 @dataclass
 class LintIssue:
     level: str  # error | warn
-    rule: str  # palette-color | font-size | grid | shadow | gradient | file-size | compressed | width | math
+    rule: str  # palette-color | font-size | grid | shadow | gradient | file-size | compressed | width | math | hue-count
     message: str
     element_id: str | None = None
     fix: LintFix | None = None
@@ -78,6 +81,23 @@ def _color_issue(where: str, value: str, el_id: str | None, fld: str, page: int 
     )
 
 
+def _hue_of(value: str) -> str | None:
+    """调色板颜色所属的 hue 名（stroke 与 fill 同属一个 hue）；基础色、中性 hue 返回 None。"""
+    t = P.exact_token(value) if isinstance(value, str) else None
+    if t is None:
+        return None
+    name = t.name[:-5] if t.name.endswith("-fill") else t.name
+    return name if name in P.hues() and name not in NEUTRAL_HUES else None
+
+
+def _hue_count_issue(hues: set[str], where: str = "") -> LintIssue | None:
+    if len(hues) <= MAX_HUES:
+        return None
+    names = ", ".join(h for h in P.hues() if h in hues)
+    return LintIssue("warn", "hue-count", f"{where}{len(hues)} hues in one figure ({names}); use at most {MAX_HUES} — "
+                     "colour is for semantic roles only, make the other nodes neutral (surface fill, muted/fg stroke)")
+
+
 def _is_num(v: Any) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
@@ -108,9 +128,14 @@ def lint_excalidraw(src: str | dict) -> list[LintIssue]:
         issues.append(LintIssue("warn", "file-size", f'source is {_mb(size)} MB (> 2 MB); embedded images in "files" bloat it'))
     doc = json.loads(src) if isinstance(src, str) else src
     lo = hi = None
+    hues: set[str] = set()
     for el in doc.get("elements") or []:
         if not isinstance(el, dict) or _truthy(el.get("isDeleted")):
             continue
+        for fld in ("strokeColor", "backgroundColor"):
+            h = _hue_of(el.get(fld))
+            if h:
+                hues.add(h)
         if _is_num(el.get("x")):
             pts = el.get("points") if isinstance(el.get("points"), list) else None
             xs = ([el["x"] + p[0] for p in pts if isinstance(p, list) and p and _is_num(p[0])] if pts
@@ -142,6 +167,9 @@ def lint_excalidraw(src: str | dict) -> list[LintIssue]:
     w = _width_issue(hi - lo) if lo is not None and hi is not None else None
     if w:
         issues.append(w)
+    h = _hue_count_issue(hues)
+    if h:
+        issues.append(h)
     return issues
 
 
@@ -208,6 +236,7 @@ def lint_drawio(xml: str) -> list[LintIssue]:
         models = page.elements("mxGraphModel")
         math_on = bool(models) and (models[0].attrs or {}).get("math") == "1"
         lo = hi = None
+        hues: set[str] = set()
         for cell in cells:
             a = cell.attrs or {}
             el_id = a.get("id")
@@ -225,6 +254,9 @@ def lint_drawio(xml: str) -> list[LintIssue]:
                 i = _color_issue(f"style {key}", v, el_id, key, pi)
                 if i:
                     issues.append(i)
+                h = _hue_of(v)
+                if h:
+                    hues.add(h)
             if style.get("shadow") == "1":
                 issues.append(LintIssue("error", "shadow", "shadow=1 (shadows are not allowed)", el_id, LintFix("shadow", "0", "1", pi)))
             fs = style.get("fontSize")
@@ -262,6 +294,9 @@ def lint_drawio(xml: str) -> list[LintIssue]:
         w = _width_issue(hi - lo, f"page {pi + 1}: " if pi else "") if lo is not None and hi is not None else None
         if w:
             issues.append(w)
+        h = _hue_count_issue(hues, f"page {pi + 1}: " if pi else "")
+        if h:
+            issues.append(h)
     return issues
 
 

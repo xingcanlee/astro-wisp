@@ -6,53 +6,63 @@ draw.io 用于**精确排版的结构图**（模型结构、分层架构）。�
 
 - 8px 网格：`mxGeometry` 的 x/y/width/height 取 8 的倍数（`gridSize="8"`）。
 - 字号只用 12 / 14 / 18；字体 `fontFamily=Inter`（中文自动回落到 Noto Sans SC）。
-- 线宽 `strokeWidth=1.5`，强调 `2.5`；圆角 `rounded=1;arcSize=8`。
+- 线宽：中性节点 `strokeWidth=1`，hue 节点与连线 `1.25`，强调 `2`。
+- 圆角 4px：`rounded=1;absoluteArcSize=1;arcSize=8`。`absoluteArcSize=1` 时 `arcSize` 是圆角**直径**（px），所以 8 → 4px；不写 `absoluteArcSize` 时 `arcSize` 是短边的百分比，圆角随节点大小变化，不要用。
+- 颜色：默认中性节点；hue 只给语义角色，一张图最多 3 种 hue（slate 不计，lint `hue-count` 警告）；节点文字 `fontColor=#1d1d1f`。
 - 禁止 `shadow=1`、`gradientColor`、`sketch=1`；不用 `glass`。
 - 未压缩：File → Properties → 取消勾选 Compressed。若拿到压缩文件，运行 `uv run skills/wisp-diagram/scripts/wisp_diagram.py normalize file.drawio` 解压（路径按 skill 实际位置调整）。
 - 标签里的换行用 `&lt;br&gt;`，`&` 写成 `&amp;amp;`（`html=1` 时 value 是 HTML，再经 XML 转义）。
 
 ## 节点（vertex）
 
-通用前缀（`F`、`S` 替换成下表的颜色）：
+**中性节点（默认）**：输入、LayerNorm、Add、普通步骤都用它。
 
 ```
-rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=F;strokeColor=S;strokeWidth=1.5;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;
+rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;
+```
+
+强调的中性节点：`strokeColor=#1d1d1f;strokeWidth=1.25`。
+
+**语义角色节点**（`F`、`S` 替换成下表的颜色）：
+
+```
+rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=F;strokeColor=S;strokeWidth=1.25;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;
 ```
 
 各 hue 的 `fillColor` / `strokeColor`（括号内是语义名）：
 
 | hue                     | 颜色片段                                 |
 | ----------------------- | ---------------------------------------- |
-| `blue` (q, active)      | `fillColor=#dbeafe;strokeColor=#1d4ed8;` |
-| `amber` (k, highlight)  | `fillColor=#fef3c7;strokeColor=#b45309;` |
-| `green` (v, done)       | `fillColor=#dcfce7;strokeColor=#15803d;` |
-| `rose` (grad, error)    | `fillColor=#ffe4e6;strokeColor=#be123c;` |
-| `violet` (weight)       | `fillColor=#ede9fe;strokeColor=#7c3aed;` |
-| `teal` (activation)     | `fillColor=#ccfbf1;strokeColor=#0f766e;` |
-| `orange` (bias)         | `fillColor=#ffedd5;strokeColor=#c2410c;` |
-| `slate` (mask, visited) | `fillColor=#e2e8f0;strokeColor=#475569;` |
+| `blue` (q, active)      | `fillColor=#e9f2fb;strokeColor=#2f5783;` |
+| `amber` (k, highlight)  | `fillColor=#fbf2df;strokeColor=#7b5518;` |
+| `green` (v, done)       | `fillColor=#e9f5e9;strokeColor=#2c522d;` |
+| `rose` (grad, error)    | `fillColor=#fcedec;strokeColor=#984646;` |
+| `violet` (weight)       | `fillColor=#f5eef9;strokeColor=#4d335c;` |
+| `teal` (activation)     | `fillColor=#e3f5f3;strokeColor=#0f766e;` |
+| `orange` (bias)         | `fillColor=#fceee4;strokeColor=#762f06;` |
+| `slate` (mask, visited) | `fillColor=#eaedf2;strokeColor=#464e57;` |
 
-- 强调节点：把 `strokeWidth=1.5` 换成 `strokeWidth=2.5`。
-- 中性节点（输入、LayerNorm 等）用 `slate`。
-- 文字色统一 `fontColor=#1d1d1f`（正文黑）；要和描边同色时用该 hue 的 stroke 值。
+- 强调节点：把 `strokeWidth=1.25` 换成 `strokeWidth=2`。强调不靠换颜色。
+- `slate`（mask、visited）是中性灰，用于掩码、已访问等**有含义**的灰；没有含义的节点用上面的中性节点。
+- 节点文字统一 `fontColor=#1d1d1f`（正文黑）。彩色文字只用于独立标签（连线标签、图例），取该 hue 的 stroke 值。
 
 ## 分组容器
 
 ```
-rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#e2e2dd;strokeWidth=1.5;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontFamily=Inter;fontSize=12;fontColor=#5c6067;container=0;
+rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#e2e2dd;strokeWidth=1;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontFamily=Inter;fontSize=12;fontColor=#5c6067;container=0;
 ```
 
 先在 XML 中写容器（它在最底层），再写内部节点；子节点保持 `parent="1"` 并用绝对坐标即可（不需要真正的父子关系）。
 
 ## 连线（edge）
 
-| 用途                  | 样式                                                                                                                                                           |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 实线                  | `endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.5;`                                                                                                 |
-| 带标签                | 在实线样式后加 `fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;`，`value="标签"`                                                                               |
-| 虚线/可选             | `endArrow=classic;html=1;strokeColor=#5c6067;strokeWidth=1.5;dashed=1;`                                                                                        |
-| 残差/梯度（玫红虚线） | `edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=classic;html=1;strokeColor=#be123c;strokeWidth=1.5;dashed=1;fontFamily=Inter;fontSize=12;fontColor=#be123c;` |
-| 直角折线              | 加 `edgeStyle=orthogonalEdgeStyle;rounded=1;`                                                                                                                  |
+| 用途                  | 样式                                                                                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 实线                  | `endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;`                                                                                                 |
+| 带标签                | 在实线样式后加 `fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;`，`value="标签"`                                                                                |
+| 虚线/可选             | `endArrow=classic;html=1;strokeColor=#5c6067;strokeWidth=1.25;dashed=1;`                                                                                        |
+| 残差/梯度（玫红虚线） | `edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=classic;html=1;strokeColor=#984646;strokeWidth=1.25;dashed=1;fontFamily=Inter;fontSize=12;fontColor=#984646;` |
+| 直角折线              | 加 `edgeStyle=orthogonalEdgeStyle;rounded=1;`                                                                                                                   |
 
 - 连线必须带 `source` 和 `target`（节点 id），`<mxGeometry relative="1" as="geometry"/>`。
 - 绕行的残差线：加 `exitX=1;exitY=0.5;entryX=1;entryY=0.5;`，并在 `mxGeometry` 里用 `<Array as="points">` 给出拐点（x 落在节点右侧 40px 处，如 296）。
@@ -92,13 +102,13 @@ value="内容 query \(\mathbf q_t^{C,h}\)&lt;br&gt;\(d_r=64\)"
         <mxCell id="title" value="最小示例" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Inter;fontSize=18;fontStyle=1;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="0" y="0" width="240" height="32" as="geometry"/>
         </mxCell>
-        <mxCell id="a" value="输入" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#475569;strokeWidth=1.5;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
+        <mxCell id="a" value="输入" style="rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="0" y="64" width="128" height="48" as="geometry"/>
         </mxCell>
-        <mxCell id="b" value="线性层" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;strokeWidth=1.5;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
+        <mxCell id="b" value="线性层" style="rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f5eef9;strokeColor=#4d335c;strokeWidth=1.25;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="224" y="64" width="128" height="48" as="geometry"/>
         </mxCell>
-        <mxCell id="e1" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.5;" edge="1" parent="1" source="a" target="b">
+        <mxCell id="e1" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;" edge="1" parent="1" source="a" target="b">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="note" value="注：最小可用模板" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#5c6067;" vertex="1" parent="1">

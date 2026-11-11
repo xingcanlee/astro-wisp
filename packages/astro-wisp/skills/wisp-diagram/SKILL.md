@@ -97,20 +97,28 @@ $W export diagrams/attention.wisp.svg --theme dark  -o /tmp/attention.dark.png
 
 ## 3. 调色板
 
-颜色只能来自 `palette.json`。作画时**只用浅色值**（下表左值）；build 会把它们映射成 `var(--wd-*)`（暗色值由 SVG 自动切换）。不要手选暗色值，不要用调色板之外的任何颜色（lint 报错，`--fix` 吸附到最近的令牌）。
+颜色只能来自 `palette.json`。这 8 个 hue 按**印刷油墨**调：描边是低彩度的深色墨（钢蓝、赭石、苔绿、砖红、茄紫、手册 teal、铁锈橙、冷灰），填充是接近纸色的淡洗，和页面的墨色正文、单一 teal 强调色是一家人。作画时**只用浅色值**（下表左值）；build 会把它们映射成 `var(--wd-*)`（暗色值由 SVG 自动切换）。不要手选暗色值，不要用调色板之外的任何颜色（lint 报错，`--fix` 吸附到最近的令牌）。
 
 | hue      | stroke（线条、文字）light / dark | fill（填充）light / dark | 语义名            |
 | -------- | -------------------------------- | ------------------------ | ----------------- |
-| `blue`   | `#1d4ed8` / `#60a5fa`            | `#dbeafe` / `#1b2740`    | `q`、`active`     |
-| `amber`  | `#b45309` / `#fbbf24`            | `#fef3c7` / `#38290c`    | `k`、`highlight`  |
-| `green`  | `#15803d` / `#4ade80`            | `#dcfce7` / `#122d1c`    | `v`、`done`       |
-| `rose`   | `#be123c` / `#fb7185`            | `#ffe4e6` / `#3a1620`    | `grad`、`error`   |
-| `violet` | `#7c3aed` / `#a78bfa`            | `#ede9fe` / `#272040`    | `weight`          |
-| `teal`   | `#0f766e` / `#2dd4bf`            | `#ccfbf1` / `#0f2c29`    | `activation`      |
-| `orange` | `#c2410c` / `#fb923c`            | `#ffedd5` / `#3a2010`    | `bias`            |
-| `slate`  | `#475569` / `#94a3b8`            | `#e2e8f0` / `#222831`    | `mask`、`visited` |
+| `blue`   | `#2f5783` / `#a9cbef`            | `#e9f2fb` / `#1a2634`    | `q`、`active`     |
+| `amber`  | `#7b5518` / `#f2c681`            | `#fbf2df` / `#2e2515`    | `k`、`highlight`  |
+| `green`  | `#2c522d` / `#84b585`            | `#e9f5e9` / `#1a281c`    | `v`、`done`       |
+| `rose`   | `#984646` / `#eda9aa`            | `#fcedec` / `#341f1f`    | `grad`、`error`   |
+| `violet` | `#4d335c` / `#bb9ece`            | `#f5eef9` / `#291e2e`    | `weight`          |
+| `teal`   | `#0f766e` / `#7fd3c5`            | `#e3f5f3` / `#112926`    | `activation`      |
+| `orange` | `#762f06` / `#ce8d66`            | `#fceee4` / `#311f15`    | `bias`            |
+| `slate`  | `#464e57` / `#9da7b3`            | `#eaedf2` / `#23272b`    | `mask`、`visited` |
 
 基础色：正文 `fg` `#1d1d1f`（Excalidraw 默认黑 `#000000`/`#1e1e1e` 也会被视为 fg），次要 `muted` `#5c6067`，面 `surface` `#f4f4f2`，边框 `border` `#e2e2dd`，画布白 `#ffffff`（build 会去掉背景）。
+
+### 颜色怎么用（比选哪个颜色更重要）
+
+- **默认节点是中性的**：`surface` 底 + `muted`（或 `fg`）1px 描边 + `fg` 文字。骨架里不写 `color` 或写 `"color": "neutral"`；draw.io 用 cheatsheet 的「中性节点」预设。
+- **颜色只给语义角色**（Q/K/V、权重、梯度……）。不要为了区分并列的兄弟节点、为了「好看」给节点换色。
+- **一张图最多 3 种 hue**（`slate` 是中性灰，不计）。超过时 lint 给出 `hue-count` 警告：挑出这张图要讲的那几个角色上色，其余改回中性。
+- **强调靠线宽或 `highlight`**，不靠再加一个颜色。
+- **节点里的字用 `fg`**；只有独立的、和某个角色绑定的标签（连线标签、图例说明）才用该 hue 的 stroke 色。
 
 ### 语义色（所有文章、图表一致）
 
@@ -134,27 +142,29 @@ $W export diagrams/attention.wisp.svg --theme dark  -o /tmp/attention.dark.png
 
 ## 4. 风格硬规则
 
-| 项目   | 规则                                                                                                                     |
-| ------ | ------------------------------------------------------------------------------------------------------------------------ |
-| 网格   | 所有元素 x/y/宽/高取 **8px** 的倍数                                                                                      |
-| 字号   | 只用 **12**（注释）/ **14**（标签）/ **18**（标题）；lint 容差 ±1                                                        |
-| 线宽   | **1.5**（常规），**2.5**（强调，一张图一两处）；细线 1 仅用于分隔                                                        |
-| 圆角   | 矩形/容器圆角：Excalidraw `round`，draw.io `rounded=1;arcSize=8`                                                         |
-| 填充   | 纯色填充，使用 hue 的 fill；**禁止渐变**                                                                                 |
-| 阴影   | **禁止**                                                                                                                 |
-| 宽度   | 自然宽度 **640–700px**（正文栏宽）；超过 720px lint 警告，超过 1000px 字已看不清                                         |
-| 流向   | 从上到下；连线横平竖直，拐弯走直角（骨架用 `via`，draw.io 用 `edgeStyle=orthogonalEdgeStyle`）                           |
-| 公式   | 只在 draw.io 里用：页面 `math="1"`，标签写 `\(...\)`（见 drawio-cheatsheet「公式」）；Excalidraw 用 Unicode（Kᵀ、√d、Σ） |
-| 字体   | Excalidraw 用 Excalifont（中文回落 Noto Sans SC，**不用小赖体**）；draw.io 用 `Inter`                                    |
-| 手绘   | `roughness: 1`；draw.io 不用 `sketch=1`                                                                                  |
-| 背景   | 不画背景矩形，保持透明                                                                                                   |
-| 源文件 | `.excalidraw` 为 JSON；`.drawio` 为**未压缩** XML；嵌入图片会使文件膨胀（>2MB 警告）                                     |
+| 项目   | 规则                                                                                                                         |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| 网格   | 所有元素 x/y/宽/高取 **8px** 的倍数                                                                                          |
+| 字号   | 只用 **12**（注释）/ **14**（标签）/ **18**（标题）；lint 容差 ±1                                                            |
+| 线宽   | 中性节点 **1**；hue 节点和连线 **1.25**；强调 **2**（一张图一两处）                                                          |
+| 圆角   | **4px**，与页面的 box 圆角一致：Excalidraw `roundness: {type: 3, value: 4}`，draw.io `rounded=1;absoluteArcSize=1;arcSize=8` |
+| 颜色   | 默认中性节点；hue 只给语义角色，**一张图 ≤ 3 种 hue**（slate 不计）；节点内文字 `fg`                                         |
+| 填充   | 纯色填充，使用 hue 的 fill 或 `surface`；**禁止渐变**                                                                        |
+| 阴影   | **禁止**                                                                                                                     |
+| 宽度   | 自然宽度 **640–700px**（正文栏宽）；超过 720px lint 警告，超过 1000px 字已看不清                                             |
+| 流向   | 从上到下；连线横平竖直，拐弯走直角（骨架用 `via`，draw.io 用 `edgeStyle=orthogonalEdgeStyle`）                               |
+| 公式   | 只在 draw.io 里用：页面 `math="1"`，标签写 `\(...\)`（见 drawio-cheatsheet「公式」）；Excalidraw 用 Unicode（Kᵀ、√d、Σ）     |
+| 字体   | Excalidraw 用 Excalifont（中文回落 Noto Sans SC，**不用小赖体**）；draw.io 用 `Inter`                                        |
+| 手绘   | `roughness: 1`；draw.io 不用 `sketch=1`                                                                                      |
+| 背景   | 不画背景矩形，保持透明                                                                                                       |
+| 源文件 | `.excalidraw` 为 JSON；`.drawio` 为**未压缩** XML；嵌入图片会使文件膨胀（>2MB 警告）                                         |
 
 ## 5. 自检清单
 
 - [ ] lint `--strict` 通过：无非调色板颜色、无阴影/渐变、字号合规、元素在 8px 网格上、宽度不超过 720px
 - [ ] 流程从上到下，连线横平竖直；没有一字排开被缩小的长流程
 - [ ] 语义色用对：Q 蓝、K 琥珀、V 绿、权重紫、激活青、梯度/损失玫红、偏置橙、掩码/输入灰
+- [ ] 一张图 ≤ 3 种 hue（lint 无 `hue-count`），其余节点是中性的；节点里的字是 `fg`
 - [ ] 一张图只讲一件事，节点 ≤ 12（手绘）
 - [ ] 连线不穿过节点、不交叉；短连线（间距 < 96px）上没有标签
 - [ ] 中文标签每行 ≤ 8–10 个汉字，没有被截断
@@ -197,6 +207,8 @@ alt 写入 SVG 的 `<title>`，引号中的说明成为图注；`#page=<页面�
 | -------------------------------------------- | --------------------------------------------------------------------- |
 | 手写完整 Excalidraw 元素                     | 只写骨架，用 `$W new` 转换                                            |
 | 在编辑器里用了调色板外的颜色（吸管、默认色） | 用素材库；lint `--fix` 吸附；仍报错就改源文件                         |
+| 每个节点一个颜色，一张图五六种 hue           | 默认中性节点，只给要讲的语义角色上色，≤ 3 种 hue                      |
+| 调色板换代后旧源文件全是 lint 错误           | 用 `$W migrate --from <旧 palette.json>` 按令牌名改写（见下文）       |
 | 手选暗色值作画                               | 只用浅色值，暗色靠 SVG 自动切换                                       |
 | 图画成横向一长条，放进文章被缩到看不清       | 画布宽 640px，流程从上到下，分支并排成列                              |
 | 图里的标题和题注重复                         | 文章里的图不写标题                                                    |
@@ -214,7 +226,22 @@ alt 写入 SVG 的 `<title>`，引号中的说明成为图注；`#page=<页面�
 | 空洞的 alt（“图 1”“diagram”）                | alt 写图要说明的结论                                                  |
 | 用图表工具画数据图                           | 折线/柱状等数据图不属于本 skill                                       |
 
-## 8. 排错
+## 8. 调色板换代（migrate）
+
+`palette.json` 的 hue 值改了之后，旧源文件里的十六进制都不在新调色板里。**不要用 `lint --fix`**：它按 ΔE 吸附到最近的令牌，换代后最近的不一定是同名令牌（例如旧的紫会吸到新的灰）。用 `migrate` 按令牌名一一改写，同时把线宽（旧 thin/normal/bold → 新值）和圆角（draw.io 顶点改成 `absoluteArcSize=1;arcSize=<2×corner-radius>`，Excalidraw 写 `roundness.value`）一起换掉：
+
+```bash
+git show <旧版本>:packages/astro-wisp/design/palette.json > /tmp/old-palette.json   # 或 skill 自带 palette.json 的旧版本
+# glob 用引号交给脚本展开（Python glob，支持 **，不支持 {a,b}）
+$W migrate --from /tmp/old-palette.json 'src/content/**/diagrams/*.excalidraw' 'src/content/**/diagrams/*.drawio' --check   # 退出码 1 = 有文件要改
+$W migrate --from /tmp/old-palette.json 'src/content/**/diagrams/*.excalidraw' 'src/content/**/diagrams/*.drawio'
+$W lint 'src/content/**/diagrams/*.excalidraw' 'src/content/**/diagrams/*.drawio'   # 再看 hue-count 等警告，按「颜色怎么用」改图
+$W build --root . --manifest diagrams.manifest.json --force
+```
+
+migrate 也认得素材库（`.excalidrawlib`、`<mxlibrary>` 的 `.xml`）和 `drawio-config.json`。已经是新值的文件再跑一遍不会变化。
+
+## 9. 排错
 
 - `uv: command not found`：安装 uv（`curl -LsSf https://astral.sh/uv/install.sh | sh`）。需要 Python ≥ 3.11，uv 会按需自动下载。
 - `无法启动 Chromium`：`uv run --with playwright==1.64.1 playwright install chromium`（版本要与脚本锁定的 playwright 一致）。

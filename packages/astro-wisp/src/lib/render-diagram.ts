@@ -6,13 +6,14 @@
  * - 用 diagrams.manifest.json 校验源文件与 .wisp.svg 的哈希（与 `pnpm diagram check` 同一套逻辑）；
  * - 选择 draw.io 页面（页名或 1 起的序号）；
  * - 处理 SVG：id 页面内唯一化、alt 写入 <title>、去掉根元素 width/height；
- * - 生成 <figure>：figcaption、下载链接、可选的“在 draw.io 中打开”。
+ * - 生成 <figure>：题注（图号拆成 .wisp-fig-no）与动作（下载源文件、可选的“在 draw.io 中打开”）同一行。
  * 产物缺失或过期：dev 返回醒目的占位块；build 抛错。
  *
  * 只依赖 node 内置模块：remark 插件会被打进 SSR 构建。manifest 由 skill 的 Python CLI 写入，
  * 这里只做只读校验（哈希算法与 wisp_diagram_lib/manifest.py 一致）。
  */
 import { iconSvg } from './icons';
+import { figureCaptionHtml } from '../plugins/figure-caption';
 import { postId } from '../utils/post-id';
 import { createHash } from 'node:crypto';
 import { existsSync, globSync, readFileSync, statSync } from 'node:fs';
@@ -397,12 +398,11 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     if (!existsSync(svgPath))
       throw new DiagramProblem(`缺少产物 ${toPosix(relative(root, svgPath))}`);
 
-    const seq = String(ref.seq);
     const stem = stemOf(abs).replace(/[^\w-]+/g, '-');
     const { svg, width } = prepareSvg(readFileSync(svgPath, 'utf8'), {
-      suffix: seq,
+      suffix: String(ref.seq),
       alt: ref.alt,
-      fallbackTitleId: `${stem}-title-${seq}`,
+      fallbackTitleId: `${stem}-title-${ref.seq}`,
     });
 
     const key = downloadKeyFor(abs, root);
@@ -410,36 +410,41 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     const href = key !== undefined ? downloadHrefFor(key, env.base) : undefined;
     const file = basename(abs);
     const links: string[] = [];
+    // 动作跟在题注第一行的右端：可见文字取短词（「源文件」「draw.io」），完整含义放在 aria-label / title
     if (showDl && href) {
       links.push(
         `<a class="wisp-diagram-dl" href="${escAttr(href)}" download="${escAttr(file)}" type="${escAttr(contentTypeFor(file).split(';')[0]!)}"` +
-          ` aria-label="${escAttr(`下载源文件 ${file}（${KIND_NAME[style]}）`)}" title="${escAttr(`下载源文件 ${file}`)}">${iconSvg('file-down')}下载源文件</a>`,
+          ` aria-label="${escAttr(`下载源文件 ${file}（${KIND_NAME[style]}）`)}" title="${escAttr(`下载源文件 ${file}`)}">${iconSvg('file-down')}源文件</a>`,
       );
       const absHref = style === 'clean' ? absoluteUrl(env.siteUrl, href) : undefined;
       if (absHref) {
         links.push(
           `<a class="wisp-diagram-open" href="${escAttr(`https://app.diagrams.net/#U${encodeURIComponent(absHref)}`)}"` +
-            ` target="_blank" rel="noopener noreferrer" aria-label="在 draw.io 中打开" title="在 draw.io 中打开">${iconSvg('external-link')}打开 draw.io</a>`,
+            ` target="_blank" rel="noopener noreferrer" aria-label="在 draw.io 中打开（新窗口）" title="在 draw.io 中打开">${iconSvg('external-link')}draw.io</a>`,
         );
       }
     }
 
+    const seq = String(ref.seq);
     const caption = ref.caption?.trim();
-    const cls = [
-      'wisp-figure',
-      'wisp-diagram',
-      ...(caption ? ['wisp-has-caption'] : []),
-      ...(ref.wide ? ['wisp-wide'] : []),
-    ].join(' ');
+    const actions = links.length ? `<span class="wisp-fig-actions">${links.join('')}</span>` : '';
+    // 题注与动作同一行时，figure 的可访问名称只取题注文字，不把链接文字算进去
+    const captionId = caption && actions ? `${stem}-caption-${seq}` : '';
+    const foot = caption
+      ? actions
+        ? `<figcaption><span class="wisp-fig-text" id="${escAttr(captionId)}">${figureCaptionHtml(caption)}</span>${actions}</figcaption>`
+        : `<figcaption>${figureCaptionHtml(caption)}</figcaption>`
+      : actions;
+    const cls = ['wisp-figure', 'wisp-diagram', ...(ref.wide ? ['wisp-wide'] : [])].join(' ');
     const pageAttr =
       style === 'clean' && pages[pageIndex] ? ` data-page="${escAttr(pages[pageIndex]!)}"` : '';
+    const labelledBy = captionId ? ` aria-labelledby="${escAttr(captionId)}"` : '';
     const bodyStyle = width ? ` style="--wd-w:${Math.round(width * 100) / 100}px"` : '';
     const html =
-      `<figure class="${cls}" data-style="${style}"${pageAttr}>` +
+      `<figure class="${cls}" data-style="${style}"${pageAttr}${labelledBy}>` +
       // 窄屏下可横向滚动：容器需可键盘聚焦（WCAG scrollable-region-focusable）
       `<div class="wisp-diagram-body" tabindex="0" role="group" aria-label="${escAttr(ref.alt?.trim() || '图表')}"${bodyStyle}>${svg}</div>` +
-      (caption ? `<figcaption>${escText(caption)}</figcaption>` : '') +
-      (links.length ? `<div class="wisp-diagram-actions">${links.join('')}</div>` : '') +
+      foot +
       `</figure>`;
     return { html, ok: true, style, source: abs, downloadHref: showDl ? href : undefined };
   } catch (err) {

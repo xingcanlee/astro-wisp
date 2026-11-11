@@ -12,7 +12,8 @@ draw.io 自定义调色板配置（让作者只能选到 Wisp 调色板里的颜
 配置项说明：
 - presetColors / defaultColors：颜色选择器中显示的色块，只保留调色板的浅色值（不带 # 的 6 位十六进制）。
 - defaultColorSchemes：Format 面板 Style 页中的 8 个 hue 配色方案（描边 + 填充 + 文字色）。
-- defaultVertexStyle / defaultEdgeStyle：新建形状和连线的默认样式（圆角 arcSize=8、线宽 1.5、Inter 14px / 12px、无阴影）。
+- defaultVertexStyle / defaultEdgeStyle：新建形状和连线的默认样式。新形状是中性节点（surface 底、muted 1px 描边、4px 圆角 absoluteArcSize=1;arcSize=8），连线线宽 1.25，Inter 14px / 12px，无阴影。
+- 颜色只给语义角色：一张图最多 3 种 hue（slate 不计），节点里的字保持正文色。
 - gridSteps：网格步长 8。
 
 注意：

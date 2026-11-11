@@ -128,16 +128,40 @@ describe('renderDiagram', () => {
     expect(r.ok).toBe(true);
     expect(r.style).toBe('hand');
     expect(r.html).toMatch(
-      /^<figure class="wisp-figure wisp-diagram wisp-has-caption" data-style="hand"><div class="wisp-diagram-body" tabindex="0" role="group" aria-label="流程" style="--wd-w:848px"><svg /,
+      /^<figure class="wisp-figure wisp-diagram" data-style="hand" aria-labelledby="flow-caption-1"><div class="wisp-diagram-body" tabindex="0" role="group" aria-label="流程" style="--wd-w:848px"><svg /,
     );
-    expect(r.html).toContain('<figcaption>图 1：&lt;b&gt;</figcaption>');
+    // 题注与动作同一行：图号拆成 .wisp-fig-no，动作在 figcaption 末尾
+    expect(r.html).toMatch(
+      /<figcaption><span class="wisp-fig-text" id="flow-caption-1"><span class="wisp-fig-no">图 1：<\/span>&lt;b&gt;<\/span><span class="wisp-fig-actions"><a class="wisp-diagram-dl"[^>]*>[\s\S]*?<\/a><\/span><\/figcaption><\/figure>$/,
+    );
     expect(r.html).toContain('href="/diagrams/demo/flow.excalidraw" download="flow.excalidraw"');
     expect(r.html).toContain('aria-label="下载源文件 flow.excalidraw（Excalidraw）"');
     expect(r.html).toMatch(
-      /class="wisp-diagram-dl"[^>]*title="下载源文件 flow\.excalidraw"[^>]*><svg [^>]*class="wisp-icon"[^>]*aria-hidden="true"[\s\S]*?<\/svg>下载源文件<\/a>/,
+      /class="wisp-diagram-dl"[^>]*title="下载源文件 flow\.excalidraw"[^>]*><svg [^>]*class="wisp-icon"[^>]*aria-hidden="true"[\s\S]*?<\/svg>源文件<\/a>/,
     );
     expect(r.html).not.toContain('app.diagrams.net'); // Excalidraw 没有在线打开
     expect(r.html).toContain('>流程</title>');
+  });
+  it('caption / actions: four shapes', () => {
+    const base = { src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 };
+    // 只有动作：动作单独一行，不包 figcaption，figure 不需要 aria-labelledby
+    const actionsOnly = renderDiagram(base, env()).html;
+    expect(actionsOnly).toMatch(
+      /<\/div><span class="wisp-fig-actions"><a [\s\S]*<\/span><\/figure>$/,
+    );
+    expect(actionsOnly).not.toContain('<figcaption');
+    expect(actionsOnly).not.toContain('aria-labelledby="flow-caption');
+    // 只有题注：没有图号时是普通 muted 题注
+    const captionOnly = renderDiagram(
+      { ...base, caption: '自注意力', download: false },
+      env(),
+    ).html;
+    expect(captionOnly).toMatch(/<\/div><figcaption>自注意力<\/figcaption><\/figure>$/);
+    expect(captionOnly).not.toContain('wisp-fig-no');
+    expect(captionOnly).toMatch(/^<figure class="wisp-figure wisp-diagram" data-style="hand"><div/);
+    // 都没有
+    const bare = renderDiagram({ ...base, download: false }, env()).html;
+    expect(bare).toMatch(/<\/svg><\/div><\/figure>$/);
   });
   it('selects draw.io page by name, by 1-based index, defaults to first', () => {
     const first = renderDiagram({ src: './diagrams/model.drawio', from: repo.post, seq: 1 }, env());
@@ -162,7 +186,7 @@ describe('renderDiagram', () => {
   it('adds open-in-draw.io link only with a real site url', () => {
     const r = renderDiagram({ src: './diagrams/model.drawio', from: repo.post, seq: 1 }, env());
     expect(r.html).toMatch(
-      /class="wisp-diagram-open"[^>]*aria-label="在 draw\.io 中打开"[^>]*><svg [^>]*class="wisp-icon"[\s\S]*?<\/svg>打开 draw\.io<\/a>/,
+      /class="wisp-diagram-open"[^>]*aria-label="在 draw\.io 中打开（新窗口）"[^>]*><svg [^>]*class="wisp-icon"[\s\S]*?<\/svg>draw\.io<\/a>/,
     );
     expect(r.html).toContain(
       `https://app.diagrams.net/#U${encodeURIComponent('https://blog.dev/diagrams/demo/model.drawio')}`,
@@ -191,7 +215,7 @@ describe('renderDiagram', () => {
         { src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 },
         env({ downloads: false }),
       ).html,
-    ).not.toContain('wisp-diagram-actions');
+    ).not.toContain('wisp-fig-actions');
   });
   it('shared diagrams download from /diagrams/shared/', () => {
     const r = renderDiagram(

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { genAll } from '../../scripts/gen-tokens';
 import { genTokens, genPele, genDiagram } from './generate';
 import { checkContrast } from './contrast';
+import { oklch } from 'culori';
 import { mergePalette, palette, resolveColor, nearestToken } from './palette';
 
 describe('palette', () => {
@@ -13,16 +14,28 @@ describe('palette', () => {
   it('resolveColor', () => {
     expect(resolveColor('fg', 'light')).toBe('#1d1d1f');
     expect(resolveColor('fg', 'dark')).toBe('#e6e6e3');
-    expect(resolveColor('blue', 'light')).toBe('#1d4ed8');
-    expect(resolveColor('blue-fill', 'dark')).toBe('#1b2740');
-    expect(resolveColor('q', 'light')).toBe('#1d4ed8');
-    expect(resolveColor('k', 'dark')).toBe('#fbbf24');
+    expect(resolveColor('blue', 'light')).toBe('#2f5783');
+    expect(resolveColor('blue-fill', 'dark')).toBe('#1a2634');
+    expect(resolveColor('q', 'light')).toBe('#2f5783');
+    expect(resolveColor('k', 'dark')).toBe('#f2c681');
     expect(() => resolveColor('nope')).toThrow();
   });
   it('nearestToken', () => {
-    expect(nearestToken('#1d4ed8')).toMatchObject({ name: 'blue', deltaE: 0 });
-    expect(nearestToken('#1e4fd9').name).toBe('blue');
-    expect(nearestToken('#dbeafe').name).toBe('blue-fill');
+    expect(nearestToken('#2f5783')).toMatchObject({ name: 'blue', deltaE: 0 });
+    expect(nearestToken('#305884').name).toBe('blue');
+    expect(nearestToken('#e8f1fb').name).toBe('blue-fill');
+  });
+  it('分类色是低彩度的「印刷油墨」，填充是近纸色的淡洗（DESIGN.md Colors）', () => {
+    for (const [name, { stroke, fill }] of Object.entries(palette.color.hue)) {
+      for (const mode of ['light', 'dark'] as const) {
+        expect(oklch(stroke[mode])!.c, `${name} stroke ${mode}`).toBeLessThanOrEqual(0.12);
+        expect(oklch(fill[mode])!.c, `${name} fill ${mode}`).toBeLessThanOrEqual(0.04);
+      }
+      expect(oklch(fill.light)!.l, `${name} fill light`).toBeGreaterThanOrEqual(0.94);
+      expect(oklch(fill.dark)!.l, `${name} fill dark`).toBeLessThanOrEqual(0.3);
+    }
+    // activation 与界面强调色在 light 下是同一种墨
+    expect(resolveColor('activation', 'light')).toBe(resolveColor('accent', 'light'));
   });
 });
 

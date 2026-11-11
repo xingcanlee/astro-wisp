@@ -14,12 +14,12 @@ class TestPalette:
 
     def test_resolves_semantic_and_hue(self):
         assert resolve_color("q").hue == "blue"
-        assert resolve_color("amber").stroke["light"] == "#b45309"
+        assert resolve_color("amber").stroke["light"] == "#7b5518"
         assert resolve_color("nope") is None
 
     def test_var_tables(self):
-        assert wd_vars("light")["--wd-blue-fill"] == "#dbeafe"
-        assert wd_vars("dark")["--wd-blue"] == "#60a5fa"
+        assert wd_vars("light")["--wd-blue-fill"] == "#e9f2fb"
+        assert wd_vars("dark")["--wd-blue"] == "#a9cbef"
 
 
 class TestExcalidrawExport:
@@ -27,9 +27,9 @@ class TestExcalidrawExport:
 
     def test_maps_palette_colors_and_reports_unknown(self):
         s = self.r.svg
-        assert 'fill="var(--wd-blue-fill, #dbeafe)"' in s
-        assert 'stroke="var(--wd-blue, #1d4ed8)"' in s
-        assert 'stroke="var(--wd-green, #15803d)"' in s  # rgb()
+        assert 'fill="var(--wd-blue-fill, #e9f2fb)"' in s
+        assert 'stroke="var(--wd-blue, #2f5783)"' in s
+        assert 'stroke="var(--wd-green, #2c522d)"' in s  # rgb()
         assert 'stroke="var(--wd-fg, #1d1d1f)"' in s  # #1e1e1e
         assert 'fill="var(--wd-bg, #fcfcfb)"' in s  # #FFF
         assert "fill: var(--wd-fg, #1d1d1f)" in s  # style, #000
@@ -58,7 +58,7 @@ class TestExcalidrawExport:
     def test_fix_snaps_unknown(self):
         f = to_portable_svg(fx("excalidraw-export.svg"), fix=True)
         assert f.unknown_colors == []
-        assert 'stroke="var(--wd-blue, #1d4ed8)"' in f.svg
+        assert 'stroke="var(--wd-blue, #2f5783)"' in f.svg
         assert any(w.startswith("snapped #2563eb") for w in f.warnings)
 
 
@@ -90,7 +90,7 @@ class TestMasks:
 
     def test_removes_only_top_level_background(self):
         assert "removed background rect" in self.r.warnings
-        assert 'stroke="var(--wd-blue, #1d4ed8)" stroke-width="1.5" mask="url(#m1)"' in self.r.svg
+        assert 'stroke="var(--wd-blue, #2f5783)" stroke-width="1.5" mask="url(#m1)"' in self.r.svg
         assert len(re.findall(r'<rect x="0" y="0" width="320" height="200" fill="#ffffff">', self.r.svg)) == 2
 
     def test_idempotent(self):

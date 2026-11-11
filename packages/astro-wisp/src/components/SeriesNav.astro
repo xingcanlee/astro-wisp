@@ -2,6 +2,11 @@
 /**
  * 系列文章导航：宽屏放在正文左侧，窄屏折叠到正文前。
  * 路由层负责按 series.order 排好序，组件只负责展示当前文章和链接。
+ *
+ * aside 形态默认收起：栏里只留一行吸顶的按钮「系列名 7 / 10 ⌄」，与右侧目录的标题行成对；
+ * 点开后篇目表在原位出现。状态在 html[data-series="open|collapsed"]（Post 的内联脚本在首帧前写入，
+ * localStorage `wisp-series-open`），书眉里的「7 / 10 篇」按钮（Header）也切换它。
+ * 无 JS 时没有 data-series：按钮隐藏，篇目表完整显示。
  */
 import Icon from 'virtual:wisp/components/Icon';
 import config from 'virtual:wisp/config';
@@ -26,15 +31,15 @@ const {
   variant = 'aside',
   title = /^zh\b/i.test(config.site.lang) ? '系列文章' : 'Series',
 } = Astro.props;
-const headingId = variant === 'aside' ? 'wisp-series-title-aside' : 'wisp-series-title-inline';
+const zh = /^zh\b/i.test(config.site.lang);
 const currentIndex = items.findIndex((item) => item.id === currentId);
-const position =
-  currentIndex >= 0
-    ? /^zh\b/i.test(config.site.lang)
-      ? `第 ${currentIndex + 1}/${items.length} 篇`
-      : `${currentIndex + 1}/${items.length}`
-    : '';
-const inlineTitle = position ? `${title} · ${position}` : title;
+const count = currentIndex >= 0 ? `${currentIndex + 1} / ${items.length}` : String(items.length);
+const expandLabel = zh ? '展开系列篇目' : 'Show series contents';
+const collapseLabel = zh ? '收起系列篇目' : 'Hide series contents';
+// 地标名：一个词说明这是什么 + 系列名（不把可见的「7 / 23」拼进去）
+const landmark = zh ? `系列：${title}` : `Series: ${title}`;
+// 系列名和「7 / 23」之间给读屏一个停顿（视觉上靠间距分开），否则可访问名称会读成「DeepSeek7 / 23」
+const sep = zh ? '，' : ', ';
 // 篇目标题以编号开头（「05 MLA …」）时拆成编号列 + 标题列，换行后标题悬挂对齐
 const split = (t: string) => {
   const m = /^(\d{1,3})[\s　]+(.+)$/.exec(t);
@@ -45,9 +50,14 @@ const split = (t: string) => {
 {items.length > 0 &&
   (variant === 'inline' ? (
     <details class="wisp-series wisp-series-inline">
+      {/* 与宽屏栏顶的标题行同一种写法：系列名 + 「7 / 23」+ chevron（朝下 = 收起着） */}
       <summary>
-        <Icon name="chevron-right" class="wisp-series-chev" />
-        {inlineTitle}
+        <span class="wisp-series-name">{title}</span>
+        <span class="wisp-series-sr">{sep}</span>
+        <span class="wisp-series-count">{count}</span>
+        <span class="wisp-series-toggle-ico" aria-hidden="true">
+          <Icon name="chevron-down" />
+        </span>
       </summary>
       <ol>
         {items.map((item) => (
@@ -64,26 +74,45 @@ const split = (t: string) => {
       </ol>
     </details>
   ) : (
-    <nav class="wisp-series wisp-series-aside" aria-labelledby={headingId}>
-      <p id={headingId} class="wisp-series-title">
-        <span>{title}</span>
-        <span class="wisp-series-count">
-          {currentIndex >= 0 ? `${currentIndex + 1} / ${items.length}` : items.length}
-        </span>
+    <nav class="wisp-series wisp-series-aside" aria-label={landmark}>
+      {/* 无 JS：静态标题行；有 JS：同一行换成可切换的按钮（两者同尺寸，互相替换） */}
+      <p class="wisp-series-title">
+        <span class="wisp-series-name">{title}</span>
+        <span class="wisp-series-sr">{sep}</span>
+        <span class="wisp-series-count">{count}</span>
       </p>
-      <ol>
-        {items.map((item) => (
-          <li>
-            <a
-              href={sitePath(import.meta.env.BASE_URL, `/posts/${item.id}/`)}
-              aria-current={item.id === currentId ? 'page' : undefined}
-            >
-              <span class="wisp-series-no">{split(item.title).no}</span>
-              <span class="wisp-series-text">{split(item.title).text}</span>
-            </a>
-          </li>
-        ))}
-      </ol>
+      <button
+        type="button"
+        class="wisp-series-title wisp-series-toggle"
+        aria-expanded="true"
+        aria-controls="wisp-series-list"
+        data-series-toggle
+        data-label-open={collapseLabel}
+        data-label-closed={expandLabel}
+        title={collapseLabel}
+      >
+        <span class="wisp-series-name">{title}</span>
+        <span class="wisp-series-sr">{sep}</span>
+        <span class="wisp-series-count">{count}</span>
+        <span class="wisp-series-toggle-ico" aria-hidden="true">
+          <Icon name="chevron-down" />
+        </span>
+      </button>
+      <div class="wisp-rail-scroll wisp-scroll" data-rail-scroll>
+        <ol id="wisp-series-list">
+          {items.map((item) => (
+            <li>
+              <a
+                href={sitePath(import.meta.env.BASE_URL, `/posts/${item.id}/`)}
+                aria-current={item.id === currentId ? 'page' : undefined}
+              >
+                <span class="wisp-series-no">{split(item.title).no}</span>
+                <span class="wisp-series-text">{split(item.title).text}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
     </nav>
   ))}
 
@@ -110,8 +139,9 @@ const split = (t: string) => {
       color: var(--wisp-muted);
       transition: color 150ms;
     }
+    /* 编号是读者找位置用的文字，用 muted（≥ 4.5:1），不用 subtle */
     .wisp-series-no {
-      color: var(--wisp-subtle);
+      color: var(--wisp-muted);
       font-size: 0.75rem;
       font-variant-numeric: tabular-nums;
       transition: color 150ms;
@@ -120,7 +150,7 @@ const split = (t: string) => {
       color: var(--wisp-fg);
     }
     .wisp-series a:hover .wisp-series-no {
-      color: var(--wisp-muted);
+      color: var(--wisp-fg);
     }
     .wisp-series a[aria-current='page'] {
       color: var(--wisp-fg);
@@ -143,22 +173,102 @@ const split = (t: string) => {
     .wisp-series-aside a[aria-current='page'] {
       border-inline-start-color: var(--wisp-accent);
     }
+    /*
+     * 标题行：与右侧目录的标题行成对（0.875rem/600 墨色标题、2.5rem 高、同一吸顶位置）。
+     * 静态 <p>（无 JS）和切换按钮共用这一套尺寸。
+     */
     .wisp-series-title {
       display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 0.75rem;
-      margin: 0 0 0.75rem;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      min-height: 2.5rem;
+      margin: 0;
+      padding: 0;
       color: var(--wisp-fg);
+      font: inherit;
       font-weight: 600;
       font-size: 0.875rem;
+      line-height: 1.4;
+      text-align: start;
+    }
+    .wisp-series-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .wisp-series-sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
     .wisp-series-count {
       flex: none;
+      margin-inline-start: auto;
       color: var(--wisp-muted);
       font-size: 0.75rem;
       font-weight: 400;
       font-variant-numeric: tabular-nums;
+    }
+    .wisp-series-toggle {
+      border: 0;
+      border-radius: 4px;
+      background: none;
+      cursor: pointer;
+    }
+    /* chevron 占一个与目录收起按钮同尺寸（1.75rem）的方块，贴栏右缘 */
+    .wisp-series-toggle-ico {
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      margin-inline-start: -0.25rem;
+      color: var(--wisp-muted);
+      font-size: 1rem;
+      transition: color 150ms;
+    }
+    .wisp-series-toggle:hover .wisp-series-toggle-ico,
+    .wisp-series-toggle:hover .wisp-series-count {
+      color: var(--wisp-accent);
+    }
+    .wisp-series-toggle:focus-visible {
+      outline: 2px solid var(--wisp-accent);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+    .wisp-series-toggle[aria-expanded='true'] .wisp-series-toggle-ico :global(.wisp-icon),
+    .wisp-series-inline[open] summary .wisp-series-toggle-ico :global(.wisp-icon) {
+      transform: rotate(180deg);
+    }
+
+    /* 以下只在 JS 可用时生效（html[data-series] 由 Post 内联脚本在首帧前写入）；无 JS 时篇目表完整显示 */
+    :global(html:not([data-series])) .wisp-series-toggle,
+    :global(html[data-series]) .wisp-series-aside > p.wisp-series-title {
+      display: none;
+    }
+    :global(html[data-series='collapsed']) .wisp-series-aside .wisp-rail-scroll {
+      display: none;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .wisp-series-toggle-ico :global(.wisp-icon) {
+        transition: transform 150ms;
+      }
+      /* 展开：篇目表淡入并下移一点；不动画高度，栏宽不变 */
+      .wisp-series-aside ol[data-reveal] {
+        animation: wisp-series-reveal 180ms var(--wisp-ease, ease-out);
+      }
+      @keyframes wisp-series-reveal {
+        from {
+          opacity: 0;
+          transform: translateY(-0.375rem);
+        }
+      }
     }
 
     .wisp-series-inline {
@@ -169,7 +279,7 @@ const split = (t: string) => {
       display: flex;
       align-items: center;
       min-height: 2.75rem;
-      gap: 0.375rem;
+      gap: 0.5rem;
       cursor: pointer;
       color: var(--wisp-muted);
       font-size: 0.875rem;
@@ -184,26 +294,58 @@ const split = (t: string) => {
     .wisp-series-inline[open] summary {
       color: var(--wisp-fg);
     }
-    .wisp-series-inline[open] summary :global(.wisp-series-chev) {
-      transform: rotate(90deg);
+    .wisp-series-inline summary:hover .wisp-series-toggle-ico {
+      color: var(--wisp-accent);
     }
     .wisp-series-inline ol {
-      /* 长系列（几十篇）展开时限制高度，避免把正文推出一屏 */
+      /* 长系列（几十篇）展开时限制高度，避免把正文推出一屏。左右各留 0.375rem 再用负外边距抵消，
+         滚动容器裁剪时焦点环（2px + 2px 偏移）仍完整可见，文字边线不动 */
       max-height: 60vh;
       overflow-y: auto;
-      padding-bottom: 0.75rem;
+      margin-inline: -0.375rem;
+      padding: 0.125rem 0.375rem 0.75rem;
     }
     .wisp-series-inline a {
       min-height: 2.25rem;
       align-content: center;
     }
-    .wisp-series :global(.wisp-series-chev) {
-      flex: none;
-    }
     @media (prefers-reduced-motion: no-preference) {
-      .wisp-series :global(.wisp-series-chev) {
+      .wisp-series-inline .wisp-series-toggle-ico :global(.wisp-icon) {
         transition: transform 150ms;
       }
     }
   }
 </style>
+
+<script>
+  // 宽屏系列栏的展开 / 收起。按钮有两处：栏顶的标题行、书眉里的「7 / 10 篇」（Header）。
+  const root = document.documentElement;
+  const list = document.getElementById('wisp-series-list');
+  const toggles = [...document.querySelectorAll<HTMLButtonElement>('[data-series-toggle]')];
+  const sync = () => {
+    const open = root.dataset.series === 'open';
+    for (const b of toggles) {
+      b.setAttribute('aria-expanded', String(open));
+      const label = open ? b.dataset.labelOpen : b.dataset.labelClosed;
+      if (label) b.title = label;
+    }
+  };
+  if (root.dataset.series && list) {
+    sync();
+    for (const b of toggles)
+      b.addEventListener('click', () => {
+        const open = root.dataset.series !== 'open';
+        root.dataset.series = open ? 'open' : 'collapsed';
+        try {
+          localStorage.setItem('wisp-series-open', open ? '1' : '0');
+        } catch {}
+        if (open && matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+          list.toggleAttribute('data-reveal', true);
+          list.addEventListener('animationend', () => list.removeAttribute('data-reveal'), {
+            once: true,
+          });
+        }
+        sync();
+      });
+  }
+</script>

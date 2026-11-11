@@ -1,13 +1,19 @@
 /*
- * 图表（Excalidraw / draw.io）的 figure 样式与下载链接。
+ * 图表（Excalidraw / draw.io）的图形本体样式。
  * 由 Post 布局在 hasDiagram（remark-diagram 写入 frontmatter）为真时按需加载。
+ * 题注与动作（源文件 / draw.io）的排版是所有 figure 共用的，在 figure.css。
  *
- * remark-diagram / Diagram.astro 输出：
- *   <figure class="wisp-figure wisp-diagram" data-style="hand|clean">
+ * remark-diagram / Diagram.astro 输出（render-diagram.ts）：
+ *   题注 + 动作：
+ *   <figure class="wisp-figure wisp-diagram" data-style="hand|clean" aria-labelledby="x-caption-1">
  *     <div class="wisp-diagram-body" style="--wd-w:848px"><svg class="wisp-d" viewBox=…>…</svg></div>
- *     <figcaption>…</figcaption>
- *     <div class="wisp-diagram-actions"><a class="wisp-diagram-dl" download>下载源文件</a><a class="wisp-diagram-open">打开 draw.io</a></div>
+ *     <figcaption>
+ *       <span class="wisp-fig-text" id="x-caption-1"><span class="wisp-fig-no">图 05-1：</span>…</span>
+ *       <span class="wisp-fig-actions"><a class="wisp-diagram-dl" download>源文件</a><a class="wisp-diagram-open">draw.io</a></span>
+ *     </figcaption>
  *   </figure>
+ *   只有题注：<figcaption><span class="wisp-fig-no">…</span>…</figcaption>
+ *   只有动作：<span class="wisp-fig-actions">…</span> 直接跟在 .wisp-diagram-body 后面
  * 颜色只用 --wisp-* 令牌；SVG 内部颜色由 diagram.css 把 --wd-* 绑定到令牌。
  */
 @layer theme, base, components, utilities;
@@ -17,11 +23,7 @@
 
   /* ---------- figure ---------- */
   .wisp-diagram {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: baseline;
-    column-gap: 1rem;
-    margin-block: 1.5em;
+    margin-block: var(--wisp-block-gap, 1.75em);
     max-width: 100%;
     max-inline-size: 100%;
     min-width: 0;
@@ -36,20 +38,12 @@
  * 所有图表都允许缩小到容器宽度，避免 min-width 触发横向滚动或页面溢出。
  */
   .wisp-diagram-body {
-    grid-column: 1 / -1;
-    grid-row: 1;
     max-width: 100%;
     max-inline-size: 100%;
     min-width: 0;
     overflow-x: clip;
     overflow-y: clip;
     padding-block: 0.125em;
-  }
-  .wisp-diagram > figcaption {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    min-width: 0;
-    margin-top: 0.5em;
   }
   .wisp-diagram-body > svg {
     display: block;
@@ -80,71 +74,6 @@
     display: block;
     margin-block: 0.5em;
     text-align: center;
-  }
-
-  /* 下载 / 在 draw.io 中打开 */
-  .wisp-diagram-actions {
-    display: flex;
-    grid-column: 1 / -1;
-    grid-row: 3;
-    flex-wrap: nowrap;
-    justify-content: flex-end;
-    gap: 0.25em 1em;
-    margin-top: 0.25em;
-    font-size: 0.75rem;
-    line-height: 1.6;
-    white-space: nowrap;
-  }
-  .wisp-diagram:not(.wisp-has-caption) > .wisp-diagram-actions {
-    grid-row: 2;
-  }
-  .prose .wisp-diagram-actions a,
-  .wisp-diagram-actions a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3em;
-    color: var(--wisp-muted);
-    text-decoration-line: none;
-  }
-  .prose .wisp-diagram-actions a:hover,
-  .wisp-diagram-actions a:hover {
-    color: var(--wisp-accent);
-    text-decoration-line: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.25em;
-  }
-  .wisp-diagram-actions a:focus-visible {
-    outline: 2px solid var(--wisp-accent);
-    outline-offset: 3px;
-    border-radius: 4px;
-  }
-  /* 图标（Lucide 内联 SVG）：与文字居中对齐，颜色跟随 currentColor */
-  .wisp-diagram-actions a .wisp-icon {
-    width: 0.95em;
-    height: 0.95em;
-    vertical-align: 0;
-  }
-
-  @media (max-width: 39.99rem) {
-    .wisp-diagram {
-      grid-template-columns: 1fr;
-    }
-    .wisp-diagram > figcaption,
-    .wisp-diagram-actions,
-    .wisp-diagram:not(.wisp-has-caption) > .wisp-diagram-actions {
-      grid-column: 1;
-    }
-    .wisp-diagram-actions {
-      grid-row: 3;
-      justify-content: flex-start;
-    }
-    .wisp-diagram-actions a {
-      min-height: 2.75rem;
-      padding-inline: 0.25rem;
-    }
-    .wisp-diagram:not(.wisp-has-caption) > .wisp-diagram-actions {
-      grid-row: 2;
-    }
   }
 
   /* ---------- dev 占位：产物缺失或哈希不一致 ---------- */

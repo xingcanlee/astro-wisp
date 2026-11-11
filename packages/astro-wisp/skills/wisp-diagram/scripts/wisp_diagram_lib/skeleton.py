@@ -29,6 +29,8 @@ ARROW_GAP = 6
 def resolve_skeleton_color(name: str | None) -> dict[str, str]:
     """hue / 语义名 / 基础色 → 浅色 stroke + fill（导出时再由 to_portable_svg 变量化）。"""
     p = palette()["color"]
+    if name == "neutral":
+        return {"stroke": p["base"]["muted"]["light"], "fill": p["base"]["surface"]["light"]}
     if not name or name == "fg":
         return {"stroke": p["base"]["fg"]["light"], "fill": "transparent"}
     if name == "muted":
@@ -36,7 +38,7 @@ def resolve_skeleton_color(name: str | None) -> dict[str, str]:
     hue = name if name in p["hue"] else p["semantic"].get(name)
     h = p["hue"].get(hue) if isinstance(hue, str) else None
     if not isinstance(h, dict) or "stroke" not in h:
-        valid = [*p["hue"].keys(), *[k for k in p["semantic"] if not k.startswith("$")], "fg", "muted"]
+        valid = [*p["hue"].keys(), *[k for k in p["semantic"] if not k.startswith("$")], "neutral", "fg", "muted"]
         raise WispError(f'[wisp-diagram] 未知颜色名 "{name}"。可用：{", ".join(valid)}')
     return {"stroke": h["stroke"]["light"], "fill": h["fill"]["light"]}
 
@@ -155,21 +157,27 @@ def skeleton_to_element_skeletons(sk: dict) -> tuple[list[dict], list[str]]:
                 raise WispError(f"[wisp-diagram] 节点 {n['id']} 缺少数值字段 {k}")
             if math.fmod(n[k], grid) != 0:
                 warnings.append(f"节点 {n['id']} 的 {k}={js_number(n[k])} 不在 {js_number(grid)}px 网格上")
-        c = resolve_skeleton_color(n.get("color"))
+        # 没写 color 的节点是中性节点：surface 底、muted 细线（强调时 fg、常规线宽）
+        neutral = (n.get("color") or "neutral") == "neutral"
+        c = resolve_skeleton_color(n.get("color") or "neutral")
+        if neutral and n.get("emphasis"):
+            c = {**c, "stroke": resolve_skeleton_color("fg")["stroke"]}
+        width = (d["stroke-width"]["normal"] if n.get("emphasis") else d["stroke-width"]["thin"]) if neutral else sw(n.get("emphasis"))
         shape = SHAPE.get(n.get("shape") or "rect")
         if not shape:
             raise WispError(f"[wisp-diagram] 节点 {n['id']} 的 shape 无效：{n.get('shape')}")
         el: dict[str, Any] = {
             "type": shape, "id": n["id"], "x": n["x"], "y": n["y"], "width": n["w"], "height": n["h"],
-            "strokeColor": c["stroke"], "backgroundColor": c["fill"], "strokeWidth": sw(n.get("emphasis")),
+            "strokeColor": c["stroke"], "backgroundColor": c["fill"], "strokeWidth": width,
             "strokeStyle": "dashed" if n.get("dashed") else d["excalidraw"]["strokeStyle"], **common,
         }
         if shape in ("rectangle", "diamond"):
-            el["roundness"] = {"type": ADAPTIVE_RADIUS}
+            el["roundness"] = {"type": ADAPTIVE_RADIUS, "value": d["corner-radius"]}
         if n.get("label"):
             el["label"] = {
                 "text": n["label"], "fontSize": d["font-size-px"][n.get("size") or "label"], "fontFamily": EXCALIFONT,
-                "strokeColor": resolve_skeleton_color(n["labelColor"])["stroke"] if n.get("labelColor") else c["stroke"],
+                # 节点里的字一律 fg（颜色由描边和底色表达）；labelColor 可以覆盖
+                "strokeColor": resolve_skeleton_color(n.get("labelColor") or "fg")["stroke"],
                 "textAlign": "center", "verticalAlign": "middle",
             }
         out.append(el)

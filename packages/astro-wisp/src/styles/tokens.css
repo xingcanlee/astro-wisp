@@ -14,22 +14,22 @@
   --wisp-accent-fg: #ffffff;
   --wisp-code-bg: #f6f6f4;
   --wisp-selection: #ccf0ea;
-  --wisp-hue-blue: #1d4ed8;
-  --wisp-hue-blue-fill: #dbeafe;
-  --wisp-hue-amber: #b45309;
-  --wisp-hue-amber-fill: #fef3c7;
-  --wisp-hue-green: #15803d;
-  --wisp-hue-green-fill: #dcfce7;
-  --wisp-hue-rose: #be123c;
-  --wisp-hue-rose-fill: #ffe4e6;
-  --wisp-hue-violet: #7c3aed;
-  --wisp-hue-violet-fill: #ede9fe;
+  --wisp-hue-blue: #2f5783;
+  --wisp-hue-blue-fill: #e9f2fb;
+  --wisp-hue-amber: #7b5518;
+  --wisp-hue-amber-fill: #fbf2df;
+  --wisp-hue-green: #2c522d;
+  --wisp-hue-green-fill: #e9f5e9;
+  --wisp-hue-rose: #984646;
+  --wisp-hue-rose-fill: #fcedec;
+  --wisp-hue-violet: #4d335c;
+  --wisp-hue-violet-fill: #f5eef9;
   --wisp-hue-teal: #0f766e;
-  --wisp-hue-teal-fill: #ccfbf1;
-  --wisp-hue-orange: #c2410c;
-  --wisp-hue-orange-fill: #ffedd5;
-  --wisp-hue-slate: #475569;
-  --wisp-hue-slate-fill: #e2e8f0;
+  --wisp-hue-teal-fill: #e3f5f3;
+  --wisp-hue-orange: #762f06;
+  --wisp-hue-orange-fill: #fceee4;
+  --wisp-hue-slate: #464e57;
+  --wisp-hue-slate-fill: #eaedf2;
 }
 
 [data-theme="dark"] {
@@ -45,22 +45,22 @@
   --wisp-accent-fg: #0b1f1d;
   --wisp-code-bg: #16171a;
   --wisp-selection: #1d3d39;
-  --wisp-hue-blue: #60a5fa;
-  --wisp-hue-blue-fill: #1b2740;
-  --wisp-hue-amber: #fbbf24;
-  --wisp-hue-amber-fill: #38290c;
-  --wisp-hue-green: #4ade80;
-  --wisp-hue-green-fill: #122d1c;
-  --wisp-hue-rose: #fb7185;
-  --wisp-hue-rose-fill: #3a1620;
-  --wisp-hue-violet: #a78bfa;
-  --wisp-hue-violet-fill: #272040;
-  --wisp-hue-teal: #2dd4bf;
-  --wisp-hue-teal-fill: #0f2c29;
-  --wisp-hue-orange: #fb923c;
-  --wisp-hue-orange-fill: #3a2010;
-  --wisp-hue-slate: #94a3b8;
-  --wisp-hue-slate-fill: #222831;
+  --wisp-hue-blue: #a9cbef;
+  --wisp-hue-blue-fill: #1a2634;
+  --wisp-hue-amber: #f2c681;
+  --wisp-hue-amber-fill: #2e2515;
+  --wisp-hue-green: #84b585;
+  --wisp-hue-green-fill: #1a281c;
+  --wisp-hue-rose: #eda9aa;
+  --wisp-hue-rose-fill: #341f1f;
+  --wisp-hue-violet: #bb9ece;
+  --wisp-hue-violet-fill: #291e2e;
+  --wisp-hue-teal: #7fd3c5;
+  --wisp-hue-teal-fill: #112926;
+  --wisp-hue-orange: #ce8d66;
+  --wisp-hue-orange-fill: #311f15;
+  --wisp-hue-slate: #9da7b3;
+  --wisp-hue-slate-fill: #23272b;
 }
 
 /* 语义色只写一次，自动随 hue 切换 */

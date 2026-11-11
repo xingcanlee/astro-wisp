@@ -6,7 +6,8 @@
 通用约定：
 
 - 语义色固定：Q = 蓝（`q`）、K = 琥珀（`k`）、V = 绿（`v`）、权重 = 紫（`weight`）、激活/softmax = 青（`activation`）、梯度/损失 = 玫红（`grad`/`error`）、偏置 = 橙（`bias`）、掩码/输入 = 灰（`mask`）。
-- 最终输出节点用 `"emphasis": true`（线宽 2.5），可选/未选中的路径用 `"dashed": true`。
+- **一张图最多 3 种 hue**（`slate`/`mask` 是中性灰，不计）。只给图要讲的那几个语义角色上色，其余节点写 `"color": "neutral"`（或不写 color）：surface 底、muted 1px 细线、正文色文字。
+- 最终输出节点用 `"emphasis": true`（hue 节点线宽 2；中性节点改为墨色描边、线宽 1.25），不要为强调再换一个颜色；可选/未选中的路径用 `"dashed": true`。
 - **总宽不超过 700px**（正文栏约 710px），节点摆在行、列上：正对的矩形之间箭头是水平 / 竖直的直线，错开时是中心连线上的斜线，需要拐弯用 `via`。箭头不会自动绕开其他节点，布局时要保证连线不穿过第三个节点。
 - 连线标签放在线段中点，**线段太短（节点间距小于约 96px）时不要加标签**，否则标签会压住箭头头部。
 - 节点文字用 `\n` 换行；每行中文不超过 8–10 个字。
@@ -59,7 +60,7 @@ Q 与 K 做缩放点积，softmax 归一化成注意力权重，再对 V 加权�
       "w": 216,
       "h": 64,
       "label": "缩放点积\nQ·Kᵀ/√d",
-      "color": "weight"
+      "color": "neutral"
     },
     {
       "id": "softmax",
@@ -69,7 +70,7 @@ Q 与 K 做缩放点积，softmax 归一化成注意力权重，再对 V 加权�
       "w": 216,
       "h": 64,
       "label": "softmax",
-      "color": "activation"
+      "color": "neutral"
     },
     {
       "id": "mask",
@@ -90,7 +91,7 @@ Q 与 K 做缩放点积，softmax 归一化成注意力权重，再对 V 加权�
       "w": 304,
       "h": 64,
       "label": "输出 O",
-      "color": "rose",
+      "color": "neutral",
       "emphasis": true
     },
     {
@@ -101,7 +102,7 @@ Q 与 K 做缩放点积，softmax 归一化成注意力权重，再对 V 加权�
       "w": 144,
       "h": 72,
       "label": "偏置 b",
-      "color": "bias",
+      "color": "neutral",
       "dashed": true
     }
   ],
@@ -123,7 +124,7 @@ Q 与 K 做缩放点积，softmax 归一化成注意力权重，再对 V 加权�
 
 ## 2. Transformer Block（draw.io）
 
-精确的纵向结构图用 draw.io：自下而上 LayerNorm → 多头自注意力 → Add → LayerNorm → FFN → Add，两条虚线是残差连接。
+精确的纵向结构图用 draw.io：自下而上 LayerNorm → 多头自注意力 → Add → LayerNorm → FFN → Add，两条虚线是残差连接。这些模块都不是语义角色，所以全部用中性节点；要讲的 FFN 用墨色描边强调，颜色只留给残差线。
 节点样式取自 `drawio-cheatsheet.md` 的预设。保存为 `transformer-block.drawio`。
 
 ```xml
@@ -136,49 +137,49 @@ Q 与 K 做缩放点积，softmax 归一化成注意力权重，再对 V 加权�
         <mxCell id="title" value="Transformer Block" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Inter;fontSize=18;fontStyle=1;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="0" y="0" width="320" height="32" as="geometry"/>
         </mxCell>
-        <mxCell id="grp" value="× N 层堆叠" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#e2e2dd;strokeWidth=1.5;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontFamily=Inter;fontSize=12;fontColor=#5c6067;container=0;" vertex="1" parent="1">
+        <mxCell id="grp" value="× N 层堆叠" style="rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#e2e2dd;strokeWidth=1.25;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontFamily=Inter;fontSize=12;fontColor=#5c6067;container=0;" vertex="1" parent="1">
           <mxGeometry x="0" y="64" width="320" height="432" as="geometry"/>
         </mxCell>
-        <mxCell id="inp" value="输入 X" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#475569;strokeWidth=1.5;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
+        <mxCell id="inp" value="输入 X" style="rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="64" y="528" width="192" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="ln1" value="LayerNorm" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#475569;strokeWidth=1.5;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
+        <mxCell id="ln1" value="LayerNorm" style="rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="64" y="440" width="192" height="32" as="geometry"/>
         </mxCell>
-        <mxCell id="mha" value="多头自注意力" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#1d4ed8;strokeWidth=1.5;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
+        <mxCell id="mha" value="多头自注意力" style="rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="64" y="360" width="192" height="48" as="geometry"/>
         </mxCell>
-        <mxCell id="add1" value="Add 残差" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;strokeWidth=1.5;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
+        <mxCell id="add1" value="Add 残差" style="rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="64" y="296" width="192" height="32" as="geometry"/>
         </mxCell>
-        <mxCell id="ln2" value="LayerNorm" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#475569;strokeWidth=1.5;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
+        <mxCell id="ln2" value="LayerNorm" style="rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="64" y="232" width="192" height="32" as="geometry"/>
         </mxCell>
-        <mxCell id="ffn" value="前馈网络 FFN" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#15803d;strokeWidth=2.5;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
+        <mxCell id="ffn" value="前馈网络 FFN" style="rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#1d1d1f;strokeWidth=1.25;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="64" y="152" width="192" height="48" as="geometry"/>
         </mxCell>
-        <mxCell id="add2" value="Add 残差" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;strokeWidth=1.5;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
+        <mxCell id="add2" value="Add 残差" style="rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1;fontFamily=Inter;fontSize=14;fontColor=#1d1d1f;" vertex="1" parent="1">
           <mxGeometry x="64" y="88" width="192" height="32" as="geometry"/>
         </mxCell>
-        <mxCell id="e1" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.5;" edge="1" parent="1" source="inp" target="ln1">
+        <mxCell id="e1" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;" edge="1" parent="1" source="inp" target="ln1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e2" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.5;" edge="1" parent="1" source="ln1" target="mha">
+        <mxCell id="e2" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;" edge="1" parent="1" source="ln1" target="mha">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e3" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.5;" edge="1" parent="1" source="mha" target="add1">
+        <mxCell id="e3" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;" edge="1" parent="1" source="mha" target="add1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e4" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.5;" edge="1" parent="1" source="add1" target="ln2">
+        <mxCell id="e4" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;" edge="1" parent="1" source="add1" target="ln2">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e5" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.5;" edge="1" parent="1" source="ln2" target="ffn">
+        <mxCell id="e5" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;" edge="1" parent="1" source="ln2" target="ffn">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e6" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.5;" edge="1" parent="1" source="ffn" target="add2">
+        <mxCell id="e6" value="" style="endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;" edge="1" parent="1" source="ffn" target="add2">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r1" value="残差" style="endArrow=classic;html=1;strokeColor=#be123c;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.5;entryX=1;entryY=0.5;fontFamily=Inter;fontSize=12;fontColor=#be123c;dashed=1;" edge="1" parent="1" source="inp" target="add1">
+        <mxCell id="r1" value="残差" style="endArrow=classic;html=1;strokeColor=#984646;strokeWidth=1.25;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.5;entryX=1;entryY=0.5;fontFamily=Inter;fontSize=12;fontColor=#984646;dashed=1;" edge="1" parent="1" source="inp" target="add1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="296" y="548"/>
@@ -186,7 +187,7 @@ Q 与 K 做缩放点积，softmax 归一化成注意力权重，再对 V 加权�
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="r2" value="残差" style="endArrow=classic;html=1;strokeColor=#be123c;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.5;entryX=1;entryY=0.5;fontFamily=Inter;fontSize=12;fontColor=#be123c;dashed=1;" edge="1" parent="1" source="add1" target="add2">
+        <mxCell id="r2" value="残差" style="endArrow=classic;html=1;strokeColor=#984646;strokeWidth=1.25;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.5;entryX=1;entryY=0.5;fontFamily=Inter;fontSize=12;fontColor=#984646;dashed=1;" edge="1" parent="1" source="add1" target="add2">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="296" y="312"/>
@@ -272,7 +273,7 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
       "w": 192,
       "h": 56,
       "label": "点积 → C[i][j]",
-      "color": "activation"
+      "color": "neutral"
     }
   ],
   "edges": [
@@ -354,7 +355,7 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
       "w": 160,
       "h": 56,
       "label": "注意力",
-      "color": "weight"
+      "color": "neutral"
     },
     {
       "id": "out",
@@ -364,7 +365,7 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
       "w": 112,
       "h": 56,
       "label": "输出 oₜ",
-      "color": "rose",
+      "color": "neutral",
       "emphasis": true
     }
   ],
@@ -470,7 +471,7 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
       "w": 120,
       "h": 72,
       "label": "加权求和",
-      "color": "rose"
+      "color": "neutral"
     }
   ],
   "edges": [
@@ -526,7 +527,7 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
       "w": 112,
       "h": 56,
       "label": "向量化",
-      "color": "weight"
+      "color": "neutral"
     },
     {
       "id": "db",
@@ -536,7 +537,7 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
       "w": 128,
       "h": 56,
       "label": "向量库",
-      "color": "violet",
+      "color": "neutral",
       "emphasis": true
     },
     {
@@ -557,7 +558,7 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
       "w": 112,
       "h": 56,
       "label": "向量化",
-      "color": "weight"
+      "color": "neutral"
     },
     {
       "id": "retrieve",
@@ -577,7 +578,7 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
       "w": 112,
       "h": 56,
       "label": "大模型",
-      "color": "rose",
+      "color": "neutral",
       "emphasis": true
     },
     {
@@ -634,7 +635,7 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
       "w": 128,
       "h": 56,
       "label": "前向传播",
-      "color": "active"
+      "color": "neutral"
     },
     {
       "id": "loss",
@@ -664,7 +665,7 @@ A(m×k) × B(k×n) = C(m×n)；下排说明 C[i][j] 是 A 的第 i 行与 B 的�
       "w": 128,
       "h": 56,
       "label": "优化器",
-      "color": "bias"
+      "color": "neutral"
     },
     {
       "id": "w",

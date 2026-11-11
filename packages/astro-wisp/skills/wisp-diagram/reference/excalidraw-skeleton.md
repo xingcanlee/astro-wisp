@@ -25,17 +25,17 @@ $W new attention.skeleton.json -o attention.excalidraw [--seed N] [--build]
 
 ## Node
 
-| 字段            | 必填 | 说明                                                     |
-| --------------- | ---- | -------------------------------------------------------- |
-| `id`            | 是   | 唯一，供 edges 引用；重复会报错                          |
-| `shape`         | 否   | `rect`（默认，圆角矩形）、`ellipse`、`diamond`           |
-| `x` `y` `w` `h` | 是   | 数值，左上角坐标与宽高；取 8 的倍数                      |
-| `label`         | 否   | 节点内文字，`\n` 换行；水平垂直居中                      |
-| `color`         | 否   | hue 名、语义名或基础色（见下）；省略时为黑色描边、无填充 |
-| `labelColor`    | 否   | 文字色，默认与描边同色                                   |
-| `size`          | 否   | 文字字号：`label`(14，默认) / `title`(18) / `note`(12)   |
-| `emphasis`      | 否   | `true` 时线宽 2.5（默认 1.5）                            |
-| `dashed`        | 否   | `true` 时虚线边框                                        |
+| 字段            | 必填 | 说明                                                                           |
+| --------------- | ---- | ------------------------------------------------------------------------------ |
+| `id`            | 是   | 唯一，供 edges 引用；重复会报错                                                |
+| `shape`         | 否   | `rect`（默认，圆角矩形）、`ellipse`、`diamond`                                 |
+| `x` `y` `w` `h` | 是   | 数值，左上角坐标与宽高；取 8 的倍数                                            |
+| `label`         | 否   | 节点内文字，`\n` 换行；水平垂直居中                                            |
+| `color`         | 否   | hue 名、语义名或基础色（见下）；省略时为中性节点（surface 底、muted 1px 描边） |
+| `labelColor`    | 否   | 文字色，默认 `fg`（节点里的字不跟描边同色）                                    |
+| `size`          | 否   | 文字字号：`label`(14，默认) / `title`(18) / `note`(12)                         |
+| `emphasis`      | 否   | `true` 时线宽 2（默认 1.25）；中性节点改为 `fg` 描边、线宽 1.25（默认 1）      |
+| `dashed`        | 否   | `true` 时虚线边框                                                              |
 
 ## Edge
 
@@ -46,7 +46,7 @@ $W new attention.skeleton.json -o attention.excalidraw [--seed N] [--build]
 | `label`     | 否   | 箭头中点处的标签（12px，与箭头同色）                                               |
 | `color`     | 否   | 默认 `fg`（黑）；常用 `muted`、语义色                                              |
 | `dashed`    | 否   | 虚线                                                                               |
-| `emphasis`  | 否   | 线宽 2.5                                                                           |
+| `emphasis`  | 否   | 线宽 2（默认 1.25）                                                                |
 | `arrow`     | 否   | `end`（默认，终点箭头）、`both`（双向）、`none`（无箭头线段）                      |
 | `via`       | 否   | 拐点列表 `[[x, y], …]`（绝对坐标）：箭头画成经过这些点的折线，用来走直角或绕开节点 |
 
@@ -75,12 +75,14 @@ $W new attention.skeleton.json -o attention.excalidraw [--seed N] [--build]
 
 - 8 个 hue：`blue` `amber` `green` `rose` `violet` `teal` `orange` `slate`
 - 语义名（见 SKILL.md 的语义色表）：`q` `k` `v` `weight` `activation` `grad` `bias` `mask` `highlight` `visited` `active` `done` `error`
+- 中性：`neutral`（节点默认值：surface 底 + muted 描边）
 - 基础色：`fg`（正文黑）、`muted`（次要灰）
+- 一张图最多用 3 种 hue（`slate`/`mask` 不计），其余节点保持中性；见 SKILL.md「颜色怎么用」。
 - 其他名字会报错并列出可用名字。
 
 ## 固定的样式参数（不可在骨架里改）
 
-线宽 1.5 / 2.5、roughness 1、solid 填充、圆角、字体 Excalifont（中文回落 Noto Sans SC）、字号 12/14/18，全部来自 palette.json。
+线宽 1 / 1.25 / 2、roughness 1、solid 填充、4px 圆角（`roundness: {type: 3, value: 4}`）、字体 Excalifont（中文回落 Noto Sans SC）、字号 12/14/18，全部来自 palette.json。
 
 ## 完整示例
 

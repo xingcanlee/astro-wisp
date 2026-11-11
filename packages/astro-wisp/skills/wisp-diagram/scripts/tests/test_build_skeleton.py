@@ -120,7 +120,8 @@ class TestElementSkeletons:
         assert q["fillStyle"] == d["excalidraw"]["fillStyle"]
         assert q["strokeWidth"] == d["stroke-width"]["normal"]
         assert q["strokeColor"] == P["color"]["hue"]["blue"]["stroke"]["light"]
-        assert q["roundness"] == {"type": 3}
+        assert q["roundness"] == {"type": 3, "value": d["corner-radius"]}
+        assert q["label"]["strokeColor"] == P["color"]["base"]["fg"]["light"]  # 节点里的字是 fg
         assert q["label"]["text"] == "Q" and q["label"]["fontSize"] == d["font-size-px"]["label"] and q["label"]["fontFamily"] == EXCALIFONT
         assert next(e for e in self.elements if e["id"] == "s")["strokeWidth"] == d["stroke-width"]["bold"]
 
@@ -135,6 +136,19 @@ class TestElementSkeletons:
         assert title["text"] == "自注意力" and title["fontSize"] == P["diagram"]["font-size-px"]["title"]
         assert title["strokeColor"] == P["color"]["base"]["fg"]["light"]
         assert note["fontSize"] == P["diagram"]["font-size-px"]["note"] and note["strokeColor"] == P["color"]["base"]["muted"]["light"]
+
+    def test_neutral_nodes(self):
+        d, base = P["diagram"], P["color"]["base"]
+        els, _ = skeleton_to_element_skeletons({"nodes": [
+            {"id": "a", "x": 0, "y": 0, "w": 96, "h": 48, "label": "A"},
+            {"id": "b", "x": 160, "y": 0, "w": 96, "h": 48, "color": "neutral", "emphasis": True},
+            {"id": "c", "x": 320, "y": 0, "w": 96, "h": 48, "label": "Q", "color": "q", "labelColor": "q"},
+        ]})
+        a, b, c = els
+        assert (a["strokeColor"], a["backgroundColor"], a["strokeWidth"]) == (base["muted"]["light"], base["surface"]["light"], d["stroke-width"]["thin"])
+        assert (b["strokeColor"], b["backgroundColor"], b["strokeWidth"]) == (base["fg"]["light"], base["surface"]["light"], d["stroke-width"]["normal"])
+        assert a["label"]["strokeColor"] == base["fg"]["light"]
+        assert c["label"]["strokeColor"] == P["color"]["hue"]["blue"]["stroke"]["light"]
 
     def test_grid_warning(self):
         assert self.warnings == ["节点 d 的 x=3 不在 8px 网格上"]

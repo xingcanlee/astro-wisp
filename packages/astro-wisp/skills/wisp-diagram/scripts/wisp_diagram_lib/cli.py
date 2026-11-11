@@ -16,6 +16,7 @@ USAGE = """用法：uv run <skill>/scripts/wisp_diagram.py <命令> [...]
 命令：
   lint <文件|glob>... [--fix] [--strict]     颜色 / 字号 / 网格 / 阴影 / 渐变 / 文件大小检查
   normalize <文件|glob>... [--check]         解压 drawio、格式化 JSON、精简 Excalidraw appState
+  migrate --from <旧palette.json> <文件|glob>... [--check]   调色板换代：按令牌名改写颜色、线宽、圆角
   build <文件|目录>... [选项]                源文件 → 可移植 .wisp.svg
   export <文件> [--theme light|dark] [--scale 2] [-o out.png]   导出 PNG（源文件或 .wisp.svg）
   new <skeleton.json> [-o out.excalidraw] [--seed N] [--build]   骨架 → .excalidraw
@@ -112,6 +113,42 @@ def cmd_normalize(files: list[str], check: bool = False, log=_out) -> int:
             else:
                 Path(f).write_text(nxt, "utf-8", newline="\n")
                 log(f"{f}: normalized")
+        except Exception as e:  # noqa: BLE001
+            log(f"{f}: failed: {e}")
+            failed = True
+    if failed:
+        return 2
+    return 1 if check and dirty > 0 else 0
+
+
+def cmd_migrate(files: list[str], old_palette: str, check: bool = False, log=_out) -> int:
+    """退出码：0 无变化/已写入；1 --check 发现需要迁移；2 用法或读写错误。"""
+    from .migrate import Migration, load_palette
+
+    targets = expand_args(files)
+    if not targets:
+        log("usage: wisp_diagram.py migrate --from <old-palette.json> <file|glob>... [--check]")
+        return 2
+    mig = Migration.from_palettes(load_palette(old_palette))
+    dirty = 0
+    failed = False
+    for f in targets:
+        try:
+            mig.stats = {}
+            src = Path(f).read_text("utf-8")
+            nxt = mig.file(f)
+            if nxt is None:
+                log(f"{f}: skipped (not .excalidraw / .excalidrawlib / .drawio / mxlibrary .xml / drawio-config .json)")
+                continue
+            if nxt == src:
+                continue
+            dirty += 1
+            what = ", ".join(f"{k} {v}" for k, v in sorted(mig.stats.items())) or "reformatted"
+            if check:
+                log(f"{f}: needs migrate ({what})")
+            else:
+                Path(f).write_text(nxt, "utf-8", newline="\n")
+                log(f"{f}: migrated ({what})")
         except Exception as e:  # noqa: BLE001
             log(f"{f}: failed: {e}")
             failed = True
@@ -416,6 +453,11 @@ def _parser() -> argparse.ArgumentParser:
     s.add_argument("files", nargs="*")
     s.add_argument("--check", action="store_true", help="只检查不写入（需要规范化时退出码 1）")
 
+    s = sub.add_parser("migrate", help="调色板换代：按令牌名把旧调色板的值改写成当前值")
+    s.add_argument("files", nargs="*")
+    s.add_argument("--from", dest="old", required=True, help="旧的 palette.json（例如 git show <rev>:…/palette.json > old.json）")
+    s.add_argument("--check", action="store_true", help="只检查不写入（需要迁移时退出码 1）")
+
     def build_opts(s: argparse.ArgumentParser) -> None:
         s.add_argument("--manifest", help="项目模式：增量构建并更新该 manifest（默认 <root>/diagrams.manifest.json）")
         s.add_argument("--root", help="项目根目录（默认当前目录）；扫描 <root>/src/content/**/diagrams/")
@@ -467,7 +509,7 @@ def main(argv: list[str] | None = None) -> int:
         _out(USAGE)
         return 0 if argv else 2
     p = _parser()
-    known = {"lint", "normalize", "build", "export", "new", "check", "probe", "cache"}
+    known = {"lint", "normalize", "migrate", "build", "export", "new", "check", "probe", "cache"}
     if argv[0] not in known:
         _err(f"未知命令：{argv[0]}\n{USAGE}")
         return 2
@@ -488,6 +530,8 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_lint(files, args.fix, args.strict)
         if args.cmd == "normalize":
             return cmd_normalize(args.files, args.check)
+        if args.cmd == "migrate":
+            return cmd_migrate(args.files, args.old, args.check)
         if args.cmd == "build":
             return cmd_build(args)
         if args.cmd == "export":

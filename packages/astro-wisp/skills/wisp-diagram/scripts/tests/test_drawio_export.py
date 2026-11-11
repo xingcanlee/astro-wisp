@@ -23,7 +23,7 @@ def test_strip_light_dark():
 
 RAW = ('<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" style="background: transparent; color-scheme: light;" viewBox="0 0 10 10" id="ge-svg-abc" content="&lt;mxfile/&gt;">'
        '<style type="text/css">@supports (color: light-dark(#000, #fff)) { #ge-svg-abc { --ge-adaptive-fg: light-dark(#000000, var(--ge-light-color, #ffffff)); } }</style>'
-       '<rect fill="#dbeafe" stroke="#1d4ed8" style="fill: light-dark(rgb(219, 234, 254), rgb(26, 39, 56)); stroke: light-dark(rgb(29, 78, 216), rgb(129, 171, 255));"/>'
+       '<rect fill="#e9f2fb" stroke="#2f5783" style="fill: light-dark(rgb(233, 242, 251), rgb(26, 39, 56)); stroke: light-dark(rgb(47, 87, 131), rgb(129, 171, 255));"/>'
        '<text fill="#000000" style="fill: var(--ge-adaptive-fg, #000000);">x</text><div style="color: light-dark(#1d1d1f, #d4d4d6); font-size: 12px"></div></svg>')
 
 
@@ -35,7 +35,7 @@ class TestClean:
             assert s not in self.out
 
     def test_dedupes_style(self):
-        assert '<rect fill="#dbeafe" stroke="#1d4ed8"/>' in self.out
+        assert '<rect fill="#e9f2fb" stroke="#2f5783"/>' in self.out
         assert '<text fill="#000000">' in self.out
 
     def test_html_color(self):

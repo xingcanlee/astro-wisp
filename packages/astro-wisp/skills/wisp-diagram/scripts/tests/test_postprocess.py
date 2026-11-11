@@ -7,7 +7,7 @@ from wisp_diagram_lib.postprocess import inject_a11y, postprocess, preclean, pro
 
 RAW = """<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100"><!-- svg-source:excalidraw --><metadata></metadata><defs><style class="style-fonts">
       </style></defs>
-<g stroke-linecap="round"><path d="M0 0 L100 0" stroke="#1d4ed8" stroke-width="1.5" fill="#dbeafe"/></g>
+<g stroke-linecap="round"><path d="M0 0 L100 0" stroke="#2f5783" stroke-width="1.5" fill="#e9f2fb"/></g>
 <mask/><g mask="url(#mask-a)"><path d="M0 50 L200 50" stroke="#1e1e1e" fill="none"/></g>
 <mask id="mask-a"><rect x="0" y="0" fill="#fff" width="200" height="100"/><rect x="80" y="40" fill="#000" width="40" height="20"/></mask>
 <text x="10" y="20" font-family="Excalifont, Xiaolai, Segoe UI Emoji" fill="#1e1e1e">注意力 Q·Kᵀ</text></svg>"""
@@ -59,9 +59,9 @@ def test_inject_a11y_without_desc():
 @pytest.mark.e2e
 def test_svgo_config(session):
     svg = ('<svg xmlns="http://www.w3.org/2000/svg" class="wisp-d" viewBox="0 0 10 10"><style>.wisp-d{--wd-fg:#111}</style><desc>d</desc>'
-           '<mask id="m"><rect width="10" height="10" fill="#fff"/></mask><rect width="10" height="10" mask="url(#m)" fill="var(--wd-blue, #1d4ed8)"/></svg>')
+           '<mask id="m"><rect width="10" height="10" fill="#fff"/></mask><rect width="10" height="10" mask="url(#m)" fill="var(--wd-blue, #2f5783)"/></svg>')
     out = svgo_optimize(session, svg, "fig")
-    for s in ('viewBox="0 0 10 10"', ".wisp-d{--wd-fg:#111}", "var(--wd-blue, #1d4ed8)", "<desc>", 'id="fig-m"', "url(#fig-m)", 'class="wisp-d"'):
+    for s in ('viewBox="0 0 10 10"', ".wisp-d{--wd-fg:#111}", "var(--wd-blue, #2f5783)", "<desc>", 'id="fig-m"', "url(#fig-m)", 'class="wisp-d"'):
         assert s in out
 
 
@@ -70,7 +70,7 @@ def test_postprocess_full(session):
     r = postprocess(session, RAW, style="hand", source="demo.excalidraw", id_prefix="demo", title="演示", desc="一条带标签的箭头")
     svg = r.svg
     assert r.unknown_colors == []
-    for s in ('class="wisp-d"', "var(--wd-blue, #1d4ed8)", "var(--wd-blue-fill, #dbeafe)", "var(--wd-fg, #1d1d1f)", "var(--wd-font-hand)"):
+    for s in ('class="wisp-d"', "var(--wd-blue, #2f5783)", "var(--wd-blue-fill, #e9f2fb)", "var(--wd-fg, #1d1d1f)", "var(--wd-font-hand)"):
         assert s in svg
     assert re.search(r"@media \(prefers-color-scheme:dark\)", svg)
     assert re.search(r'<mask id="demo-mask-a">.*fill="#fff".*fill="#000"', svg)

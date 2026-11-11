@@ -5,5 +5,5 @@
     <rect x="0" y="0" width="320" height="200" fill="#ffffff"></rect>
   </defs>
   <rect x="0" y="0" width="320" height="200" fill="#ffffff"></rect>
-  <path d="M20 50 L300 50" stroke="#1d4ed8" stroke-width="1.5" mask="url(#m1)"></path>
+  <path d="M20 50 L300 50" stroke="#2f5783" stroke-width="1.5" mask="url(#m1)"></path>
 </svg>
