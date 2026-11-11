@@ -37,6 +37,13 @@ describe('defineWispConfig', () => {
     const c = defineWispConfig({ features: { codeFold: { maxLines: 40 } } });
     expect(c.features.codeFold).toEqual({ enabled: true, maxLines: 40, previewLines: 12 });
   });
+  it('codeWrap 默认关闭，可开启', () => {
+    expect(defineWispConfig().features.codeWrap).toBe(false);
+    expect(defineWispConfig({ features: { codeWrap: true } }).features.codeWrap).toBe(true);
+    expect(() => defineWispConfig({ features: { codeWrap: 'yes' as unknown as boolean } })).toThrow(
+      /features\.codeWrap/,
+    );
+  });
   it('codeFold 非法值抛错', () => {
     expect(() => defineWispConfig({ features: { codeFold: { previewLines: 0 } } })).toThrow(
       /codeFold\.previewLines/,

@@ -13,8 +13,11 @@ async function render(
   lineNumbers = true,
   meta?: string,
   fold: object = {},
+  codeWrap = false,
 ) {
-  const c = wispShikiConfig(wispConfigSchema.parse({ features: { lineNumbers, codeFold: fold } }));
+  const c = wispShikiConfig(
+    wispConfigSchema.parse({ features: { lineNumbers, codeFold: fold, codeWrap } }),
+  );
   const h = await createShikiHighlighter({
     themes: c.themes as unknown as CreateShikiHighlighterOptions['themes'],
     langs: [lang] as unknown as CreateShikiHighlighterOptions['langs'],
@@ -44,6 +47,14 @@ describe('wispShikiConfig', () => {
   it('lineNumbers 开关', async () => {
     expect(await render('a', 'ts', true)).toContain('wisp-ln');
     expect(await render('a', 'ts', false)).not.toContain('wisp-ln');
+  });
+  it('codeWrap 默认关闭；开启时容器带 wisp-code--wrap，且不写内联 white-space', async () => {
+    const off = await render('a', 'ts');
+    expect(off).toMatch(/class="wisp-code wisp-code--copy"/);
+    expect(off).not.toContain('wisp-code--wrap');
+    const on = await render('a', 'ts', true, undefined, {}, true);
+    expect(on).toContain('class="wisp-code wisp-code--copy wisp-code--wrap"');
+    expect(on).not.toContain('white-space');
   });
   it('行号不进入文本内容（由 CSS counter 生成）', async () => {
     const html = await render('a\nb', 'ts');

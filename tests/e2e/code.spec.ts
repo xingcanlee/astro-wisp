@@ -65,6 +65,32 @@ test('收起时若按钮已滚出视口，会被滚回可见位置', async ({ pa
   await expect(btn).toBeInViewport({ ratio: 1 });
 });
 
+test('在展开的长代码底部点「收起」：代码块顶端回到页眉下方，焦点留在按钮上', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' }); // 减少动态效果时立即跳转，不必等平滑滚动
+  const box = folded(page);
+  const btn = box.locator('.wisp-fold');
+  await btn.click();
+  await btn.evaluate((b) => b.scrollIntoView({ block: 'end' }));
+  expect(await box.evaluate((b) => b.getBoundingClientRect().top)).toBeLessThan(0);
+  await btn.focus();
+  await page.keyboard.press('Enter');
+  await expect(btn).toHaveAttribute('aria-expanded', 'false');
+  const pad = await page.evaluate(() =>
+    parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop),
+  );
+  const top = await box.evaluate((b) => b.getBoundingClientRect().top);
+  expect(Math.abs(top - pad)).toBeLessThanOrEqual(2);
+  await expect(btn).toBeFocused();
+});
+
+test('展开 / 收起按钮在触屏宽度下高 44px', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  const h = await folded(page)
+    .locator('.wisp-fold')
+    .evaluate((b) => b.getBoundingClientRect().height);
+  expect(h).toBeGreaterThanOrEqual(44);
+});
+
 test('nofold 的长代码块不折叠，也没有展开按钮', async ({ page }) => {
   const box = page.locator('.wisp-code[data-lines="40"]:not([data-fold])');
   await expect(box).toHaveCount(1);
@@ -154,4 +180,48 @@ test('折叠态下行号和横向滚动仍可用', async ({ page }) => {
     .evaluate((el) => getComputedStyle(el, '::before').content);
   expect(content).not.toBe('none');
   expect(await pre.evaluate((el) => getComputedStyle(el).overflowX)).toBe('auto');
+});
+
+test('自动换行按钮只出现在横向溢出的代码块上', async ({ page }) => {
+  const wide = page.locator('.wisp-code[data-language="bash"]').first();
+  await expect(wide).toHaveAttribute('data-wisp-wide', '');
+  await expect(wide.locator('.wisp-wrap')).toBeVisible();
+  await expect(wide.locator('.wisp-wrap')).toHaveAttribute('aria-label', '自动换行');
+  await expect(wide.locator('.wisp-wrap')).toHaveAttribute('aria-pressed', 'false');
+  const short = page.locator('.wisp-code[data-lines="4"]').first();
+  await expect(short.locator('.wisp-wrap')).toBeHidden();
+});
+
+test('溢出提示是边缘渐隐（不是阴影），随滚动位置更新', async ({ page }) => {
+  const pre = page.locator('.wisp-code[data-language="bash"] pre').first();
+  await expect(pre).toHaveAttribute('data-wisp-overflow', 'end');
+  expect(await pre.evaluate((el) => getComputedStyle(el).boxShadow)).toBe('none');
+  expect(await pre.evaluate((el) => getComputedStyle(el).maskImage)).toContain('linear-gradient');
+  await pre.evaluate((el) => (el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2));
+  await expect(pre).toHaveAttribute('data-wisp-overflow', 'both');
+  await pre.evaluate((el) => (el.scrollLeft = el.scrollWidth));
+  await expect(pre).toHaveAttribute('data-wisp-overflow', 'start');
+});
+
+test('切换自动换行：整页生效、记住选择、刷新后首帧即换行', async ({ page }) => {
+  const box = page.locator('.wisp-code[data-language="bash"]').first();
+  const pre = box.locator('pre');
+  const h0 = (await pre.boundingBox())!.height;
+  await box.hover();
+  await box.locator('.wisp-wrap').click();
+  await expect(box.locator('.wisp-wrap')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('html')).toHaveAttribute('data-wisp-code-wrap', 'on');
+  expect(await page.evaluate(() => localStorage.getItem('wisp-code-wrap'))).toBe('on');
+  await expect(pre).not.toHaveAttribute('data-wisp-overflow');
+  expect((await pre.boundingBox())!.height).toBeGreaterThan(h0 * 1.5);
+  // 换行后行号只有 1 个（一个逻辑行）
+  expect(await pre.locator('.line').count()).toBe(1);
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-wisp-code-wrap', 'on');
+  await expect(box.locator('.wisp-wrap')).toHaveAttribute('aria-pressed', 'true');
+  // 复制仍得到原始的一行
+  await box.hover();
+  await box.locator('.wisp-copy').click();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copied.split('\n').filter(Boolean)).toHaveLength(1);
 });

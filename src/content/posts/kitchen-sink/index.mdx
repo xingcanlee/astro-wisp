@@ -63,13 +63,21 @@ import MatMul from '../matrix-multiplication/MatMul.tsx';
 >
 > 第二段在同一个浅底要点块里，正文色，不用斜体。
 
-## 脚注
+## 引用与脚注
 
-脚注用于补充说明，不打断正文的阅读节奏。[^a] 也可以在一段话中引用多个脚注。[^b]
+引用标记是上标的编号，点击跳到文末「参考与注释」里对应的一条，悬停可以预览。[^a] 也可以在一段话中引用多个脚注。[^b]
+
+缩放点积注意力把点积除以 $\sqrt{d_k}$，避免 softmax 进入饱和区[^attention]；FlashAttention 通过分块计算和在线 softmax 减少显存读写[^flash][^attention]。vLLM 的 PagedAttention 实现在 `csrc/attention/` 下[^vllm]。
 
 [^a]: 这是第一个脚注的内容，它会在页面底部显示。
 
 [^b]: 第二个脚注的内容可以稍长一些，包含对前面论述的限定条件。
+
+[^attention]: Ashish Vaswani 等，“Attention Is All You Need”，NeurIPS 2017。[arXiv:1706.03762](https://arxiv.org/abs/1706.03762)。缩放因子为 $1/\sqrt{d_k}$，见原文 §3.2.1。
+
+[^flash]: Tri Dao 等，“FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness”，NeurIPS 2022。[arxiv.org/abs/2205.14135](https://arxiv.org/abs/2205.14135)，访问于 2026-08-30。
+
+[^vllm]: vLLM 项目，`csrc/attention/` 目录，main 分支，访问于 2026-08-30。[https://github.com/vllm-project/vllm/tree/main/csrc/attention?display=source&a_very_long_query_parameter=to-check-that-long-urls-wrap-inside-the-notes-column](https://github.com/vllm-project/vllm/tree/main/csrc/attention?display=source&a_very_long_query_parameter=to-check-that-long-urls-wrap-inside-the-notes-column)
 
 ## 代码
 
@@ -307,9 +315,9 @@ gantt
     交互组件        :p2, after p1, 10d
 ```
 
-饼图：
+饼图（围栏的 `caption="…"` 写题注）：
 
-```mermaid
+```mermaid caption="图 3：一篇文章的时间分配"
 pie title 一篇文章的时间分配
     "写作" : 45
     "排版" : 25
@@ -324,6 +332,24 @@ pie title 一篇文章的时间分配
 ![自注意力计算流程](./diagrams/attention-flow.excalidraw '图 1：自注意力')
 
 ![Transformer 数据流：y = Wx + b](../../shared/diagrams/transformer-block.drawio#page=2 '图 2：draw.io 多页文件的第二页')
+
+比正文栏窄的图居中，题注仍贴正文左边线：
+
+![Transformer block](../../shared/diagrams/transformer-block.drawio 'Figure 4. A narrow diagram whose caption is long enough to wrap onto a second line, so the actions stay on the first line')
+
+不写标题的图表只有下载链接：
+
+![自注意力计算流程（无题注）](./diagrams/attention-flow.excalidraw)
+
+### 图片
+
+带标题的图片排成 figure，标题是图下题注：
+
+![四张 GPU 的利用率与显存占用](./images/gpu-util.png '图 5：解码阶段的 GPU 利用率')
+
+不带标题的图片保持原样：
+
+![prefill 与 decode 两个阶段](./images/phase.png)
 
 交互讲解组件的引用写法见 explainers.md：
 

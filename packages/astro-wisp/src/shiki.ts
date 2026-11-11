@@ -95,11 +95,14 @@ export function parseFoldMeta(
 
 /** 给 pre 加语言信息，并包一层 div.wisp-code（语言标签 + 复制按钮的定位容器）。
  *  codeCopy 为真时给容器加 wisp-code--copy 修饰类，让 CSS 无需等客户端脚本
- *  插入按钮后再用 :has() 探测，避免语言标签位置跳变（CLS）。 */
+ *  插入按钮后再用 :has() 探测，避免语言标签位置跳变（CLS）。
+ *  codeWrap 为真时加 wisp-code--wrap：站点默认自动换行（无 JS 也生效）；
+ *  读者的选择写在 html[data-wisp-code-wrap="on|off"] 上，优先于这个默认值（见 code.css）。 */
 export function wispFrameTransformer(
   lineNumbers: boolean,
   fold?: CodeFoldOptions,
   codeCopy?: boolean,
+  codeWrap?: boolean,
 ): ShikiTransformer {
   return {
     name: 'wisp:frame',
@@ -108,7 +111,9 @@ export function wispFrameTransformer(
       node.properties.dataLanguage = lang;
       this.addClassToHast(node, 'wisp-pre');
       if (lineNumbers) this.addClassToHast(node, 'wisp-ln');
+      // 无 JS 时可键盘横向滚动；有 JS 时只有确实溢出的代码块保留 tabindex（Base 布局的脚本按 data-wisp-tab 接管）
       node.properties.tabindex = 0;
+      node.properties['data-wisp-tab'] = '';
       // 行数与折叠标记（不含 JS 时仍完整显示，脚本负责实际折叠）
       const code = node.children.find(
         (c): c is Element => c.type === 'element' && c.tagName === 'code',
@@ -138,7 +143,9 @@ export function wispFrameTransformer(
           type: 'element',
           tagName: 'div',
           properties: {
-            class: codeCopy ? 'wisp-code wisp-code--copy' : 'wisp-code',
+            class: ['wisp-code', codeCopy && 'wisp-code--copy', codeWrap && 'wisp-code--wrap']
+              .filter(Boolean)
+              .join(' '),
             'data-language': lang,
             ...extra,
           },
@@ -165,6 +172,7 @@ export function wispShikiConfig(config: WispConfig) {
   return {
     themes: { light: 'github-light', dark: 'github-dark' },
     defaultColor: false as const,
+    // 换行由 code.css 按读者偏好切换（悬挂缩进、行号只标逻辑行），不用 Shiki 的内联 white-space
     wrap: false as const,
     transformers: [
       wispDiffTransformer(),
@@ -173,6 +181,7 @@ export function wispShikiConfig(config: WispConfig) {
         config.features.lineNumbers,
         config.features.codeFold,
         config.features.codeCopy,
+        config.features.codeWrap,
       ),
     ],
   };

@@ -32,6 +32,11 @@ export const wispConfigSchema = z.object({
   features: z
     .object({
       codeCopy: z.boolean().default(true),
+      /**
+       * 代码块默认自动换行。false（默认）= 长行横向滚动；读者都可以用代码块题注行的「自动换行」按钮切换，
+       * 选择存在 localStorage（wisp-code-wrap），对整页代码块生效。
+       */
+      codeWrap: z.boolean().default(false),
       lineNumbers: z.boolean().default(true),
       math: z.boolean().default(true),
       mermaid: z.boolean().default(true),
