@@ -6,12 +6,14 @@
  */
 export * from './core';
 export { default as Explainer, type ExplainerProps } from './react/Explainer';
-export { default as Player, type PlayerProps } from './react/Player';
+export { default as Player, MAX_TICKS, type PlayerProps } from './react/Player';
+export { RichText, Tex, loadKatex, type RichTextProps, type TexProps } from './react/RichText';
 export {
   usePlayer,
   SPEEDS,
   BASE_INTERVAL_MS,
   stepDelay,
+  nextSpeed,
   type PlayerApi,
   type Speed,
 } from './react/usePlayer';
@@ -28,3 +30,4 @@ export {
 } from './react/primitives/Matrix';
 export { default as Cell, type CellProps, type CellState } from './react/primitives/Cell';
 export { default as Label, type LabelProps } from './react/primitives/Label';
+export { default as TexLabel, type TexLabelProps } from './react/primitives/TexLabel';

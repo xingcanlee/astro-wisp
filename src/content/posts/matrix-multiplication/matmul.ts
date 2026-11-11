@@ -56,7 +56,7 @@ export function matmul(a: number[][], b: number[][]): Timeline<MatMulState> {
   const tl: Timeline<MatMulState> = [
     {
       state: snap('start', null, null, null, null),
-      caption: `计算 C = A × B：A 为 ${m}×${K}，B 为 ${K}×${n}，C 为 ${m}×${n}`,
+      caption: `计算 $C = AB$：A 为 ${m}×${K}，B 为 ${K}×${n}，C 为 ${m}×${n}；每个元素 $C_{ij} = \\sum_k A_{ik}B_{kj}$`,
     },
   ];
 

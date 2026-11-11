@@ -8,6 +8,9 @@ export type Speed = (typeof SPEEDS)[number];
 export const BASE_INTERVAL_MS = 1000;
 export const stepDelay = (speed: number): number => BASE_INTERVAL_MS / speed;
 
+/** 倍速按钮的循环顺序：0.5× → 1× → 2× → 0.5×。 */
+export const nextSpeed = (s: Speed): Speed => SPEEDS[(SPEEDS.indexOf(s) + 1) % SPEEDS.length];
+
 export interface PlayerApi {
   index: number;
   playing: boolean;
@@ -21,6 +24,8 @@ export interface PlayerApi {
   seek: (i: number) => void;
   toggle: () => void;
   setSpeed: (s: Speed) => void;
+  /** 切到下一档倍速（见 nextSpeed） */
+  cycleSpeed: () => void;
 }
 
 /**
@@ -95,5 +100,6 @@ export function usePlayer(length: number): PlayerApi {
       setPlaying(true);
     },
     setSpeed,
+    cycleSpeed: () => setSpeed(nextSpeed),
   };
 }

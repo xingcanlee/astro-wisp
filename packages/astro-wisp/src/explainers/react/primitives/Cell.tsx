@@ -1,6 +1,9 @@
 import { motion, useReducedMotion } from 'motion/react';
 import { toneFill, toneStroke, type Tone } from '../../core/tones';
 
+/** 强高亮描边宽度 */
+const STRONG_STROKE = 2.5;
+
 export type CellState = 'none' | 'soft' | 'strong';
 
 export interface CellProps {
@@ -68,16 +71,21 @@ export default function Cell({
         transition={transition}
         style={{ fill: toneStroke(tone), fillOpacity: 0.2 }}
       />
+      {/* 强高亮的描边向内收半个线宽：整条描边都在格子范围内，不会被 Stage 的 pad 或 SVG 边界裁掉 */}
       <motion.rect
-        x={x}
-        y={y}
-        width={size}
-        height={size}
-        rx={4}
+        x={x + STRONG_STROKE / 2}
+        y={y + STRONG_STROKE / 2}
+        width={size - STRONG_STROKE}
+        height={size - STRONG_STROKE}
+        rx={4 - STRONG_STROKE / 2}
         initial={false}
         animate={{ opacity: state === 'strong' ? 1 : 0 }}
         transition={transition}
-        style={{ fill: toneFill('highlight'), stroke: toneStroke('highlight'), strokeWidth: 2.5 }}
+        style={{
+          fill: toneFill('highlight'),
+          stroke: toneStroke('highlight'),
+          strokeWidth: STRONG_STROKE,
+        }}
       />
       <text
         x={x + size / 2}

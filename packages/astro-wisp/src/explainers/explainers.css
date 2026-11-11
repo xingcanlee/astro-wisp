@@ -1,47 +1,77 @@
-/* 交互式讲解：Explainer 外壳、Player 控制条、caption、SVG 原语。只使用 --wisp-* 令牌。
+/* 交互式讲解：Explainer 外壳、Player、caption、SVG 原语。只使用 --wisp-* 令牌。
  * 由 Player.tsx 引入：只有用到讲解组件的页面才会加载。属于正文内容样式，与 .prose 同在 utilities 层。 */
 @layer theme, base, components, utilities;
 
 @layer utilities {
   /*
- * 外观：一张卡片。标题是卡片的顶栏（左对齐），中间是白底舞台（SVG），底部是浅底的说明 + 控制条。
- * 舞台用页面底色而不是 surface，组件内部的灰色轨道/格子才不会“灰上加灰”。
- */
-  .wisp-explainer {
-    margin-block: 2.25rem;
-    margin-inline: 0;
+   * 外观：一张 1px 发丝线卡片（手册里的一幅插图），从上到下：
+   *   标题行（纸白，图号 + 标题 | 步数）→ 舞台（纸白，SVG）→ 进度刻度线（压在舞台与说明的分界上）
+   *   → 说明（surface）→ 控制条（surface，上一步 / 播放 / 下一步 | 倍速）。
+   * 舞台用页面底色而不是 surface，组件内部的灰色轨道/格子才不会“灰上加灰”。
+   * 高度稳定：说明区按最长那一步预留高度（全部说明叠在同一网格格子里），舞台有 min-height 棘轮（Player.tsx）。
+   */
+  .wisp-explainer,
+  .wisp-player {
+    --wisp-player-thumb: 12px;
+    --wisp-player-btn: 2.5rem;
   }
+  .wisp-explainer {
+    margin-block: var(--wisp-block-gap, 1.75em);
+    margin-inline: 0;
+    border: 1px solid var(--wisp-border);
+    border-radius: 4px;
+    background: var(--wisp-bg);
+  }
+
+  /* 标题行：左边图号 + 标题，右边步数 */
   .prose .wisp-explainer__title,
   .wisp-explainer__title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
     margin: 0;
     padding: 0.625rem 1rem;
-    border: 1px solid var(--wisp-border);
-    border-bottom: 0;
-    border-radius: 4px 4px 0 0;
-    background: var(--wisp-bg);
+    border-bottom: 1px solid var(--wisp-border);
     color: var(--wisp-fg);
-    font-size: 0.8125rem;
-    font-weight: 600;
+    font-size: 0.875rem;
     line-height: 1.5;
     text-align: start;
   }
+  .wisp-explainer__title-text {
+    min-width: 0;
+    font-weight: 600;
+  }
+  /* 有图号时与静态图题同一语法：图号墨色加粗，其余 muted 常规 */
+  .wisp-explainer__title-text[data-numbered] {
+    color: var(--wisp-muted);
+    font-weight: 400;
+  }
+  .wisp-explainer__title .wisp-fig-no {
+    color: var(--wisp-fg);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .wisp-explainer__title .wisp-player__count {
+    flex: none;
+  }
 
   .wisp-player {
-    overflow: hidden;
     border: 1px solid var(--wisp-border);
     border-radius: 4px;
     background: var(--wisp-bg);
     padding: 0;
   }
-  .wisp-explainer__title + .wisp-player {
-    border-radius: 0 0 4px 4px;
+  /* 在 Explainer 里卡片边框由 figure 画 */
+  .wisp-explainer > .wisp-player {
+    border: 0;
+    border-radius: 0 0 3px 3px;
   }
   .wisp-player__stage {
     padding: 1.25rem 1rem;
   }
   .wisp-player:focus-visible,
-  .wisp-player button:focus-visible,
-  .wisp-player__range:focus-visible {
+  .wisp-player button:focus-visible {
     outline: 2px solid var(--wisp-accent);
     outline-offset: 2px;
   }
@@ -65,42 +95,176 @@
     font-size: 14px;
     font-weight: 600;
   }
-
-  .wisp-player__caption {
-    min-height: 3em;
-    margin-top: 0;
-    padding: 0.875rem 1rem 0;
-    border-top: 1px solid var(--wisp-border);
-    background: var(--wisp-surface);
-    color: var(--wisp-fg);
-    font-size: 0.875rem;
-    line-height: 1.6;
+  /* TexLabel：foreignObject 里的 KaTeX，与 Label 同字号，在盒子里垂直居中 */
+  .wisp-explainer__tex-label {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    font-family: var(--wisp-font-sans);
+    font-size: 14px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .wisp-explainer__tex-label .katex {
+    font-size: 1.1em;
   }
 
+  /*
+   * 进度刻度线：舞台与说明的分界本身就是一条 1px rule，已走过的部分是 2px teal（与页眉的阅读进度线同一语言）。
+   * 每一步一个刻度（步数 ≤ MAX_TICKS）。真正的控件是叠在上面的透明 <input type="range">：24px 高的命中区，
+   * 滑块只在 hover / 键盘焦点时出现。滑块中心的行程是 [thumb/2, 100% − thumb/2]，填充和刻度按同一公式定位。
+   */
+  .wisp-player__track {
+    position: relative;
+    height: 1px;
+    background: var(--wisp-border);
+  }
+  .wisp-player__rail {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .wisp-player__fill {
+    position: absolute;
+    top: -0.5px;
+    left: 0;
+    height: 2px;
+    width: calc(
+      var(--wisp-player-thumb) / 2 + var(--wisp-progress) * (100% - var(--wisp-player-thumb))
+    );
+    background: var(--wisp-accent);
+  }
+  .wisp-player__tick {
+    position: absolute;
+    top: -3px;
+    left: calc(var(--wisp-player-thumb) / 2 + var(--wisp-at) * (100% - var(--wisp-player-thumb)));
+    width: 1px;
+    height: 7px;
+    margin-left: -0.5px;
+    background: var(--wisp-subtle);
+  }
+  .wisp-player__tick[data-done] {
+    background: var(--wisp-accent);
+  }
+
+  .wisp-player__range {
+    position: absolute;
+    z-index: 1;
+    inset-inline: 0;
+    top: -12px;
+    width: 100%;
+    height: 24px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
+  }
+  .wisp-player__range:focus-visible {
+    outline: none;
+  }
+  .wisp-player__range::-webkit-slider-runnable-track {
+    height: 24px;
+    background: transparent;
+    border: 0;
+  }
+  .wisp-player__range::-moz-range-track {
+    height: 24px;
+    background: transparent;
+    border: 0;
+  }
+  .wisp-player__range::-moz-range-progress {
+    background: transparent;
+  }
+  .wisp-player__range::-webkit-slider-thumb {
+    box-sizing: border-box;
+    width: var(--wisp-player-thumb);
+    height: var(--wisp-player-thumb);
+    margin-top: calc((24px - var(--wisp-player-thumb)) / 2);
+    border: 2px solid var(--wisp-bg);
+    border-radius: 3px;
+    background: var(--wisp-accent);
+    opacity: 0;
+    appearance: none;
+  }
+  .wisp-player__range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: var(--wisp-player-thumb);
+    height: var(--wisp-player-thumb);
+    border: 2px solid var(--wisp-bg);
+    border-radius: 3px;
+    background: var(--wisp-accent);
+    opacity: 0;
+  }
+  .wisp-player__range:hover::-webkit-slider-thumb,
+  .wisp-player__range:focus-visible::-webkit-slider-thumb {
+    opacity: 1;
+  }
+  .wisp-player__range:hover::-moz-range-thumb,
+  .wisp-player__range:focus-visible::-moz-range-thumb {
+    opacity: 1;
+  }
+  .wisp-player__range:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--wisp-accent);
+    outline-offset: 1px;
+  }
+  .wisp-player__range:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--wisp-accent);
+    outline-offset: 1px;
+  }
+
+  /* 说明：全部步骤的说明叠在同一格，盒子高度 = 最长的那一步；只有当前那段可见、在 aria-live 区里 */
+  .wisp-player__captions {
+    display: grid;
+    padding: 0.875rem 1rem 0.25rem;
+    background: var(--wisp-surface);
+    color: var(--wisp-fg);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    text-align: start;
+    overflow-wrap: break-word;
+  }
+  .wisp-player__captions > *,
+  .wisp-player__ghosts > * {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+  .wisp-player__ghosts {
+    display: grid;
+    visibility: hidden;
+  }
+
+  /* 控制条：左边上一步 / 播放 / 下一步，右边（步数）+ 倍速。一行，320px 也不换行 */
   .wisp-player__controls {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem 0.75rem;
-    margin-top: 0;
-    padding: 0.75rem 1rem 1rem;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem 0.5rem;
+    border-radius: 0 0 3px 3px;
     background: var(--wisp-surface);
   }
   .wisp-player__buttons,
-  .wisp-player__speed {
-    display: inline-flex;
+  .wisp-player__aside {
+    display: flex;
+    align-items: center;
     gap: 0.25rem;
   }
+  .wisp-player__aside {
+    gap: 0.5rem;
+  }
   .wisp-player button {
-    min-width: 2.5rem;
-    min-height: 2.5rem;
-    padding: 0 0.5rem;
-    border: 1px solid var(--wisp-border);
     display: inline-flex;
+    flex: none;
     align-items: center;
     justify-content: center;
+    width: var(--wisp-player-btn);
+    height: var(--wisp-player-btn);
+    padding: 0;
+    border: 0;
     border-radius: 3px;
-    background: var(--wisp-bg);
+    background: transparent;
     color: var(--wisp-fg);
     font: inherit;
     font-size: 0.875rem;
@@ -108,68 +272,79 @@
     cursor: pointer;
     transition:
       background-color 150ms,
-      border-color 150ms,
-      transform 120ms;
+      color 150ms;
   }
   .wisp-player button .wisp-icon {
     width: 1rem;
     height: 1rem;
   }
-  .wisp-player button:active:not(:disabled) {
-    transform: scale(0.94);
-  }
   .wisp-player button:hover:not(:disabled) {
-    border-color: var(--wisp-accent);
+    background: var(--wisp-surface-2);
+  }
+  .wisp-player button:disabled {
+    color: var(--wisp-subtle);
+    cursor: default;
+  }
+  .wisp-player .wisp-player__play {
+    background: var(--wisp-accent);
+    color: var(--wisp-accent-fg);
   }
   .wisp-player .wisp-player__play:hover:not(:disabled) {
     background: color-mix(in srgb, var(--wisp-accent) 88%, var(--wisp-fg));
   }
-  .wisp-player button:disabled {
-    color: var(--wisp-subtle);
-    cursor: not-allowed;
+  .wisp-player .wisp-player__speed {
+    width: auto;
+    min-width: var(--wisp-player-btn);
+    padding-inline: 0.5rem;
   }
-  .wisp-player .wisp-player__play {
-    background: var(--wisp-accent);
-    border-color: var(--wisp-accent);
-    color: var(--wisp-accent-fg);
-  }
-  .wisp-player .wisp-player__play:disabled {
-    background: var(--wisp-bg);
-    color: var(--wisp-subtle);
-    border-color: var(--wisp-border);
-  }
-  .wisp-player__speed button[aria-pressed='true'] {
-    background: var(--wisp-selection);
-    border-color: var(--wisp-accent);
-  }
-  .wisp-player__range {
-    flex: 1 1 8rem;
-    min-width: 6rem;
-    min-height: 2.5rem;
-    accent-color: var(--wisp-accent);
-  }
+
   .wisp-player__count {
     color: var(--wisp-muted);
     font-size: 0.8125rem;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  /* 预留最宽取值的宽度：::before 放最宽的文字（不可见），当前值叠在同一格 */
+  .wisp-player__reserve {
+    display: inline-grid;
+    white-space: nowrap;
+  }
+  .wisp-player__reserve::before {
+    content: attr(data-reserve);
+    visibility: hidden;
+  }
+  .wisp-player__reserve::before,
+  .wisp-player__reserve > span {
+    grid-area: 1 / 1;
+  }
+  .wisp-player__count .wisp-player__reserve > span {
+    justify-self: end;
   }
 
+  @media (pointer: coarse) {
+    .wisp-explainer,
+    .wisp-player {
+      --wisp-player-btn: 2.75rem;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .wisp-player button {
       transition: none;
     }
   }
-  /* 窄屏：进度条、页码、倍速并在第二行，控制条两行放下 */
-  @media (max-width: 39.99rem) {
-    .wisp-player__buttons {
-      flex: 1 0 100%;
+  @media (max-width: 40rem) {
+    .wisp-player__stage {
+      padding: 1rem 0.75rem;
     }
-    .wisp-player__range {
-      flex-basis: 4.5rem;
-      min-width: 4.5rem;
+    .wisp-explainer__title,
+    .prose .wisp-explainer__title {
+      padding-inline: 0.75rem;
     }
-    .wisp-player__speed button {
-      min-width: 2.75rem;
+    .wisp-player__captions {
+      padding-inline: 0.75rem;
+      font-size: 0.875rem;
+    }
+    .wisp-player__controls {
       padding-inline: 0.25rem;
     }
   }

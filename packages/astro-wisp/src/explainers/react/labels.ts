@@ -15,6 +15,8 @@ export interface PlayerLabels {
   stepOf: (index: number, total: number) => string;
   speed: string;
   speedValue: (s: number) => string;
+  /** 倍速按钮的无障碍名称：当前倍速 + 按下会切换 */
+  speedCycle: (s: number) => string;
   /** 键盘提示（title 中的括号部分） */
   keys: { first: string; prev: string; next: string; last: string; toggle: string };
 }
@@ -32,6 +34,7 @@ export const ZH: PlayerLabels = {
   stepOf: (i, n) => `第 ${i} 步，共 ${n} 步`,
   speed: '播放速度',
   speedValue: (s) => `${s} 倍速`,
+  speedCycle: (s) => `播放速度：${s} 倍，按下切换`,
   keys: { first: 'Home', prev: '←', next: '→', last: 'End', toggle: '空格' },
 };
 
@@ -48,6 +51,7 @@ export const EN: PlayerLabels = {
   stepOf: (i, n) => `Step ${i} of ${n}`,
   speed: 'Playback speed',
   speedValue: (s) => `${s}× speed`,
+  speedCycle: (s) => `Playback speed ${s}×, activate to change`,
   keys: { first: 'Home', prev: '←', next: '→', last: 'End', toggle: 'Space' },
 };
 

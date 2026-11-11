@@ -7,11 +7,12 @@ import {
   CELL,
   Explainer,
   LABEL_H,
-  Label,
   Matrix,
   Stage,
+  TexLabel,
   focusOf,
   formatNumber as f,
+  plainInlineMath,
   matrixHeight,
   matrixWidth,
 } from 'astro-wisp/explainers';
@@ -108,7 +109,14 @@ function Scene({ s, focus }: { s: MatMulState; focus?: string[] }) {
         tone="v"
         highlight={focusOf(focus, 'c')}
       />
-      <Label x={wA / 2} y={hB / 2 + LABEL_H / 2} text="C = A × B" muted />
+      <TexLabel
+        x={wA / 2}
+        y={hB / 2 + LABEL_H / 2}
+        width={wA}
+        height={LABEL_H}
+        tex="C = AB"
+        muted
+      />
     </Stage>
   );
 }
@@ -119,7 +127,7 @@ export default function MatMul({ a, b, title }: MatMulProps) {
     <Explainer
       steps={steps}
       title={title}
-      label={title ? `${title}：矩阵乘法讲解` : '矩阵乘法讲解'}
+      label={title ? `${plainInlineMath(title)}：矩阵乘法讲解` : '矩阵乘法讲解'}
     >
       {(step) => (
         <>
