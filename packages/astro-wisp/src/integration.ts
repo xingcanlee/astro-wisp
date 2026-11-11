@@ -10,6 +10,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import remarkCjkFriendly from 'remark-cjk-friendly';
+import remarkCjkFriendlyGfmStrikethrough from 'remark-cjk-friendly-gfm-strikethrough';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkPele from './plugins/remark-pele';
@@ -243,6 +244,8 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
           [wispPipeline, { digest: pipelineDigest() }],
           // 中文强调：`**文字。**后文` 这类紧挨全角标点的 ** / * 也能闭合（CommonMark 的分界规则不认 CJK）
           remarkCjkFriendly,
+          // GFM 删除线同样需要绕过 CommonMark 对中文标点的分界规则；必须在 Astro 的 GFM 扩展之后运行。
+          remarkCjkFriendlyGfmStrikethrough,
         ];
         const rehypePlugins: RehypePlugins = [];
         if (config.features.math) remarkPlugins.push(remarkMath);

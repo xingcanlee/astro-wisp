@@ -14,6 +14,9 @@ const q = (f: string) => (/[\s]/.test(f) ? `"${f}"` : f);
 const stack = (fs: string[]) =>
   fs.map((f) => (FONT_STACK_VARS[f] ? `var(${FONT_STACK_VARS[f]}, ${q(f)})` : q(f))).join(', ');
 
+/** Pele 的面积图 / 饼图填充：描边色混入背景，避免调色板重调后变成深色墨块。 */
+export const PELE_FILL_STROKE_PERCENT = { light: 58, dark: 40 } as const;
+
 function modeVars(p: Palette, mode: Mode): string {
   const lines: string[] = [];
   for (const [k, v] of Object.entries(p.color.base)) lines.push(`  --wisp-${k}: ${v[mode]};`);
@@ -63,8 +66,30 @@ export function genPele(p: Palette = defaultPalette): string {
     typeof radiusValue.md === 'number'
       ? radiusValue.md
       : 8;
-  const series = hueNamesOf(p)
-    .map((h, i) => `  --pele-series-${i + 1}: var(--wisp-hue-${h});`)
+  const hues = hueNamesOf(p);
+  const series = hues
+    .map(
+      (h, i) =>
+        `  --pele-series-${i + 1}: var(--wisp-hue-${h});\n` +
+        `  --pele-series-${i + 1}-fill: color-mix(in srgb, var(--wisp-hue-${h}) ${PELE_FILL_STROKE_PERCENT.light}%, var(--wisp-bg));`,
+    )
+    .join('\n');
+  const darkSeries = hues
+    .map(
+      (h, i) =>
+        `  --pele-series-${i + 1}-fill: color-mix(in srgb, var(--wisp-hue-${h}) ${PELE_FILL_STROKE_PERCENT.dark}%, var(--wisp-bg));`,
+    )
+    .join('\n');
+  const fills = hues
+    .map(
+      (_, i) =>
+        `.pele-pie .pele-slice:nth-child(${i + 1}),\n` +
+        `.pele-pie .pele-legend-item:nth-child(${i + 1}) rect,\n` +
+        `.pele-xychart .pele-plot > .pele-series:nth-child(${i + 1}) .pele-area,\n` +
+        `.pele-xychart .pele-plot > .pele-series:nth-child(${i + 1}).pele-bars {\n` +
+        `  fill: var(--pele-series-${i + 1}-fill, var(--pele-series-${i + 1}));\n` +
+        `}`,
+    )
     .join('\n');
   return `${HEADER}
 .pele {
@@ -79,6 +104,22 @@ export function genPele(p: Palette = defaultPalette): string {
   --pele-font: var(--wisp-font-sans);
   --pele-radius: ${radius}px;
 ${series}
+}
+
+[data-theme="dark"] .pele {
+${darkSeries}
+}
+
+${fills}
+
+.pele-pie .pele-slices,
+.pele-pie .pele-slice {
+  stroke: var(--wisp-bg);
+  stroke-width: 1px;
+}
+
+.pele-pie .pele-slice-labels {
+  fill: var(--wisp-fg);
 }
 `;
 }

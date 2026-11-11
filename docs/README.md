@@ -51,3 +51,7 @@
 - **Node ≥ 22.23.4**（astro@7 的 `engines` 要求）。
 - 包管理器：pnpm。
 - 图表构建（仅作者本地需要，CI 不需要）：Playwright Chromium（Excalidraw 导出），draw.io desktop CLI 或 Docker（draw.io 导出）。
+
+## 0.5.1 决策记录
+
+- **字体 CLS**：本轮没有加入 `size-adjust` / `ascent-override`：本地 CJK fallback 的度量因系统字体而异，硬编码覆盖可能让部分平台更不稳定。后续若要处理，应在生产构建的长系列文章上用节流网络先测 CLS，再按平台分别校准并回归侧栏一行 / 两行的边界。

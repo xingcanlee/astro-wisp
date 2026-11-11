@@ -2,6 +2,19 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.5.1 (2026-11-11)
+
+### 修复
+
+- **Mermaid 饼图与面积填充**：系列填充改为由 hue 描边色混入背景的中间明度，分隔线保持 1px 背景色，切换浅色 / 深色时标签仍满足对比度要求。
+- **中文删除线**：加入 `remark-cjk-friendly-gfm-strikethrough@2.3.2`，`.md` 与 `.mdx` 中 `~~文字。~~后文` 均能正确闭合。
+- **脚注升级说明**：更正 0.5.0 的表述；0.5.x 输出仍保留 `.footnotes`、`section[data-footnotes]`、`[data-footnote-ref]`、`[data-footnote-backref]` 与 `#footnote-label`，并在此基础上增加 `.wisp-notes`、`.wisp-cite` 等主题类。
+
+### 测试与示例
+
+- 演示站加入 4 篇系列示例文章，覆盖系列栏、书眉位置按钮、窄屏文首详情和无 JS 回落；系列图表源文件按颜色规范收敛到最多 3 种 hue。
+- e2e 增加系列导航覆盖；本版也在 Firefox 与 WebKit 各完整运行一次测试套件，主题行为通过，浏览器专属的 KaTeX axe / clipboard permission 检查保留为测试环境差异。
+
 ## 0.5.0 (2026-11-11)
 
 本版调整了图题 class、调色板的 8 个 hue、交互讲解的控制条和含公式标题的锚点 id，**自定义了样式、覆盖了组件或带有图表源文件的站点请先看文末「升级说明」**。
@@ -90,7 +103,7 @@
 
 - **交互讲解**：说明和标题里可以（可选）写 `$…$` 行内公式；`$` 不成对时按原文显示。如果你自己拼了播放器控制条或依赖「第一步 / 最后一步」按钮、三个倍速按钮（`aria-pressed`）的选择器，请改为新的循环倍速按钮（`.wisp-player__speed`）；自定义 `labels` 时可以补上 `speedCycle`。
 - **中文强调后的多余空格不再需要**：`remark-cjk-friendly` 之后，`**文字。**后文` 可以直接紧挨着写，不必为了让 `**` 闭合而在后面加空格；已有的空格可以保留，但可以删掉。
-- **脚注**：写法不变，但文末的列表现在是「参考与注释」，自定义了 `.footnotes` 相关样式的站点请对照 `prose.css` 里新的 `.wisp-cite` / `.wisp-notes`。
+- **脚注**：写法不变，文末列表现在是「参考与注释」。0.5.x 仍保留 0.4.3 可匹配的 `.footnotes`、`section[data-footnotes]`、`[data-footnote-ref]`、`[data-footnote-backref]` 和 `#footnote-label`；同时增加 `.wisp-cite`、`.wisp-notes` 等主题类，站点可以在原选择器上继续覆盖，也可以按需补充新类。
 
 ## 0.4.3
 

@@ -195,7 +195,7 @@ describe('astro-wisp 集成', () => {
  * 截下 hast 比较。内容覆盖：表格、块级公式、Mermaid、带标题的图片、脚注引用、代码块、中文加粗、含公式的标题。
  */
 const PARITY_SOURCE = [
-  '段落一，引用文献[^a]。**加粗。**后文，**文字**（括号），文**`code`**字。',
+  '段落一，引用文献[^a]。**加粗。**后文，**文字**（括号），文**`code`**字。删除线：~~文字。~~后文，~~内容~~后文。',
   '',
   '## 含公式 $H^{res}$ 的标题',
   '',
@@ -259,6 +259,8 @@ describe('Markdown 管线：.md 与 .mdx 一致', () => {
     expect(md).toContain('<span class="wisp-tok">b-c</span>');
     expect(md).toContain('id="含公式-hres-的标题"');
     expect(md).toContain('<strong>加粗。</strong>后文');
+    expect(md).toContain('<del>文字。</del>后文');
+    expect(md).toContain('<del>内容</del>后文');
     expect(md).toContain('<strong>文字</strong>（括号）');
     expect(md).toContain('文<strong><code>code</code></strong>字');
     expect(mdx).toBe(md);

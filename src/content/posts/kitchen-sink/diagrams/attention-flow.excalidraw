@@ -126,7 +126,7 @@
     },
     {
       "angle": 0,
-      "backgroundColor": "#f5eef9",
+      "backgroundColor": "#f4f4f2",
       "boundElements": [
         {
           "id": "aubx2LQGJOxWFzuCjE28j",
@@ -161,7 +161,7 @@
         "value": 4
       },
       "seed": 790240193,
-      "strokeColor": "#4d335c",
+      "strokeColor": "#5c6067",
       "strokeStyle": "solid",
       "strokeWidth": 1.25,
       "type": "rectangle",
@@ -174,7 +174,7 @@
     },
     {
       "angle": 0,
-      "backgroundColor": "#e3f5f3",
+      "backgroundColor": "#f4f4f2",
       "boundElements": [
         {
           "id": "eq5GdAaADcjuAhdICt25S",
@@ -206,7 +206,7 @@
       "roughness": 1,
       "roundness": null,
       "seed": 2079800527,
-      "strokeColor": "#0f766e",
+      "strokeColor": "#5c6067",
       "strokeStyle": "solid",
       "strokeWidth": 1.25,
       "type": "ellipse",
@@ -259,7 +259,7 @@
     },
     {
       "angle": 0,
-      "backgroundColor": "#fcedec",
+      "backgroundColor": "#f4f4f2",
       "boundElements": [
         {
           "id": "a9yfEsyHYyeQ3KTEkj98z",
@@ -294,7 +294,7 @@
         "value": 4
       },
       "seed": 1052035823,
-      "strokeColor": "#984646",
+      "strokeColor": "#5c6067",
       "strokeStyle": "solid",
       "strokeWidth": 2,
       "type": "rectangle",
@@ -307,7 +307,7 @@
     },
     {
       "angle": 0,
-      "backgroundColor": "#fceee4",
+      "backgroundColor": "#f4f4f2",
       "boundElements": [
         {
           "id": "_BieA6JLo_93bcRxB7jJv",
@@ -334,7 +334,7 @@
         "value": 4
       },
       "seed": 1275387777,
-      "strokeColor": "#762f06",
+      "strokeColor": "#5c6067",
       "strokeStyle": "dashed",
       "strokeWidth": 1.25,
       "type": "diamond",
@@ -906,7 +906,7 @@
     {
       "angle": 0,
       "autoResize": true,
-      "backgroundColor": "transparent",
+      "backgroundColor": "#f4f4f2",
       "boundElements": null,
       "containerId": "score",
       "fillStyle": "solid",
@@ -926,7 +926,7 @@
       "roughness": 1,
       "roundness": null,
       "seed": 1913132815,
-      "strokeColor": "#4d335c",
+      "strokeColor": "#1d1d1f",
       "strokeStyle": "solid",
       "strokeWidth": 2,
       "text": "缩放点积\nQ·Kᵀ/√d",
@@ -943,7 +943,7 @@
     {
       "angle": 0,
       "autoResize": true,
-      "backgroundColor": "transparent",
+      "backgroundColor": "#f4f4f2",
       "boundElements": null,
       "containerId": "softmax",
       "fillStyle": "solid",
@@ -963,7 +963,7 @@
       "roughness": 1,
       "roundness": null,
       "seed": 1781554479,
-      "strokeColor": "#0f766e",
+      "strokeColor": "#1d1d1f",
       "strokeStyle": "solid",
       "strokeWidth": 2,
       "text": "softmax",
@@ -1017,7 +1017,7 @@
     {
       "angle": 0,
       "autoResize": true,
-      "backgroundColor": "transparent",
+      "backgroundColor": "#f4f4f2",
       "boundElements": null,
       "containerId": "out",
       "fillStyle": "solid",
@@ -1037,7 +1037,7 @@
       "roughness": 1,
       "roundness": null,
       "seed": 516955503,
-      "strokeColor": "#984646",
+      "strokeColor": "#1d1d1f",
       "strokeStyle": "solid",
       "strokeWidth": 2,
       "text": "输出 O",
@@ -1054,7 +1054,7 @@
     {
       "angle": 0,
       "autoResize": true,
-      "backgroundColor": "transparent",
+      "backgroundColor": "#f4f4f2",
       "boundElements": null,
       "containerId": "bias",
       "fillStyle": "solid",
@@ -1074,7 +1074,7 @@
       "roughness": 1,
       "roundness": null,
       "seed": 552114063,
-      "strokeColor": "#762f06",
+      "strokeColor": "#1d1d1f",
       "strokeStyle": "solid",
       "strokeWidth": 2,
       "text": "偏置 b",

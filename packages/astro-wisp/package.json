@@ -1,6 +1,6 @@
 {
   "name": "astro-wisp",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "type": "module",
   "description": "Wisp —— 安静好读的技术博客主题（Astro 集成）",
   "author": "xingcanlee",
@@ -101,6 +101,7 @@
     "pele": "^1.13.0",
     "rehype-katex": "^7.0.1",
     "remark-cjk-friendly": "2.3.2",
+    "remark-cjk-friendly-gfm-strikethrough": "2.3.2",
     "remark-math": "^6.0.0",
     "tailwindcss": "^4.3.4",
     "tsx": "^4.23.15",

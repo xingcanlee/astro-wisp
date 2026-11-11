@@ -57,6 +57,7 @@ describe('生成', () => {
   it('pele.css', () => {
     const css = genPele();
     expect(css).toContain('--pele-series-1: var(--wisp-hue-blue);');
+    expect(css).toContain('--pele-series-1-fill: color-mix(in srgb, var(--wisp-hue-blue) 58%');
     expect(css).toContain('--pele-series-8: var(--wisp-hue-slate);');
   });
   it('diagram.css', () => {
@@ -99,7 +100,7 @@ describe('覆盖调色板', () => {
 describe('对比度', () => {
   it('全部 ≥ 4.5', () => {
     const rows = checkContrast();
-    expect(rows.length).toBe(2 * (3 + 16));
+    expect(rows.length).toBe(2 * (3 + 24));
     expect(rows.filter((r) => !r.pass)).toEqual([]);
   });
 });
