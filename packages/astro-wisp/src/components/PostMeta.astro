@@ -104,8 +104,21 @@ const slugMap = config.taxonomy.slugMap;
     .wisp-meta > .wisp-meta-tags::before {
       content: none;
     }
-    .wisp-meta-tags a + a {
-      margin-inline-start: 0.75em;
+    .wisp-meta-tags {
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 0.75em;
+    }
+    /* 触屏：标签链接命中高度 ≥32px，彼此间距 ≥8px */
+    @media (pointer: coarse) {
+      .wisp-meta-tags {
+        row-gap: 0.5rem;
+      }
+      .wisp-meta-tags a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2rem;
+      }
     }
   }
 </style>

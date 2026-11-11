@@ -1,6 +1,7 @@
 ---
 /**
- * 返回顶部：滚动超过一屏后在右下角淡入的圆形图标按钮。
+ * 返回顶部：滚动超过一屏后在右下角淡入的 44×44 方形图标按钮，右缘与外框（.wisp-shell）内容边线对齐。
+ * 页脚进入视口时按钮停在页脚上方（随页面上移），不会盖住页脚里的链接。
  * 点击平滑滚动到顶部（reduced-motion 下直接跳转），随后把焦点移到页面主标题（没有则 main）。无 JS 时不显示。
  */
 import Icon from 'virtual:wisp/components/Icon';
@@ -23,12 +24,17 @@ const { label = /^zh\b/i.test(config.site.lang) ? '返回顶部' : 'Back to top'
       position: fixed;
       z-index: 40;
       inset-block-end: max(1rem, env(safe-area-inset-bottom));
-      inset-inline-end: max(1rem, env(safe-area-inset-right));
+      /* 宽屏贴外框内容右缘（与页头主题按钮、目录栏同一条线），窄屏贴页面边距 */
+      inset-inline-end: max(
+        var(--wisp-pad),
+        (100% - var(--wisp-shell)) / 2,
+        env(safe-area-inset-right)
+      );
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 2.5rem;
-      height: 2.5rem;
+      width: 2.75rem;
+      height: 2.75rem;
       padding: 0;
       border: 1px solid var(--wisp-border);
       border-radius: 4px;
@@ -37,10 +43,17 @@ const { label = /^zh\b/i.test(config.site.lang) ? '返回顶部' : 'Back to top'
       cursor: pointer;
       opacity: 0;
       visibility: hidden;
+      /* 停在页脚上方：脚本写入的上移距离（与滚动同帧更新，不做过渡） */
+      transform: translateY(calc(-1 * var(--wisp-top-lift, 0px)));
       transition:
         opacity 150ms,
         visibility 150ms,
         color 150ms;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .wisp-top {
+        transition: none;
+      }
     }
     .wisp-top[data-visible] {
       opacity: 1;
@@ -61,13 +74,17 @@ const { label = /^zh\b/i.test(config.site.lang) ? '返回顶部' : 'Back to top'
   const btn = document.querySelector<HTMLButtonElement>('[data-back-to-top]');
   if (btn) {
     let tick = false;
+    const footer = document.querySelector('body > footer, .wisp-footer');
     const update = () => {
       tick = false;
       btn.toggleAttribute('data-visible', scrollY > innerHeight);
+      // 页脚上沿进入视口后，按钮跟着上移，始终在页脚上方保持原来的底部间距
+      const over = footer ? innerHeight - footer.getBoundingClientRect().top : 0;
+      btn.style.setProperty('--wisp-top-lift', `${Math.max(0, over)}px`);
     };
-    addEventListener('scroll', () => tick || ((tick = true), requestAnimationFrame(update)), {
-      passive: true,
-    });
+    const onChange = () => tick || ((tick = true), requestAnimationFrame(update));
+    addEventListener('scroll', onChange, { passive: true });
+    addEventListener('resize', onChange);
     update();
     btn.addEventListener('click', () => {
       const still = matchMedia('(prefers-reduced-motion: reduce)').matches;

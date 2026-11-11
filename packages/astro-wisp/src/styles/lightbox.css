@@ -58,28 +58,75 @@
   width: min(92vw, 90rem);
 }
 
+/*
+ * 关闭按钮：与其他图标按钮同一规格——44×44 透明方块、4px 圆角、hover 只改颜色。
+ * 固定在视口右上角（对话框是顶层，fixed 相对视口），窄屏平移大图时也始终够得着。
+ */
 .wisp-lightbox-close {
-  position: absolute;
+  position: fixed;
   z-index: 1;
-  inset-block-start: -2.75rem;
-  inset-inline-end: 0;
+  inset-block-start: max(0.375rem, env(safe-area-inset-top));
+  inset-inline-end: max(0.375rem, env(safe-area-inset-right));
   display: grid;
   place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
-  border: 1px solid var(--wisp-border);
-  border-radius: 999px;
-  background: var(--wisp-surface);
-  color: var(--wisp-fg);
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--wisp-muted);
   font: inherit;
-  font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
+  transition: color 150ms;
 }
 
 .wisp-lightbox-close:hover {
-  background: var(--wisp-surface-2);
+  color: var(--wisp-fg);
+}
+
+.wisp-lightbox-close:focus-visible {
+  border-radius: 2px;
+}
+
+/*
+ * 窄屏：「点击看原尺寸」——图按自然宽度显示（脚本写入宽度，最多 2 倍视口宽），
+ * 放在可上下左右平移的区域里，打开时滚到中间；滚动条与其他内部滚动区同一套（global.css）。
+ * safe center：图比区域小就居中，比区域大就从起点排、靠滚动看全，不会被裁掉一边。
+ */
+@media (max-width: 40rem) {
+  .wisp-lightbox {
+    padding: 3.5rem 0 0;
+  }
+
+  .wisp-lightbox[open] {
+    display: block;
+  }
+
+  .wisp-lightbox-frame {
+    display: block;
+    width: 100%;
+    height: calc(100dvh - 3.5rem);
+    max-height: none;
+  }
+
+  .wisp-lightbox-media {
+    box-sizing: border-box;
+    display: grid;
+    place-items: safe center;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    padding: 0 1rem 1rem;
+  }
+
+  .wisp-lightbox-media > img,
+  .wisp-lightbox-media > svg {
+    max-width: none;
+    max-height: none;
+  }
 }
 
 [data-wisp-lightbox-trigger] {
@@ -106,5 +153,9 @@
 @media (prefers-reduced-motion: reduce) {
   .wisp-lightbox-media {
     scroll-behavior: auto;
+  }
+
+  .wisp-lightbox-close {
+    transition: none;
   }
 }

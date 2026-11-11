@@ -119,3 +119,16 @@ export function summarizeSeries<
     })
     .sort((a, b) => b.updated.getTime() - a.updated.getTime() || a.id.localeCompare(b.id));
 }
+
+/**
+ * 首页「最新文章」分页的文章序列（`/page/n/` 与首页底部的分页导航共用）。
+ * - 有系列时首页是整本手册的总目录，没有分页列表：返回空数组，`/page/n/` 一页都不生成。
+ * - 没有系列时排除首页精选区展示的文章（最多 featuredCount 篇），避免第 2 页重复出现。
+ */
+export function homePagedPosts<
+  T extends { data: { featured?: boolean; series?: { id: string; order: number } } },
+>(posts: T[], featuredCount: number): T[] {
+  if (posts.some((p) => p.data.series)) return [];
+  const featured = new Set(posts.filter((p) => p.data.featured).slice(0, featuredCount));
+  return posts.filter((p) => !featured.has(p));
+}

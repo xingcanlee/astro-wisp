@@ -19,6 +19,7 @@ import Header from 'virtual:wisp/components/Header';
 import Footer from 'virtual:wisp/components/Footer';
 import CopyButton from 'virtual:wisp/components/CopyButton';
 import Lightbox from 'virtual:wisp/components/Lightbox';
+import Citations from 'virtual:wisp/components/Citations';
 import { sitePath } from '../utils/paths';
 
 export interface Props {
@@ -87,6 +88,13 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
         d.dataset.themePref = s === 'light' || s === 'dark' ? s : 'system';
       })();
     </script>
+    <script is:inline>
+      // 代码块自动换行的读者偏好（CopyButton 写入）：首帧前生效，避免先滚动后换行的跳动
+      try {
+        const w = localStorage.getItem('wisp-code-wrap');
+        if (w === 'on' || w === 'off') document.documentElement.dataset.wispCodeWrap = w;
+      } catch {}
+    </script>
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     {config.site.author && <meta name="author" content={config.site.author} />}
@@ -135,41 +143,125 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
     <Footer />
     <Lightbox />
     <CopyButton />
+    <Citations />
     <script is:inline>
+      /*
+       * 横向滚动容器的溢出标记：data-wisp-overflow="start|end|both" 表示哪一侧还有没显示的内容，
+       * CSS 据此在那一侧把内容渐隐（global.css）；滚到头时该侧的渐隐消失。
+       * 同时：只有溢出的容器可以键盘聚焦（tabindex），并带「…，可横向滚动」的名称；不溢出时恢复原名称、
+       * 去掉 tabindex——markup 里的 tabindex=0 + data-wisp-tab 只是无 JS 时的回落（rehype-a11y / shiki.ts）。
+       * 代码块另记 data-wisp-wide（不换行时会溢出）——「自动换行」按钮只在这些块上出现。
+       * 站点自己的横向滚动容器加 data-wisp-scroll 属性即可加入。
+       */
       (() => {
         const zh = document.documentElement.lang.startsWith('zh');
+        const SEL =
+          '.wisp-pre, .wisp-table, .katex-display, .wisp-explainer__scroll, .wisp-pele-body, [data-wisp-scroll]';
+        const side = (el) => {
+          const max = el.scrollWidth - el.clientWidth;
+          if (max <= 1) return '';
+          const x = Math.abs(el.scrollLeft);
+          return x <= 1 ? 'end' : x >= max - 1 ? 'start' : 'both';
+        };
+        const mark = (el) => {
+          const v = side(el);
+          if ((el.getAttribute('data-wisp-overflow') || '') === v) return v;
+          if (v) el.setAttribute('data-wisp-overflow', v);
+          else el.removeAttribute('data-wisp-overflow');
+          return v;
+        };
+        const label = (el, overflow) => {
+          // 键盘：只有溢出的容器是 Tab 停靠点。主题写的 tabindex 带 data-wisp-tab（无 JS 回落），
+          // 没有 tabindex 的容器也归脚本管；站点自己写的 tabindex（没有 data-wisp-tab）保持不动
+          if ('wispTab' in el.dataset || !el.hasAttribute('tabindex')) {
+            el.dataset.wispTab = '';
+            if (overflow) el.tabIndex = 0;
+            else if (document.activeElement !== el) el.removeAttribute('tabindex');
+          }
+          // 名称：原始名称只记一次（data-wisp-label），每次都从它重新拼，所以反复 resize / 滚动不会叠加后缀
+          if (!('wispLabel' in el.dataset))
+            el.dataset.wispLabel = el.getAttribute('aria-label') || '';
+          const own = el.dataset.wispLabel;
+          if (!overflow) {
+            if (own) el.setAttribute('aria-label', own);
+            else el.removeAttribute('aria-label');
+            if ('wispRole' in el.dataset) {
+              el.removeAttribute('role');
+              delete el.dataset.wispRole;
+            }
+            return;
+          }
+          const base =
+            own ||
+            (el.classList.contains('wisp-pre')
+              ? zh
+                ? '代码'
+                : 'Code'
+              : el.classList.contains('wisp-table')
+                ? zh
+                  ? '表格'
+                  : 'Table'
+                : el.classList.contains('katex-display')
+                  ? zh
+                    ? '公式'
+                    : 'Formula'
+                  : zh
+                    ? '内容'
+                    : 'Content');
+          if (!el.hasAttribute('role')) {
+            el.setAttribute('role', 'region');
+            el.dataset.wispRole = '';
+          }
+          el.setAttribute(
+            'aria-label',
+            zh ? `${base}，可横向滚动` : `${base}, horizontally scrollable`,
+          );
+        };
         const update = () => {
-          document
-            .querySelectorAll('.wisp-pre, .wisp-table, .katex-display, .wisp-explainer__scroll')
-            .forEach((el) => {
-              const overflow = el.scrollWidth > el.clientWidth + 1;
-              el.toggleAttribute('data-wisp-overflow', overflow);
-              if (el.classList.contains('wisp-pre')) {
-                if (overflow)
-                  el.setAttribute(
-                    'aria-label',
-                    zh ? '代码，可横向滚动' : 'Code, horizontally scrollable',
-                  );
-                else el.removeAttribute('aria-label');
-              } else if (overflow) {
-                const isTable = el.classList.contains('wisp-table');
-                const existing = el.getAttribute('aria-label');
-                const baseLabel =
-                  existing || (isTable ? (zh ? '表格' : 'Table') : zh ? '内容' : 'Content');
-                el.setAttribute('role', 'region');
-                el.setAttribute(
-                  'aria-label',
-                  zh ? `${baseLabel}，可横向滚动` : `${baseLabel}, horizontally scrollable`,
-                );
-              } else {
-                el.removeAttribute('role');
-                el.removeAttribute('aria-label');
-              }
-            });
+          // 代码块：先在“不换行”状态下统一测量一次（批量写 → 批量读 → 批量写，只触发一次布局）
+          const boxes = [...document.querySelectorAll('.wisp-code')];
+          boxes.forEach((b) => b.setAttribute('data-wisp-measure', ''));
+          const wide = boxes.map((b) => {
+            const pre = b.querySelector('.wisp-pre');
+            return !!pre && pre.scrollWidth > pre.clientWidth + 1;
+          });
+          boxes.forEach((b, i) => {
+            b.removeAttribute('data-wisp-measure');
+            b.toggleAttribute('data-wisp-wide', wide[i]);
+          });
+          document.querySelectorAll(SEL).forEach((el) => label(el, mark(el) !== ''));
+        };
+        let queued = false;
+        const schedule = () => {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(() => {
+            queued = false;
+            update();
+          });
         };
         update();
-        addEventListener('resize', update, { passive: true });
-        if (window.ResizeObserver) new ResizeObserver(update).observe(document.body);
+        addEventListener('resize', schedule, { passive: true });
+        document.addEventListener('wisp:overflow', schedule);
+        if (window.ResizeObserver) new ResizeObserver(schedule).observe(document.body);
+        // 公式、思源黑体等字体换上后宽度会变，而 body 尺寸未必变
+        document.fonts?.ready.then(schedule);
+        // 滚动事件不冒泡：在捕获阶段统一接住，每个容器每帧最多更新一次
+        const pending = new Set();
+        document.addEventListener(
+          'scroll',
+          (e) => {
+            const el = e.target;
+            if (!(el instanceof Element) || !el.matches(SEL)) return;
+            if (pending.has(el)) return;
+            pending.add(el);
+            requestAnimationFrame(() => {
+              pending.delete(el);
+              mark(el);
+            });
+          },
+          { capture: true, passive: true },
+        );
       })();
     </script>
   </body>

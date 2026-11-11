@@ -3,6 +3,7 @@ import {
   filterAndSortPosts,
   filterAndSortSeries,
   groupByYear,
+  homePagedPosts,
   seriesNeighbors,
   summarizeSeries,
 } from './posts';
@@ -107,5 +108,28 @@ describe('summarizeSeries', () => {
 
   it('没有系列时返回空数组', () => {
     expect(summarizeSeries([posts[3]!])).toEqual([]);
+  });
+});
+
+describe('homePagedPosts', () => {
+  const q = (
+    id: string,
+    extra: { featured?: boolean; series?: { id: string; order: number } } = {},
+  ) => ({
+    id,
+    data: extra,
+  });
+  it('没有系列：排除首页精选区展示的文章（最多 featuredCount 篇）', () => {
+    const posts = [
+      q('a', { featured: true }),
+      q('b'),
+      q('c', { featured: true }),
+      q('d', { featured: true }),
+    ];
+    expect(homePagedPosts(posts, 2).map((x) => x.id)).toEqual(['b', 'd']);
+  });
+  it('有任何系列：首页是总目录，不分页', () => {
+    const posts = [q('a'), q('b', { series: { id: 's', order: 1 } }), q('c')];
+    expect(homePagedPosts(posts, 3)).toEqual([]);
   });
 });

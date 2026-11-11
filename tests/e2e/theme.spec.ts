@@ -111,16 +111,26 @@ test('主题按钮在 light → dark → system 间循环并持久化', async ({
   await page.goto(BASE + '/');
   const btn = page.locator('[data-wisp-theme-toggle]');
   const html = page.locator('html');
+  // 每种偏好只显示自己的那一个图标（sun / moon / sun-moon），不叠角标
+  const shown = () =>
+    btn.evaluate((b) =>
+      [...b.querySelectorAll('svg')]
+        .filter((i) => getComputedStyle(i).display !== 'none')
+        .map((i) => i.getAttribute('class')),
+    );
   await expect(btn).toHaveAttribute('aria-label', /浅色/);
   await expect(html).toHaveAttribute('data-theme', 'light');
+  expect(await shown()).toEqual(['wisp-icon i-light']);
 
   await btn.click();
   await expect(html).toHaveAttribute('data-theme', 'dark');
   await expect(html).toHaveAttribute('data-theme-pref', 'dark');
   await expect(btn).toHaveAttribute('aria-label', /深色/);
+  expect(await shown()).toEqual(['wisp-icon i-dark']);
 
   await btn.click();
   await expect(html).toHaveAttribute('data-theme-pref', 'system');
+  expect(await shown()).toEqual(['wisp-icon i-system']);
   await expect(html).toHaveAttribute('data-theme', 'dark'); // 系统为暗色
   await page.emulateMedia({ colorScheme: 'light' });
   await expect(html).toHaveAttribute('data-theme', 'light'); // system 模式跟随 matchMedia 变化

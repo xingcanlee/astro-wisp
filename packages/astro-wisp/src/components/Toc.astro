@@ -1,10 +1,12 @@
 ---
 /**
  * 文章目录。两种形态：
- * - `aside`：宽屏（≥ 1200px）右侧 sticky 栏，由 Post 布局放在 <aside> 中；可收起（状态存 localStorage），
- *   h2 下的 h3 默认折叠，只展开当前阅读所在分组；
- * - `inline`：窄屏文首的 <details> 折叠目录（≥ 1200px 时由 Post 布局隐藏）。
- * 当前章节高亮由 IntersectionObserver 实现，同时作用于页面上所有目录实例。
+ * - `aside`：宽屏（≥ 60rem）右侧 sticky 栏，由 Post 布局放进侧栏；可收起（状态存 localStorage），
+ *   h2 下的 h3 默认折叠，只展开当前阅读所在分组。栏顶是与系列栏成对的标题按钮「目录 ⌄」
+ *   （收起后仍是这一行），篇目在下面独立滚动的 [data-rail-scroll] 里；
+ * - `inline`：窄屏文首的 <details> 折叠目录（≥ 60rem 时由 Post 布局隐藏）。
+ * 当前章节高亮由 IntersectionObserver 实现，同时作用于页面上所有目录实例；点击目录项立即高亮，
+ * 滚到页面底部时高亮最后一节（最后几节往往到不了视口上部）。
  * 无 JS 时：目录完整展开，收起和折叠按钮不显示（`html[data-toc]` 由 Post 的内联脚本写入，作为 JS 可用的标记）。
  */
 import type { MarkdownHeading } from 'astro';
@@ -27,7 +29,8 @@ const {
   title = /^zh\b/i.test(config.site.lang) ? '目录' : 'Contents',
 } = Astro.props;
 const zh = /^zh\b/i.test(config.site.lang);
-const collapseLabel = zh ? `收起${title}` : `Collapse ${title}`;
+const collapseLabel = zh ? `收起${title}` : `Hide ${title.toLowerCase()}`;
+const expandLabel = zh ? `展开${title}` : `Show ${title.toLowerCase()}`;
 const minDepth = Math.min(...headings.map((h) => h.depth));
 const list = headings.map((h) => ({ ...h, level: h.depth - minDepth }));
 
@@ -85,8 +88,10 @@ function renderHeadingText(text: string): string {
   (variant === 'inline' ? (
     <details class="wisp-toc wisp-toc-inline">
       <summary>
-        <Icon name="chevron-right" class="wisp-toc-chev" />
-        {title}
+        <span class="wisp-toc-summary-label">{title}</span>
+        <span class="wisp-toc-head-ico" aria-hidden="true">
+          <Icon name="chevron-down" />
+        </span>
       </summary>
       <ol>
         {list.map((h) => (
@@ -100,67 +105,68 @@ function renderHeadingText(text: string): string {
       </ol>
     </details>
   ) : (
-    <nav class="wisp-toc wisp-toc-aside" aria-labelledby="wisp-toc-title">
-      <div class="wisp-toc-head">
-        <p id="wisp-toc-title" class="wisp-toc-title">
-          {title}
-        </p>
-        <button
-          type="button"
-          class="wisp-toc-toggle"
-          aria-label={collapseLabel}
-          aria-expanded="true"
-          aria-controls="wisp-toc-list"
-          data-toc-toggle
-          data-toc-title={title}
-        >
-          <Icon name="chevron-right" class="wisp-toc-ico-close" />
-          <Icon name="chevron-left" class="wisp-toc-ico-open" />
-          <span class="sr-only" data-toc-action-label>
-            {collapseLabel}
-          </span>
-        </button>
-      </div>
-      <ol id="wisp-toc-list">
-        {groups.map(({ head, kids }, i) =>
-          kids.length === 0 ? (
-            <li>
-              <a href={`#${head.slug}`} data-toc-link={head.slug}>
-                {no(head.slug) && <span class="wisp-toc-no">{no(head.slug)}</span>}
-                <span set:html={renderHeadingText(head.text)} />
-              </a>
-            </li>
-          ) : (
-            <li data-group>
-              <div class="wisp-toc-row">
+    <nav class="wisp-toc wisp-toc-aside" aria-label={title}>
+      {/* 无 JS：静态标题行；有 JS：同一行换成可切换的按钮（与系列栏的标题行同尺寸、同一种 chevron） */}
+      <p class="wisp-toc-title">
+        <span class="wisp-toc-title-label">{title}</span>
+      </p>
+      <button
+        type="button"
+        class="wisp-toc-title wisp-toc-toggle"
+        aria-expanded="true"
+        aria-controls="wisp-toc-scroll"
+        data-toc-toggle
+        data-label-open={collapseLabel}
+        data-label-closed={expandLabel}
+        title={collapseLabel}
+      >
+        <span class="wisp-toc-title-label">{title}</span>
+        <span class="wisp-toc-head-ico" aria-hidden="true">
+          <Icon name="chevron-down" />
+        </span>
+      </button>
+      <div id="wisp-toc-scroll" class="wisp-rail-scroll wisp-scroll" data-rail-scroll>
+        <ol id="wisp-toc-list">
+          {groups.map(({ head, kids }, i) =>
+            kids.length === 0 ? (
+              <li>
                 <a href={`#${head.slug}`} data-toc-link={head.slug}>
                   {no(head.slug) && <span class="wisp-toc-no">{no(head.slug)}</span>}
                   <span set:html={renderHeadingText(head.text)} />
                 </a>
-                <button
-                  type="button"
-                  class="wisp-toc-sub-toggle"
-                  aria-expanded="false"
-                  aria-controls={`wisp-toc-sub-${i}`}
-                >
-                  <Icon name="chevron-right" class="wisp-toc-chev" />
-                  <span class="sr-only">{head.text}</span>
-                </button>
-              </div>
-              <ol id={`wisp-toc-sub-${i}`}>
-                {kids.map((k) => (
-                  <li>
-                    <a href={`#${k.slug}`} data-toc-link={k.slug}>
-                      {no(k.slug) && <span class="wisp-toc-no">{no(k.slug)}</span>}
-                      <span set:html={renderHeadingText(k.text)} />
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            </li>
-          ),
-        )}
-      </ol>
+              </li>
+            ) : (
+              <li data-group>
+                <div class="wisp-toc-row">
+                  <a href={`#${head.slug}`} data-toc-link={head.slug}>
+                    {no(head.slug) && <span class="wisp-toc-no">{no(head.slug)}</span>}
+                    <span set:html={renderHeadingText(head.text)} />
+                  </a>
+                  <button
+                    type="button"
+                    class="wisp-toc-sub-toggle"
+                    aria-expanded="false"
+                    aria-controls={`wisp-toc-sub-${i}`}
+                  >
+                    <Icon name="chevron-right" class="wisp-toc-chev" />
+                    <span class="sr-only">{head.text}</span>
+                  </button>
+                </div>
+                <ol id={`wisp-toc-sub-${i}`}>
+                  {kids.map((k) => (
+                    <li>
+                      <a href={`#${k.slug}`} data-toc-link={k.slug}>
+                        {no(k.slug) && <span class="wisp-toc-no">{no(k.slug)}</span>}
+                        <span set:html={renderHeadingText(k.text)} />
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </li>
+            ),
+          )}
+        </ol>
+      </div>
     </nav>
   ))}
 
@@ -185,7 +191,7 @@ function renderHeadingText(text: string): string {
     .wisp-toc li[data-level='2'] {
       padding-inline-start: 1.8rem;
     }
-    /* 编号 + 标题两列：编号等宽数字、subtle 色，换行后标题悬挂对齐 */
+    /* 编号 + 标题两列：编号等宽数字、muted 色（读者靠它找位置，是文字，不用 subtle），换行后标题悬挂对齐 */
     .wisp-toc a {
       display: flex;
       align-items: baseline;
@@ -197,7 +203,7 @@ function renderHeadingText(text: string): string {
     .wisp-toc-no {
       flex: none;
       min-width: 1.25rem;
-      color: var(--wisp-subtle);
+      color: var(--wisp-muted);
       font-size: 0.75rem;
       font-variant-numeric: tabular-nums;
       transition: color 150ms;
@@ -205,7 +211,8 @@ function renderHeadingText(text: string): string {
     li ol .wisp-toc-no {
       min-width: 1.75rem;
     }
-    .wisp-toc a:hover {
+    .wisp-toc a:hover,
+    .wisp-toc a:hover .wisp-toc-no {
       color: var(--wisp-fg);
     }
     .wisp-toc a[aria-current='true'] {
@@ -226,36 +233,72 @@ function renderHeadingText(text: string): string {
       white-space: nowrap;
     }
 
-    .wisp-toc-head {
+    /*
+     * 栏顶标题行：与系列栏的标题行是一对（0.875rem/600 墨色、2.5rem 高、同一吸顶位置、
+     * 右端 1.75rem 方块里的 chevron：朝下 = 收起着，朝上 = 展开着）。
+     * 静态 <p>（无 JS）和切换按钮共用这一套尺寸；收起后仍是这一行，文字「目录」不消失。
+     */
+    .wisp-toc-title {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-    .wisp-toc-title {
+      gap: 0.5rem;
+      width: 100%;
+      min-height: 2.5rem;
       margin: 0;
+      padding: 0;
       color: var(--wisp-fg);
+      font: inherit;
       font-weight: 600;
       font-size: 0.875rem;
+      line-height: 1.4;
+      text-align: start;
     }
-    .wisp-toc-toggle,
-    .wisp-toc-sub-toggle {
+    .wisp-toc-title-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .wisp-toc-toggle {
+      border: 0;
+      border-radius: 4px;
+      background: none;
+      cursor: pointer;
+    }
+    .wisp-toc-head-ico {
       display: inline-flex;
       flex: none;
       align-items: center;
       justify-content: center;
       width: 1.75rem;
       height: 1.75rem;
-      padding: 0;
-      border: 0;
-      border-radius: 4px;
-      background: none;
+      margin-inline-start: auto;
       color: var(--wisp-muted);
       font-size: 1rem;
+      transition: color 150ms;
+    }
+    .wisp-toc-toggle:hover .wisp-toc-head-ico {
+      color: var(--wisp-accent);
+    }
+    .wisp-toc-toggle[aria-expanded='true'] .wisp-toc-head-ico :global(.wisp-icon) {
+      transform: rotate(180deg);
+    }
+    .wisp-toc-sub-toggle {
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      padding: 0;
+      border: 0;
+      border-radius: 3px;
+      background: none;
+      color: var(--wisp-muted);
+      font-size: 0.875rem;
       cursor: pointer;
       transition: color 150ms;
     }
-    .wisp-toc-toggle:hover,
     .wisp-toc-sub-toggle:hover {
       color: var(--wisp-accent);
     }
@@ -263,17 +306,10 @@ function renderHeadingText(text: string): string {
     .wisp-toc-sub-toggle:focus-visible {
       outline: 2px solid var(--wisp-accent);
       outline-offset: 2px;
-    }
-    .wisp-toc-sub-toggle {
-      width: 1.5rem;
-      height: 1.5rem;
-      font-size: 0.875rem;
+      border-radius: 2px;
     }
     .wisp-toc-sub-toggle[aria-expanded='true'] :global(.wisp-toc-chev) {
       transform: rotate(90deg);
-    }
-    .wisp-toc-toggle :global(.wisp-toc-ico-open) {
-      display: none;
     }
 
     .wisp-toc-aside ol {
@@ -293,15 +329,18 @@ function renderHeadingText(text: string): string {
       border-inline-start-color: var(--wisp-accent);
       font-weight: 500;
     }
+    /*
+     * 有小节的 h2：标题列 + 固定在栏右端的 1.5rem chevron 列。chevron 对齐标题第一行的中线
+     * （0.3rem 上内边距 + 半个 0.8125rem×1.5 行高 − 半个按钮高），标题换行时也不跟着跑。
+     */
     .wisp-toc-row {
-      display: flex;
-      align-items: center;
-      gap: 0.125rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 1.5rem;
+      align-items: start;
+      column-gap: 0.125rem;
     }
-    /* chevron 紧跟文字，而不是被 flex:1 顶到侧栏最右缘 */
-    .wisp-toc-row a {
-      flex: 0 1 auto;
-      min-width: 0;
+    .wisp-toc-row .wisp-toc-sub-toggle {
+      margin-top: calc(0.3rem + 0.8125rem * 0.75 - 0.75rem);
     }
     .wisp-toc-aside li ol {
       border-inline-start: 0;
@@ -312,33 +351,20 @@ function renderHeadingText(text: string): string {
     }
 
     /* 以下规则只在 JS 可用时生效（html[data-toc] 由 Post 内联脚本写入）；无 JS 时目录完整展开 */
-    :global(html:not([data-toc])) .wisp-toc-toggle,
     :global(html:not([data-toc])) .wisp-toc-sub-toggle {
       display: none;
     }
     :global(html[data-toc]) li[data-group]:not([data-open]) > ol {
       display: none;
     }
-    :global(html[data-toc='collapsed']) .wisp-toc-title,
-    :global(html[data-toc='collapsed']) #wisp-toc-list {
+    :global(html:not([data-toc])) .wisp-toc-toggle,
+    :global(html[data-toc]) .wisp-toc-aside > p.wisp-toc-title,
+    :global(html[data-toc='collapsed']) #wisp-toc-scroll {
       display: none;
-    }
-    :global(html[data-toc='collapsed']) .wisp-toc-head {
-      justify-content: flex-start;
-      margin-bottom: 0;
-    }
-    /* 收起时保留栏宽，避免展开/收起引起正文栅格抖动 */
-    :global(html[data-toc='collapsed']) .wisp-toc-aside {
-      min-width: 9rem;
-    }
-    :global(html[data-toc='collapsed']) .wisp-toc-toggle :global(.wisp-toc-ico-close) {
-      display: none;
-    }
-    :global(html[data-toc='collapsed']) .wisp-toc-toggle :global(.wisp-toc-ico-open) {
-      display: inline;
     }
     @media (prefers-reduced-motion: no-preference) {
-      .wisp-toc :global(.wisp-toc-chev) {
+      .wisp-toc :global(.wisp-toc-chev),
+      .wisp-toc-head-ico :global(.wisp-icon) {
         transition: transform 150ms;
       }
     }
@@ -347,11 +373,12 @@ function renderHeadingText(text: string): string {
       margin: 0 0 2.5rem;
       border-bottom: 1px solid var(--wisp-border);
     }
+    /* 窄屏折叠目录：标题在左、chevron 在右，与宽屏栏顶标题行同一种写法 */
     .wisp-toc-inline summary {
       display: flex;
       align-items: center;
       min-height: 2.75rem;
-      gap: 0.35rem;
+      gap: 0.5rem;
       cursor: pointer;
       color: var(--wisp-muted);
       font-size: 0.875rem;
@@ -366,8 +393,11 @@ function renderHeadingText(text: string): string {
     .wisp-toc-inline[open] summary {
       color: var(--wisp-fg);
     }
-    .wisp-toc-inline[open] summary :global(.wisp-toc-chev) {
-      transform: rotate(90deg);
+    .wisp-toc-inline summary:hover .wisp-toc-head-ico {
+      color: var(--wisp-accent);
+    }
+    .wisp-toc-inline[open] summary .wisp-toc-head-ico :global(.wisp-icon) {
+      transform: rotate(180deg);
     }
     .wisp-toc-inline ol {
       padding-bottom: 0.75rem;
@@ -378,15 +408,12 @@ function renderHeadingText(text: string): string {
 <script>
   const root = document.documentElement;
   const btn = document.querySelector<HTMLButtonElement>('[data-toc-toggle]');
-  const actionLabel = btn?.querySelector<HTMLElement>('[data-toc-action-label]');
-  const zh = document.documentElement.lang.startsWith('zh');
-  const title = btn?.dataset.tocTitle ?? (zh ? '目录' : 'Contents');
   const sync = () => {
+    if (!btn) return;
     const expanded = root.dataset.toc !== 'collapsed';
-    btn?.setAttribute('aria-expanded', String(expanded));
-    const action = expanded ? (zh ? '收起' : 'Collapse ') : zh ? '展开' : 'Expand ';
-    btn?.setAttribute('aria-label', `${action}${title}`);
-    if (actionLabel) actionLabel.textContent = `${action}${title}`;
+    btn.setAttribute('aria-expanded', String(expanded));
+    const label = expanded ? btn.dataset.labelOpen : btn.dataset.labelClosed;
+    if (label) btn.title = label;
   };
   sync();
   btn?.addEventListener('click', () => {
@@ -415,8 +442,12 @@ function renderHeadingText(text: string): string {
   const heads = [...new Set(links.map((a) => a.dataset.tocLink!))]
     .map((id) => document.getElementById(id))
     .filter(Boolean) as HTMLElement[];
-  const box = document.querySelector<HTMLElement>('.wisp-post-aside-inner');
+  // 侧栏目录独立滚动的那一层（标题行在它外面，不随篇目滚动）
+  const box = document.querySelector<HTMLElement>('.wisp-toc-aside [data-rail-scroll]');
+  let current = '';
   const set = (id: string) => {
+    if (id === current) return;
+    current = id;
     links.forEach((a) =>
       a.dataset.tocLink === id
         ? a.setAttribute('aria-current', 'true')
@@ -435,19 +466,58 @@ function renderHeadingText(text: string): string {
   };
   if (heads.length && 'IntersectionObserver' in window) {
     const visible = new Set<string>();
+    // 点击目录项后：立即高亮被点的那一项，页面滚动停下之前不让滚动跟踪改掉它
+    // （最后几节到不了视口上部，否则永远不会被高亮，或在平滑滚动途中闪过别的项）
+    let locked = false;
+    let unlock = 0;
+    const atBottom = () => innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
+    const update = () => {
+      if (locked) return;
+      // 滚到底：最后一节
+      if (atBottom()) return set(heads[heads.length - 1]!.id);
+      // 视口上部可见的第一个标题；都不可见时取最后一个已滚过的标题
+      let cur = heads.find((h) => visible.has(h.id));
+      if (!cur) cur = heads.filter((h) => h.getBoundingClientRect().top < 0).pop();
+      if (cur) set(cur.id);
+    };
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) visible.add(e.target.id);
           else visible.delete(e.target.id);
         }
-        // 视口上部可见的第一个标题；都不可见时取最后一个已滚过的标题
-        let cur = heads.find((h) => visible.has(h.id));
-        if (!cur) cur = heads.filter((h) => h.getBoundingClientRect().top < 0).pop();
-        if (cur) set(cur.id);
+        update();
       },
       { rootMargin: '0px 0px -66% 0px' },
     );
     heads.forEach((h) => io.observe(h));
+    // 到底不一定触发交叉变化，所以滚动时也判断一次（rAF 节流）
+    let tick = false;
+    addEventListener(
+      'scroll',
+      () => {
+        if (locked) {
+          clearTimeout(unlock);
+          unlock = window.setTimeout(() => (locked = false), 150);
+          return;
+        }
+        if (!tick) {
+          tick = true;
+          requestAnimationFrame(() => {
+            tick = false;
+            update();
+          });
+        }
+      },
+      { passive: true },
+    );
+    for (const a of links)
+      a.addEventListener('click', () => {
+        set(a.dataset.tocLink!);
+        locked = true;
+        clearTimeout(unlock);
+        // 已在目标位置（没有滚动发生）时也要解锁
+        unlock = window.setTimeout(() => (locked = false), 1000);
+      });
   }
 </script>

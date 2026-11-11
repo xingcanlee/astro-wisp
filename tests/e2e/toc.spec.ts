@@ -34,13 +34,16 @@ test.describe('desktop toc', () => {
 
     // 刷新：首帧（第一个 rAF）就应是收起态
     await page.addInitScript(() => {
-      requestAnimationFrame(() => {
-        const l = document.getElementById('wisp-toc-list');
+      // 目录在文档里出现后的第一帧：首个 rAF 可能早于 body 解析到目录
+      const probe = () => {
+        const l = document.getElementById('wisp-toc-scroll'); // 收起时隐藏的是篇目滚动层
+        if (!l && document.readyState === 'loading') return requestAnimationFrame(probe);
         window.__tocFirst = {
           attr: document.documentElement.dataset.toc,
           display: l ? getComputedStyle(l).display : 'missing',
         };
-      });
+      };
+      requestAnimationFrame(probe);
     });
     await page.reload({ waitUntil: 'load' });
     await page.waitForFunction(() => window.__tocFirst);
@@ -80,6 +83,44 @@ test.describe('desktop toc', () => {
       return r.top >= box.top - 1 && r.bottom <= box.bottom + 1;
     });
     expect(inside).toBe(true);
+  });
+
+  test('点最后一节立即高亮，滚到底时也保持最后一节', async ({ page }) => {
+    await page.goto(POST);
+    const last = page.locator(
+      '#wisp-toc-list > li:last-child > a, #wisp-toc-list > li:last-child > .wisp-toc-row > a',
+    );
+    await last.click();
+    await expect(last).toHaveAttribute('aria-current', 'true');
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(300);
+    await expect(last).toHaveAttribute('aria-current', 'true');
+  });
+
+  test('收起后标题行仍显示「目录」，按钮右缘贴外框', async ({ page }) => {
+    await page.goto(POST);
+    const toggle = page.locator('.wisp-toc-toggle');
+    await toggle.click();
+    await expect(toggle).toHaveText('目录');
+    const box = (await toggle.boundingBox())!;
+    expect(box.height).toBeGreaterThanOrEqual(40);
+    const edge = await page.evaluate(() => {
+      const h = document.querySelector('.wisp-header-inner')!;
+      return h.getBoundingClientRect().right - parseFloat(getComputedStyle(h).paddingRight);
+    });
+    expect(Math.abs(box.x + box.width - edge)).toBeLessThan(1);
+  });
+
+  test('侧栏链接的焦点环不被滚动层裁掉', async ({ page }) => {
+    await page.goto(POST);
+    const a = page.locator('#wisp-toc-list a').first();
+    await a.focus();
+    const clipped = await a.evaluate((el) => {
+      const box = el.closest('[data-rail-scroll]')!.getBoundingClientRect();
+      const r = el.getBoundingClientRect();
+      return r.left - 4 < box.left || r.right + 4 > box.right || r.top - 4 < box.top;
+    });
+    expect(clipped).toBe(false);
   });
 
   test('手动点 chevron 展开和收起 h3', async ({ page }) => {
@@ -125,6 +166,25 @@ for (const [name, width, height] of [
       await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
       await expect(btn).toBeHidden();
       await expect(page.locator('h1')).toBeFocused();
+    });
+
+    test('返回顶部是 44×44，滚到底时不盖住页脚', async ({ page }) => {
+      await page.goto(POST);
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      const btn = page.getByRole('button', { name: '返回顶部' });
+      await expect(btn).toBeVisible();
+      const box = (await btn.boundingBox())!;
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      await expect
+        .poll(() =>
+          page.evaluate(() => {
+            const b = document.querySelector('.wisp-top')!.getBoundingClientRect();
+            const f = document.querySelector('.wisp-footer')!.getBoundingClientRect();
+            return b.bottom <= f.top;
+          }),
+        )
+        .toBe(true);
     });
   });
 }

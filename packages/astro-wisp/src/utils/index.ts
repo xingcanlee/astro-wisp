@@ -7,6 +7,7 @@ export {
   filterAndSortPosts,
   filterAndSortSeries,
   groupByYear,
+  homePagedPosts,
   seriesNeighbors,
   summarizeSeries,
   type PostEntry,

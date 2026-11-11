@@ -1,20 +1,26 @@
 ---
 /**
  * 主题切换按钮：light → dark → system 循环。
- * 当前偏好由 head 内联脚本写入 `<html data-theme-pref>`，图标据此用 CSS 显示，首屏无跳变。
+ * 三种偏好各一个 Lucide 图标（sun / moon / sun-moon），显示的是当前偏好而不是当前明暗，
+ * 所以「跟随系统」不需要角标。偏好由 head 内联脚本写入 `<html data-theme-pref>`，图标据此用 CSS 显示，首屏无跳变。
  * 本组件无 props。
  */
 import Icon from 'virtual:wisp/components/Icon';
+import config from 'virtual:wisp/config';
 
 export type Props = Record<string, never>;
+const zh = /^zh\b/i.test(config.site.lang);
 ---
 
-<button type="button" class="wisp-theme-toggle" data-wisp-theme-toggle aria-label="切换主题">
+<button
+  type="button"
+  class="wisp-theme-toggle"
+  data-wisp-theme-toggle
+  aria-label={zh ? '切换主题' : 'Switch theme'}
+>
   <Icon name="sun" size={18} class="i-light" />
   <Icon name="moon" size={18} class="i-dark" />
-  <span class="i-auto" aria-hidden="true">
-    A
-  </span>
+  <Icon name="sun-moon" size={18} class="i-system" />
 </button>
 
 <style>
@@ -39,49 +45,41 @@ export type Props = Record<string, never>;
       color: var(--wisp-fg);
       background-color: var(--wisp-surface);
     }
-    .wisp-theme-toggle {
-      position: relative;
-    }
     .wisp-theme-toggle:active :global(svg) {
       transform: scale(0.9);
     }
-    /* 图标显示当前实际的明暗（太阳 / 月亮），跟随系统时右下角多一个小 A 角标 */
+    /* 焦点环按规范 2px 圆角（组件自身的 4px 会盖过全局焦点环的圆角） */
+    .wisp-theme-toggle:focus-visible {
+      border-radius: 2px;
+    }
+    /* 一个偏好一个图标：浅色 sun、深色 moon、跟随系统 sun-moon；不叠角标 */
     .wisp-theme-toggle :global(svg) {
       display: none;
       transition: transform 160ms var(--wisp-ease);
     }
-    :global(html[data-theme='light']) .wisp-theme-toggle :global(.i-light),
-    :global(html[data-theme='dark']) .wisp-theme-toggle :global(.i-dark) {
-      display: block;
-    }
-    .i-auto {
-      display: none;
-      position: absolute;
-      right: 0.45rem;
-      bottom: 0.45rem;
-      min-width: 0.8rem;
-      height: 0.8rem;
-      padding-inline: 2px;
-      border-radius: 3px;
-      background: var(--wisp-surface-2);
-      color: var(--wisp-fg);
-      font-size: 0.5625rem;
-      font-weight: 700;
-      line-height: 0.8rem;
-      text-align: center;
-    }
+    :global(html[data-theme-pref='light']) .wisp-theme-toggle :global(.i-light),
+    :global(html[data-theme-pref='dark']) .wisp-theme-toggle :global(.i-dark),
     :global(html:not([data-theme-pref='light']):not([data-theme-pref='dark']))
       .wisp-theme-toggle
-      .i-auto {
+      :global(.i-system) {
       display: block;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .wisp-theme-toggle :global(svg) {
+        transition: none;
+      }
     }
   }
 </style>
 
 <script>
+  import { lang } from 'virtual:wisp/locale';
+  const zh = /^zh\b/i.test(lang);
   const d = document.documentElement;
   const mq = matchMedia('(prefers-color-scheme: dark)');
-  const names: Record<string, string> = { light: '浅色', dark: '深色', system: '跟随系统' };
+  const names: Record<string, string> = zh
+    ? { light: '浅色', dark: '深色', system: '跟随系统' }
+    : { light: 'light', dark: 'dark', system: 'system' };
   const next: Record<string, string> = { light: 'dark', dark: 'system', system: 'light' };
   let pref = names[d.dataset.themePref!] ? d.dataset.themePref! : 'system';
   const apply = () => {
@@ -90,7 +88,12 @@ export type Props = Record<string, never>;
     document
       .querySelectorAll('[data-wisp-theme-toggle]')
       .forEach((b) =>
-        b.setAttribute('aria-label', `主题：${names[pref]}（点击切换为${names[next[pref]!]}）`),
+        b.setAttribute(
+          'aria-label',
+          zh
+            ? `主题：${names[pref]}（点击切换为${names[next[pref]!]}）`
+            : `Theme: ${names[pref]} (switch to ${names[next[pref]!]})`,
+        ),
       );
   };
   apply();

@@ -109,14 +109,40 @@ import Icon from 'virtual:wisp/components/Icon';
       return clone;
     }
 
+    // 窄屏看原尺寸：自然宽度（位图取 naturalWidth / width 属性，SVG 取 width 属性或 viewBox），
+    // 最多 2 倍视口宽；比可用宽度小时就按自然宽度居中。断点与 lightbox.css 一致。
+    const narrow = matchMedia('(max-width: 40rem)');
+    function naturalWidth(source) {
+      if (source instanceof HTMLImageElement)
+        return source.naturalWidth || Number(source.getAttribute('width')) || 0;
+      const attr = Number.parseFloat(source.getAttribute('width') || '');
+      if (attr > 0 && !/[a-z%]/i.test((source.getAttribute('width') || '').replace(/px$/, '')))
+        return attr;
+      return source.viewBox?.baseVal?.width || source.getBoundingClientRect().width;
+    }
+
     function open(source) {
       if (dialog.open) dialog.close();
       activeTrigger = source;
       const label = readableLabel(source);
       title.textContent = label;
       dialog.setAttribute('aria-label', label);
-      mediaSlot.replaceChildren(cloneForDialog(source));
+      const clone = cloneForDialog(source);
+      if (narrow.matches) {
+        const w = Math.min(naturalWidth(source), innerWidth * 2);
+        if (w > 0) {
+          // 内联 style 会覆盖 SVG 自带的 max-width:100%（Pele 图）
+          clone.style.width = `${Math.round(w)}px`;
+          clone.style.maxWidth = 'none';
+          clone.style.height = 'auto';
+        }
+      }
+      mediaSlot.replaceChildren(clone);
       dialog.showModal();
+      if (narrow.matches) {
+        mediaSlot.scrollLeft = (mediaSlot.scrollWidth - mediaSlot.clientWidth) / 2;
+        mediaSlot.scrollTop = (mediaSlot.scrollHeight - mediaSlot.clientHeight) / 2;
+      }
       close.focus();
     }
 
@@ -163,7 +189,8 @@ import Icon from 'virtual:wisp/components/Icon';
 
     close.addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', (event) => {
-      if (event.target === dialog) dialog.close();
+      // 点图以外的空白处关闭（窄屏时空白属于平移区域，不是对话框本身）
+      if (event.target === dialog || event.target === mediaSlot) dialog.close();
     });
     dialog.addEventListener('close', () => {
       mediaSlot.replaceChildren();
