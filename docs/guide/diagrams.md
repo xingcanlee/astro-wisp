@@ -106,7 +106,7 @@ pnpm diagram export src/content/posts/my-post/diagrams/flow.wisp.svg --png --the
 
 ## 六、源文件下载
 
-每张图底部默认显示“源文件”链接，读者可以下载 `.excalidraw` 或 `.drawio` 后再编辑。
+每张图的题注行右端默认显示“源文件”链接（draw.io 图另有“draw.io”链接），读者可以下载 `.excalidraw` 或 `.drawio` 后再编辑。
 
 - 下载地址为 `/diagrams/<文章 id>/<文件名>`，共用图为 `/diagrams/shared/<文件名>`。
 - 构建时源文件会被复制到 `dist/diagrams/`。开发服务器也会直接提供这些地址。

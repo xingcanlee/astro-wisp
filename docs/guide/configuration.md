@@ -63,21 +63,22 @@ export default defineConfig({
 
 ## home
 
-| 字段                 | 类型     | 默认值 | 说明                                                  |
-| -------------------- | -------- | ------ | ----------------------------------------------------- |
-| `home.featuredCount` | 整数 ≥ 0 | `3`    | 首页精选区最多显示的文章数（`featured: true` 的文章） |
-| `home.pageSize`      | 整数 ≥ 1 | `10`   | 列表页每页文章数                                      |
+| 字段                 | 类型     | 默认值 | 说明                                                           |
+| -------------------- | -------- | ------ | -------------------------------------------------------------- |
+| `home.featuredCount` | 整数 ≥ 0 | `3`    | 首页精选区最多显示的文章数（`featured: true` 的文章）          |
+| `home.pageSize`      | 整数 ≥ 1 | `10`   | 列表页每页文章数；首页分页（`/page/n/`）只在站点没有系列时存在 |
 
 ## features
 
-| 字段                       | 类型    | 默认值 | 说明                                                              |
-| -------------------------- | ------- | ------ | ----------------------------------------------------------------- |
-| `features.codeCopy`        | boolean | `true` | 代码块右上角显示复制按钮                                          |
-| `features.lineNumbers`     | boolean | `true` | 代码块显示行号                                                    |
-| `features.math`            | boolean | `true` | 启用 KaTeX 公式（`remark-math` 与 `rehype-katex`）                |
-| `features.mermaid`         | boolean | `true` | 构建期用 Pele 渲染 `mermaid` 代码块。关闭后它们作为普通代码块显示 |
-| `features.toc`             | boolean | `true` | 文章页显示目录。文章 frontmatter 的 `toc: false` 可以单独关闭某篇 |
-| `features.diagramDownload` | boolean | `true` | 图表显示源文件下载链接，并在构建时复制源文件到 `dist/diagrams/`   |
+| 字段                       | 类型    | 默认值  | 说明                                                                                           |
+| -------------------------- | ------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `features.codeCopy`        | boolean | `true`  | 代码块右上角显示复制按钮                                                                       |
+| `features.lineNumbers`     | boolean | `true`  | 代码块显示行号                                                                                 |
+| `features.codeWrap`        | boolean | `false` | 代码块默认自动换行；读者可用题注行的「自动换行」按钮切换（存在 localStorage `wisp-code-wrap`） |
+| `features.math`            | boolean | `true`  | 启用 KaTeX 公式（`remark-math` 与 `rehype-katex`）                                             |
+| `features.mermaid`         | boolean | `true`  | 构建期用 Pele 渲染 `mermaid` 代码块。关闭后它们作为普通代码块显示                              |
+| `features.toc`             | boolean | `true`  | 文章页显示目录。文章 frontmatter 的 `toc: false` 可以单独关闭某篇                              |
+| `features.diagramDownload` | boolean | `true`  | 图表显示源文件下载链接，并在构建时复制源文件到 `dist/diagrams/`                                |
 
 ## mermaid
 

@@ -78,6 +78,7 @@ class Checker:
         self.check_punct(masked)
         self.check_paragraphs(masked)
         self.check_todo(masked)
+        self.check_footnotes(masked)
         return sorted(self.findings, key=lambda f: (f.line, f.rule))
 
     # ------------------------------------------------------------ 遮罩
@@ -352,6 +353,31 @@ class Checker:
         for i, l in enumerate(masked, 1):
             if "TODO" in l:
                 self.add(i, "warning", "todo", "还有未处理的 TODO 占位")
+
+
+    def check_footnotes(self, masked: list[str]) -> None:
+        """引用（GFM 脚注）：用到的 key 必须有定义，定义必须被用到，同一个 key 只定义一次。"""
+        defs: dict[str, int] = {}
+        refs: dict[str, int] = {}
+        for i, l in enumerate(masked, 1):
+            d = re.match(r"^\[\^([^\]\s]+)\]:", l)
+            if d:
+                key = d.group(1).lower()
+                if key in defs:
+                    self.add(i, "error", "fn-duplicate", f"引用 [^{d.group(1)}] 重复定义（第一次在第 {defs[key]} 行）")
+                else:
+                    defs[key] = i
+                rest = l[d.end():]
+            else:
+                rest = l
+            for m in re.finditer(r"\[\^([^\]\s]+)\](?!:)", rest):
+                refs.setdefault(m.group(1).lower(), i)
+        for key, ln in refs.items():
+            if key not in defs:
+                self.add(ln, "error", "fn-undefined", f"引用 [^{key}] 没有定义：在文末加 `[^{key}]: 出处`")
+        for key, ln in defs.items():
+            if key not in refs:
+                self.add(ln, "warning", "fn-unused", f"引用 [^{key}] 有定义但正文里没有用到（不会显示）")
 
 
 # ---------------------------------------------------------------- CLI

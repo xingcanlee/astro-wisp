@@ -22,3 +22,4 @@ packages/astro-wisp/skills/wisp-diagram/scripts/tests/fixtures/manifest-sample.j
 # MDX writer templates contain mustache placeholders and comments that must stay byte-compatible with the generator.
 packages/astro-wisp/skills/wisp-writer/reference/templates/tutorial.mdx
 packages/astro-wisp/skills/wisp-writer/reference/templates/deep-dive.mdx
+.impeccable/questions/

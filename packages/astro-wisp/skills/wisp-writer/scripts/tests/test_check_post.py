@@ -211,3 +211,24 @@ def test_cli_no_site(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(check_post._wisp, "find_root", lambda explicit=None, start=None: None)
     assert check_post.main(["--all"]) == 2
     assert "Wisp" in capsys.readouterr().err
+
+
+def test_footnotes_ok(site, write_post, check):
+    body = "正文[^a]，再引一次[^a]，另一条[^b]。\n\n[^a]: 出处 A。\n\n[^b]: 出处 B，引用了 [^a] 也算使用。\n"
+    p = write_post("x", fm() + body)
+    assert not {"fn-undefined", "fn-unused", "fn-duplicate"} & rules(check(p, site))
+
+
+def test_footnote_undefined_unused_duplicate(site, write_post, check):
+    body = "正文[^missing]，以及[^a]。\n\n[^a]: 出处。\n\n[^a]: 重复。\n\n[^orphan]: 没人用。\n"
+    p = write_post("x", fm() + body)
+    f = check(p, site)
+    r = rules(f)
+    assert {"fn-undefined", "fn-unused", "fn-duplicate"} <= r
+    assert [x.level for x in f if x.rule == "fn-unused"] == ["warning"]
+
+
+def test_footnote_in_code_is_ignored(site, write_post, check):
+    body = "正文 `arr[^1]` 不是引用。\n\n```py\nx[^1]\n```\n"
+    p = write_post("x", fm() + body)
+    assert "fn-undefined" not in rules(check(p, site))

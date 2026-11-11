@@ -36,13 +36,13 @@ Wisp 是一个 Astro 7 集成（npm 包 `astro-wisp`），基于 Tailwind CSS 4 
 
 ## 特性
 
-- **Markdown / MDX**：标准 Markdown 与 MDX，脚注、任务列表、表格、标题锚点和目录。
+- **Markdown / MDX**：标准 Markdown 与 MDX，脚注（渲染为文末的引用列表，悬停预览）、任务列表、表格、标题锚点和目录。
 - **公式**：KaTeX，构建期渲染，只有含公式的文章才加载样式。
-- **代码**：Shiki 双主题（浅色、深色自动切换），可选行号和一键复制；超过 24 行的代码块默认折叠，可用 `fold` / `nofold` / `fold=N` 单独控制。
+- **代码**：Shiki 双主题（浅色、深色自动切换），可选行号、一键复制和自动换行开关；超过 24 行的代码块默认折叠，可用 `fold` / `nofold` / `fold=N` 单独控制。
 - **阅读体验**：宽屏目录可收起并记住状态，h3 分组随阅读位置自动展开；顶部阅读进度条、返回顶部按钮；Lucide 图标（构建期内联）；滚动条随主题配色。
 - **Mermaid**：由 [Pele](https://www.npmjs.com/package/pele) 在构建期渲染为内联 SVG，运行时没有 Mermaid.js。
-- **图表**：Excalidraw 与 draw.io 源文件经 `wisp diagram build` 生成可移植、可主题化的 `.wisp.svg`，读者可以下载源文件。
-- **交互讲解**：通用的分步讲解积木（`Explainer` / `Player` / `Stage` / `Matrix`、`record()` 录制器），React 19 + Motion，以 island 形式按需水合。
+- **图表**：Excalidraw 与 draw.io 源文件经 `wisp diagram build` 生成可移植、可主题化的 `.wisp.svg`，题注与「源文件」下载链接同一行，读者可以下载源文件。
+- **交互讲解**：通用的分步讲解积木（`Explainer` / `Player` / `Stage` / `Matrix`、`record()` 录制器，说明与标题支持 `$…$` 行内公式），React 19 + Motion，以 island 形式按需水合。
 - **主题**：浅色、深色、跟随系统三态切换，首屏无闪烁。
 - **中文排版**：字体经 Astro 官方 Fonts API 自托管（Inter、JetBrains Mono、Excalifont），思源黑体按 unicode-range 分片、跨页缓存；全部 OFL 授权，不请求第三方字体服务；中英文间距自动处理，不做负字距。
 - **订阅与搜索引擎**：RSS（默认全文）、Sitemap。
@@ -171,7 +171,7 @@ pnpm diagram check      # 只校验哈希，CI 中使用，不需要浏览器
 `astro-wisp/explainers` 提供分步讲解的通用积木，具体讲解（矩阵乘、排序、注意力……）写在站点里：
 
 - **core**（纯 TS）：`Step<S>` 协议、`record()`（把命令式算法录成时间线）、`focusOf()` / `cellId()`、`formatNumber()`、色调 `Tone`
-- **React**：`Explainer`（figure + 标题 + 播放器）、`Player`（播放 / 单步 / 进度 / 速度 / 键盘 / aria-live，中英文界面）、`Stage`（自适应 SVG 舞台）、`Matrix` / `Cell` / `Label`
+- **React**：`Explainer`（figure + 标题 + 播放器）、`Player`（播放 / 单步 / 进度 / 循环切换倍速 / 键盘 / aria-live，中英文界面）、`RichText` / `Tex`（行内公式）、`Stage`（自适应 SVG 舞台）、`Matrix` / `Cell` / `Label`
 
 需要 React：`pnpm astro add react`，再 `pnpm add motion`。在 MDX 中导入自己的组件，加上 `client:visible`：
 
@@ -207,25 +207,25 @@ export default defineConfig({
 });
 ```
 
-| 选项                 | 类型                     | 默认值               | 说明                                                                                      |
-| -------------------- | ------------------------ | -------------------- | ----------------------------------------------------------------------------------------- |
-| `site.title`         | string                   | `Wisp`               | 站点标题                                                                                  |
-| `site.description`   | string                   | `安静好读的技术博客` | 站点描述                                                                                  |
-| `site.author`        | string                   | `""`                 | 作者                                                                                      |
-| `site.authorGithub`  | URL                      | —                    | 配置后页脚作者名链接到 GitHub                                                             |
-| `site.lang`          | string                   | `zh-CN`              | 站点语言                                                                                  |
-| `nav`                | `{label, href}[]`        | 归档、标签、关于     | 顶部导航                                                                                  |
-| `social`             | `{kind, href, label?}[]` | RSS                  | 社交链接，`kind` 可选 github、x、mastodon、bluesky、email、rss、link                      |
-| `home.featuredCount` | 整数 ≥ 0                 | `3`                  | 首页精选篇数                                                                              |
-| `home.pageSize`      | 整数 ≥ 1                 | `10`                 | 列表每页篇数                                                                              |
-| `features.*`         | boolean                  | `true`               | `codeCopy`、`lineNumbers`、`math`、`mermaid`、`toc`、`diagramDownload`；`codeFold` 为对象 |
-| `mermaid.strict`     | boolean                  | `false`              | `true` 时 Mermaid 渲染失败使构建失败                                                      |
-| `rss.fullText`       | boolean                  | `true`               | RSS 输出全文；`false` 只输出摘要                                                          |
-| `taxonomy.slugMap`   | Record<string, string>   | `{}`                 | 覆盖标签、分类的 URL 段                                                                   |
-| `components`         | Record<组件名, 路径>     | `{}`                 | 覆盖主题组件或布局，见下文                                                                |
-| `customCss`          | string[]                 | `[]`                 | 追加的样式文件                                                                            |
-| `palette`            | 路径或对象               | —                    | 覆盖调色板（与默认值深度合并）                                                            |
-| `routes.*`           | boolean                  | `true`               | `home`、`posts`、`archive`、`tags`、`categories`、`about`、`rss`、`notFound`              |
+| 选项                 | 类型                     | 默认值               | 说明                                                                                                                  |
+| -------------------- | ------------------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `site.title`         | string                   | `Wisp`               | 站点标题                                                                                                              |
+| `site.description`   | string                   | `安静好读的技术博客` | 站点描述                                                                                                              |
+| `site.author`        | string                   | `""`                 | 作者                                                                                                                  |
+| `site.authorGithub`  | URL                      | —                    | 配置后页脚作者名链接到 GitHub                                                                                         |
+| `site.lang`          | string                   | `zh-CN`              | 站点语言                                                                                                              |
+| `nav`                | `{label, href}[]`        | 归档、标签、关于     | 顶部导航                                                                                                              |
+| `social`             | `{kind, href, label?}[]` | RSS                  | 社交链接，`kind` 可选 github、x、mastodon、bluesky、email、rss、link                                                  |
+| `home.featuredCount` | 整数 ≥ 0                 | `3`                  | 首页精选篇数                                                                                                          |
+| `home.pageSize`      | 整数 ≥ 1                 | `10`                 | 列表每页篇数                                                                                                          |
+| `features.*`         | boolean                  | `true`               | `codeCopy`、`lineNumbers`、`codeWrap`（默认 `false`）、`math`、`mermaid`、`toc`、`diagramDownload`；`codeFold` 为对象 |
+| `mermaid.strict`     | boolean                  | `false`              | `true` 时 Mermaid 渲染失败使构建失败                                                                                  |
+| `rss.fullText`       | boolean                  | `true`               | RSS 输出全文；`false` 只输出摘要                                                                                      |
+| `taxonomy.slugMap`   | Record<string, string>   | `{}`                 | 覆盖标签、分类的 URL 段                                                                                               |
+| `components`         | Record<组件名, 路径>     | `{}`                 | 覆盖主题组件或布局，见下文                                                                                            |
+| `customCss`          | string[]                 | `[]`                 | 追加的样式文件                                                                                                        |
+| `palette`            | 路径或对象               | —                    | 覆盖调色板（与默认值深度合并）                                                                                        |
+| `routes.*`           | boolean                  | `true`               | `home`、`posts`、`archive`、`tags`、`categories`、`about`、`rss`、`notFound`                                          |
 
 数组（如 `nav`、`social`）整体替换，对象逐字段深度合并。非法值会在启动时报错并指出字段路径。完整说明见 [docs/guide/configuration.md](docs/guide/configuration.md)。
 

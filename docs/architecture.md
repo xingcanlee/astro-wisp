@@ -96,8 +96,10 @@ const posts = defineCollection({
 ## 4. Markdown 管线
 
 ```
-remark:  remark-math → remark-pele → remark-diagram → remark-reading-time → remark-has-math
-rehype:  rehype-katex → (Shiki 内置高亮 + Wisp transformers) → rehype-heading-anchors
+remark:  (管线指纹) → remark-cjk-friendly → remark-math → remark-pele → remark-diagram
+         → remark-reading-time → remark-has-math → remark-heading-text
+rehype:  (Shiki 内置高亮 + Wisp transformers) → rehype-katex → rehype-figure → rehype-a11y → rehype-citations
+         → (Astro：图片、heading id)
 ```
 
 - **Astro 7 默认的 Markdown 处理器是 Sätteri**，它不运行 remark/rehype 插件。Wisp 在 integration 中显式设置 `markdown.processor = unified({...})`（来自 `@astrojs/markdown-remark`）。插件只能通过这个处理器注册，不能写在旧的 `markdown.remarkPlugins` 里。
@@ -106,25 +108,28 @@ rehype:  rehype-katex → (Shiki 内置高亮 + Wisp transformers) → rehype-he
 - **remark-pele**：`render(code)` → `<figure class="wisp-figure wisp-pele" role="img" aria-label="…"><div class="pele">SVG</div></figure>`。出错时，dev 环境退化为代码块并打印警告；`mermaid.strict: true` 时构建失败。aria-label 依次取 `accTitle`、`accDescr`、图类型名。
 - **remark-reading-time**：统计 CJK 字符数 ÷ 350 + 西文词数 ÷ 200，代码块按 0.3 的权重计入，向上取整，最少 1 分钟。结果写入 `remarkPluginFrontmatter.readingTime`。
 - **remark-has-math**：检测到 math 节点时写入 `hasMath: true`，Post 布局据此按需引入 `katex.css`。
-- **TOC**：使用 `render()` 返回的 headings，取 depth 2–3；标题锚点 id 由 Astro 的 Markdown 管线生成（内部使用 github-slugger），支持中文。
+- **TOC**：使用 `render()` 返回的 headings，取 depth 2–3；标题锚点 id 由 Astro 的 Markdown 管线生成（内部使用 github-slugger），支持中文。含行内公式的标题例外：Astro 在 KaTeX 渲染之后取文字会得到乱码，`remark-heading-text` 改用源码生成 id（公式只留 ASCII 字母数字，如 `含公式 $H^{res}$ 的标题` → `含公式-hres-的标题`）；不含公式的标题 id 不变。
+- **remark-cjk-friendly**：`**文字。**后文` 这类紧挨全角标点的强调也能闭合（CommonMark 的分界规则不认 CJK 标点）；`.md` 与 `.mdx` 都生效。
+- **`.md` 与 `.mdx` 一致**：两者用同一个 processor 的插件。区别只在缓存：内容层把 `.md` 渲染好的 HTML 存在 `.astro/data-store.json`，只有文件内容或 astro 配置的 JSON 摘要变化时才重渲染，而插件是函数、进不了摘要。所以 remark 列表第一项是一个只带「管线指纹」选项的空插件（`pipelineDigest()`：主题插件 / Shiki transformer 源码、主题版本、pele / katex 等依赖版本的哈希）——升级主题后摘要变化，内容层整体失效。`integration.test.ts` 用同一段源码比较两条路径的产物。
+- **横向溢出与键盘**：rehype-a11y（表格、公式）和 shiki.ts（代码块）写 `tabindex=0 data-wisp-tab`，这是无 JS 时的回落；Base 布局的脚本首帧接管，只给确实溢出的容器保留 tabindex 和「…，可横向滚动」的名称。
 
 ## 5. 路由
 
 路由由集成通过 `injectRoute` 注入，入口文件在 `packages/astro-wisp/src/routes/`。每组路由都可以用 `routes.<键>: false` 关闭，站点再在 `src/pages/` 中自己实现（Astro 不允许同一路径重复定义）。
 
-| 路由                                | 开关                       | 说明                                                                          |
-| ----------------------------------- | -------------------------- | ----------------------------------------------------------------------------- |
-| `/`                                 | `home`                     | 精选（featured，最多 `home.featuredCount` 篇）+ 最新列表第 1 页               |
-| `/page/[n]/`                        | `home`                     | 分页：Astro `paginate()`，每页 `home.pageSize` 篇，第 1 页即 `/`              |
-| `/posts/[...id]/`                   | `posts`                    | 详情页：TOC、上一篇/下一篇、更新时间                                          |
-| `/archive/`                         | `archive`                  | 按年份分组                                                                    |
-| `/tags/` `/tags/[tag]/`             | `tags`                     | 标签列表（含文章数）、某标签下的文章                                          |
-| `/categories/` `/categories/[cat]/` | `categories`               | 同上                                                                          |
-| `/about/`                           | `about`                    | 渲染 `pages` 集合中的 `about`                                                 |
-| `/404`                              | `notFound`                 |                                                                               |
-| `/rss.xml`                          | `rss`                      | 默认输出全文（container API + MDX 渲染器），`rss.fullText=false` 时只输出摘要 |
-| `/sitemap-index.xml`                | —                          | 集成自动注册 `@astrojs/sitemap`（需要 `site`）                                |
-| `/diagrams/<post-id>/<file>`        | `features.diagramDownload` | 图表源文件下载，见 diagrams.md §5                                             |
+| 路由                                | 开关                       | 说明                                                                                                                               |
+| ----------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                                 | `home`                     | 精选（featured，最多 `home.featuredCount` 篇）+ 最新列表第 1 页                                                                    |
+| `/page/[n]/`                        | `home`                     | 分页：Astro `paginate()`，每页 `home.pageSize` 篇，第 1 页即 `/`；**只在站点没有系列时生成**（有系列时首页是总目录，没有分页列表） |
+| `/posts/[...id]/`                   | `posts`                    | 详情页：TOC、上一篇/下一篇、更新时间                                                                                               |
+| `/archive/`                         | `archive`                  | 按年份分组                                                                                                                         |
+| `/tags/` `/tags/[tag]/`             | `tags`                     | 标签列表（含文章数）、某标签下的文章                                                                                               |
+| `/categories/` `/categories/[cat]/` | `categories`               | 同上                                                                                                                               |
+| `/about/`                           | `about`                    | 渲染 `pages` 集合中的 `about`                                                                                                      |
+| `/404`                              | `notFound`                 |                                                                                                                                    |
+| `/rss.xml`                          | `rss`                      | 默认输出全文（container API + MDX 渲染器），`rss.fullText=false` 时只输出摘要                                                      |
+| `/sitemap-index.xml`                | —                          | 集成自动注册 `@astrojs/sitemap`（需要 `site`）                                                                                     |
+| `/diagrams/<post-id>/<file>`        | `features.diagramDownload` | 图表源文件下载，见 diagrams.md §5                                                                                                  |
 
 ## 6. 主题切换脚本
 

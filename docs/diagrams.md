@@ -18,7 +18,7 @@
   "type": "excalidraw",
   "version": 2,
   "source": "https://excalidraw.com",
-  "elements": [ { "id": "…", "type": "rectangle", "x": 0, "y": 0, "strokeColor": "#1d4ed8", "backgroundColor": "#dbeafe", "roughness": 1, "fontFamily": 5, … } ],
+  "elements": [ { "id": "…", "type": "rectangle", "x": 0, "y": 0, "strokeColor": "#2f5783", "backgroundColor": "#e9f2fb", "roughness": 1, "fontFamily": 5, … } ],
   "appState": { "viewBackgroundColor": "#ffffff", "gridSize": 8 },
   "files": { "<fileId>": { "mimeType": "image/png", "dataURL": "data:image/png;base64,…" } }
 }
@@ -35,7 +35,7 @@
     <mxGraphModel dx="…" grid="1" gridSize="8" …>
       <root>
         <mxCell id="0"/><mxCell id="1" parent="0"/>
-        <mxCell id="2" value="Attention" style="rounded=1;arcSize=8;fillColor=#dbeafe;strokeColor=#1d4ed8;fontFamily=Inter;" vertex="1" parent="1">
+        <mxCell id="2" value="Attention" style="rounded=1;absoluteArcSize=1;arcSize=8;fillColor=#e9f2fb;strokeColor=#2f5783;fontFamily=Inter;" vertex="1" parent="1">
           <mxGeometry x="0" y="0" width="160" height="48" as="geometry"/>
         </mxCell>
       </root>
@@ -61,13 +61,13 @@
   <desc id="d">Q 与 K 转置相乘、缩放、softmax，再与 V 相乘</desc>
   <style>
     .wisp-d{--wd-bg:transparent;--wd-fg:#1d1d1f;--wd-muted:#5c6067;--wd-border:#e2e2dd;--wd-surface:#f4f4f2;
-            --wd-blue:#1d4ed8;--wd-blue-fill:#dbeafe; … 8 个 hue … ;
+            --wd-blue:#2f5783;--wd-blue-fill:#e9f2fb; … 8 个 hue … ;
             --wd-font-sans:Inter,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
             --wd-font-hand:Excalifont,Virgil,"Noto Sans SC","PingFang SC",sans-serif}
     @media (prefers-color-scheme:dark){.wisp-d{--wd-fg:#e6e6e3; … 暗色值 …}}
   </style>
   <!-- 图元：一律使用 var(--wd-*)，并带上浅色 fallback -->
-  <rect fill="var(--wd-blue-fill, #dbeafe)" stroke="var(--wd-blue, #1d4ed8)" … />
+  <rect fill="var(--wd-blue-fill, #e9f2fb)" stroke="var(--wd-blue, #2f5783)" … />
   <text fill="var(--wd-fg, #1d1d1f)" font-family="var(--wd-font-sans)">Q</text>
 </svg>
 ```
@@ -93,8 +93,8 @@
 
 | 源颜色（作者在编辑器里选的）                           | 替换为                                                                       |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| hue 的 light stroke，如 `#1d4ed8`                      | `var(--wd-blue, #1d4ed8)`                                                    |
-| hue 的 light fill，如 `#dbeafe`                        | `var(--wd-blue-fill, #dbeafe)`                                               |
+| hue 的 light stroke，如 `#2f5783`                      | `var(--wd-blue, #2f5783)`                                                    |
+| hue 的 light fill，如 `#e9f2fb`                        | `var(--wd-blue-fill, #e9f2fb)`                                               |
 | `#1d1d1f` / `#000000` / `#1e1e1e`（Excalidraw 默认黑） | `var(--wd-fg, …)`                                                            |
 | `#ffffff` / 画布背景                                   | 删除背景矩形，或改为 `var(--wd-bg)`                                          |
 | 其他颜色                                               | **lint 报错**，并给出 ΔE 最接近的令牌建议；加 `--fix` 时自动吸附到最近的令牌 |
@@ -109,15 +109,15 @@
 
 ### 3.5 两种风格的参数
 
-| 参数       | hand（Excalidraw）              | clean（draw.io）      |
-| ---------- | ------------------------------- | --------------------- |
-| 线宽       | 1.5（强调 2.5）                 | 1.5（强调 2.5）       |
-| roughness  | 1                               | 不适用（sketch=0）    |
-| 圆角       | Excalidraw 的 round             | `rounded=1;arcSize=8` |
-| 填充       | solid，使用 hue fill            | 使用 hue fill         |
-| 文字       | 标签 14px，标题 18px，注释 12px | 同左                  |
-| 网格       | 8px 对齐                        | 8px 对齐              |
-| 阴影、渐变 | 禁止                            | 禁止                  |
+| 参数       | hand（Excalidraw）              | clean（draw.io）                        |
+| ---------- | ------------------------------- | --------------------------------------- |
+| 线宽       | 1（中性节点）/ 1.25 / 2（强调） | 同左                                    |
+| roughness  | 1                               | 不适用（sketch=0）                      |
+| 圆角       | 4px（`roundness` 值 4）         | `rounded=1;absoluteArcSize=1;arcSize=8` |
+| 填充       | solid，使用 hue fill            | 使用 hue fill                           |
+| 文字       | 标签 14px，标题 18px，注释 12px | 同左                                    |
+| 网格       | 8px 对齐                        | 8px 对齐                                |
+| 阴影、渐变 | 禁止                            | 禁止                                    |
 
 ### 3.6 PNG 导出
 
@@ -154,22 +154,26 @@ src/content/posts/attention-explained/
 `remark-diagram` 识别 `.excalidraw` / `.drawio` 结尾的图片节点后：
 
 1. 读取同目录下对应的 `.wisp.svg`。如果不存在或哈希不一致，在 dev 环境中显示一个醒目的占位块，并提示运行 `pnpm diagram build`；在 build 环境中直接报错。
-2. 把 alt 写入 `<title>`，把 title 写入 `<figcaption>`。
+2. 把 alt 写入 `<title>`，把 title 写入 `<figcaption>`（开头的图号拆成 `.wisp-fig-no`）；题注与动作（源文件 / draw.io）在同一行。
 3. 输出：
 
 ```html
 <figure class="wisp-figure wisp-diagram" data-style="hand">
   <svg class="wisp-d" …>…</svg>
-  <figcaption>图 1：Q·Kᵀ → softmax → ·V</figcaption>
-  <div class="wisp-diagram-actions">
-    <a
-      class="wisp-diagram-dl"
-      href="/diagrams/attention-explained/attention-flow.excalidraw"
-      download
-      title="下载源文件 attention-flow.excalidraw"
-      >下载源文件</a
+  <figcaption>
+    <span class="wisp-fig-text" id="attention-flow-caption-1"
+      ><span class="wisp-fig-no">图 1：</span>Q·Kᵀ → softmax → ·V</span
     >
-  </div>
+    <span class="wisp-fig-actions">
+      <a
+        class="wisp-diagram-dl"
+        href="/diagrams/attention-explained/attention-flow.excalidraw"
+        download
+        title="下载源文件 attention-flow.excalidraw"
+        >源文件</a
+      >
+    </span>
+  </figcaption>
 </figure>
 ```
 

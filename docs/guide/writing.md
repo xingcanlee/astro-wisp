@@ -71,6 +71,7 @@ export const answer = 42;
 ````
 
 - 代码块默认带行号和复制按钮，可以在 `wisp({ features })` 中关闭（`features.lineNumbers`、`features.codeCopy`）。
+- 长行默认横向滚动；题注行的「自动换行」按钮（只在会溢出的代码块上出现）可切换，选择记在 localStorage。`features.codeWrap: true` 让站点默认换行。
 - 语言名使用 Shiki 支持的标识，如 `python`、`typescript`、`bash`、`json`、`diff`。
 - `diff` 代码块中，以 `+` 和 `-` 开头的行会被标记为增删行。
 - 行内代码用反引号包裹。
@@ -98,6 +99,8 @@ $$
 
 [^1]: 脚注内容显示在文章底部。
 ```
+
+文内标记显示为 `[1]`，文末生成「参考与注释」列表；鼠标悬停（或键盘聚焦）标记会弹出该条内容的预览。
 
 ### 任务列表
 
@@ -129,7 +132,10 @@ Mermaid 代码块在构建期由 Pele 渲染为内联 SVG，没有运行时代�
 
 ```markdown
 ![alt 文本](./images/photo.jpg)
+![alt 文本](./images/photo.jpg '图 1：图注')
 ```
+
+带引号标题的独立图片会输出为 `<figure>`，标题成为图下的题注；开头的「图 1：」「Figure 2.」会单独排成图号。没有标题的图片保持原样。Mermaid 代码块同样可以在围栏后写题注：` ```mermaid caption="图 2：调度流程" `。
 
 `.excalidraw` 和 `.drawio` 源文件的引用方式不同，会被渲染为内联 SVG。见 [图表指南](./diagrams.md)。
 

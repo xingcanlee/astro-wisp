@@ -15,17 +15,18 @@ pnpm add motion        # 格子高亮的过渡动画
 
 ## 二、积木
 
-| 导出                                                   | 层    | 用途                                                                                                         |
-| ------------------------------------------------------ | ----- | ------------------------------------------------------------------------------------------------------------ |
-| `Step<S>`、`Timeline<S>`                               | core  | 一帧 = `{ state, caption, focus? }`。渲染器只依赖 state                                                      |
-| `record(initial, (state, emit) => …)`                  | core  | 把**命令式**算法录成时间线：直接修改 state，在需要停顿处 `emit(caption, focus)`，每次保存深拷贝              |
-| `cellId(m, r, c)`、`itemId(m, i)`、`focusOf(focus, m)` | core  | 高亮 id 约定（`'a:1,0'`、`'arr:3'`）与按前缀取出                                                             |
-| `formatNumber`、`formatMatrix`                         | core  | 数字格式化（真正的减号、去掉多余的 0）                                                                       |
-| `Tone`、`toneStroke`、`toneFill`                       | core  | 色调：调色板中的语义色（`q`、`k`、`v`、`visited`、`done`……）或 hue（`blue`、`amber`……）                      |
-| `Explainer`                                            | react | 外壳：`<figure>` + 标题 + `Player`                                                                           |
-| `Player`、`usePlayer`                                  | react | 播放 / 暂停 / 单步 / 进度 / 速度 / 键盘 / `aria-live`；界面文字随站点语言（中文 / 英文），可用 `labels` 覆盖 |
-| `Stage`                                                | react | SVG 舞台：viewBox 自适应宽度、窄屏横向滚动、四周留白                                                         |
-| `Matrix`、`Cell`、`Label`                              | react | 二维格子（矩阵、DP 表、注意力权重；1 行即数组）、单个格子、文字                                              |
+| 导出                                                   | 层           | 用途                                                                                                             |
+| ------------------------------------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `Step<S>`、`Timeline<S>`                               | core         | 一帧 = `{ state, caption, focus? }`。渲染器只依赖 state                                                          |
+| `record(initial, (state, emit) => …)`                  | core         | 把**命令式**算法录成时间线：直接修改 state，在需要停顿处 `emit(caption, focus)`，每次保存深拷贝                  |
+| `cellId(m, r, c)`、`itemId(m, i)`、`focusOf(focus, m)` | core         | 高亮 id 约定（`'a:1,0'`、`'arr:3'`）与按前缀取出                                                                 |
+| `formatNumber`、`formatMatrix`                         | core         | 数字格式化（真正的减号、去掉多余的 0）                                                                           |
+| `Tone`、`toneStroke`、`toneFill`                       | core         | 色调：调色板中的语义色（`q`、`k`、`v`、`visited`、`done`……）或 hue（`blue`、`amber`……）                          |
+| `Explainer`                                            | react        | 外壳：`<figure>` + 标题 + `Player`                                                                               |
+| `Player`、`usePlayer`                                  | react        | 播放 / 暂停 / 单步 / 进度 / 循环倍速 / 键盘 / `aria-live`；界面文字随站点语言（中文 / 英文），可用 `labels` 覆盖 |
+| `Stage`                                                | react        | SVG 舞台：viewBox 自适应宽度、窄屏横向滚动、四周留白                                                             |
+| `RichText`、`Tex`、`TexLabel`、`parseInlineMath`       | react / core | 行内公式：说明与标题里的 `$…$` 自动排版（KaTeX 按需加载）；`TexLabel` 是 SVG 里的公式标签                        |
+| `Matrix`、`Cell`、`Label`                              | react        | 二维格子（矩阵、DP 表、注意力权重；1 行即数组）、单个格子、文字                                                  |
 
 core 是纯 TypeScript（`astro-wisp/explainers/core`），不依赖 React / DOM，可以在 vitest 中直接测试。
 
@@ -108,13 +109,13 @@ import BubbleSort from './BubbleSort';
 
 ## 四、操作方式
 
-| 操作              | 鼠标           | 键盘（播放器获得焦点时） |
-| ----------------- | -------------- | ------------------------ |
-| 播放 / 暂停       | ▶ 按钮         | Space                    |
-| 上一步 / 下一步   | ◀ ▶ 按钮       | ← / →                    |
-| 第一步 / 最后一步 | —              | Home / End               |
-| 拖动进度          | 进度条         | —                        |
-| 速度              | 0.5× / 1× / 2× | —                        |
+| 操作              | 鼠标                            | 键盘（播放器获得焦点时） |
+| ----------------- | ------------------------------- | ------------------------ |
+| 播放 / 暂停       | ▶ 按钮                          | Space                    |
+| 上一步 / 下一步   | ◀ ▶ 按钮                        | ← / →                    |
+| 第一步 / 最后一步 | —（无按钮）                     | Home / End               |
+| 拖动进度          | 进度条                          | —                        |
+| 速度              | 倍速按钮（0.5× → 1× → 2× 循环） | —                        |
 
 - 每一步的说明位于 `aria-live="polite"` 区域，屏幕阅读器会读出。
 - 开启系统的“减少动态效果”（`prefers-reduced-motion`）后，不会自动播放，也不做过渡动画。

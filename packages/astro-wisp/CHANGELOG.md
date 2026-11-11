@@ -2,6 +2,96 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.5.0 (2026-11-11)
+
+本版调整了图题 class、调色板的 8 个 hue、交互讲解的控制条和含公式标题的锚点 id，**自定义了样式、覆盖了组件或带有图表源文件的站点请先看文末「升级说明」**。
+
+### 新增
+
+- **引用**：GFM 脚注（`正文[^key]` + `[^key]: 出处`，作者语法不变）升级为引用。新增 `rehype-citations` 与 `Citations` 组件：文内标记是带方括号的 teal 上标 `[1]`，相邻引用合并成 `[1, 2]`，读屏名称为「参考 3」；文末是带可见标题「参考与注释」（英文「References」）的编号列表，回链用 Lucide 图标，同一条被引用多次时回链带序号；点击平滑跳转并短暂标记目标，有指针悬停的设备上悬停或聚焦标记会弹出该条注释的预览（Popover API）。
+- **图题语法统一**：新增 `rehype-figure`，带标题的独立 Markdown 图片 `![alt](./x.webp '图 05-3：…')` 输出为 `<figure class="wisp-figure wisp-image">` + `<figcaption>`；Mermaid 围栏支持 `caption="…"`（也接受 `title=`）。图、图表、Mermaid、`<Figure>` 共用同一套题注：图号（「图 05-3：」「Figure 2.」「Fig. 2:」）拆成 `.wisp-fig-no`（墨色、600、表格数字），没有图号的不自动编号。位图加 1px 发丝线描边。
+- **代码块自动换行**：题注行新增「自动换行」按钮，只出现在会横向溢出的代码块上；读者的选择存在 localStorage `wisp-code-wrap`，对整页代码块生效，首帧前写入，不闪动。新增配置 `features.codeWrap`（默认 `false`）决定站点默认是否换行。打印时一律换行。
+- **统一的内部滚动条**：站点自己的滚动容器加 `class="wisp-scroll"` 即可使用主题的细滚动条（有指针的设备上滑块平时透明，指针移入或聚焦时出现）；加 `data-wisp-scroll` 属性还会参与横向溢出的边缘渐隐。
+- **交互讲解**：说明和标题里可以写 `$…$` 行内公式（按需懒加载 KaTeX，首屏 SSR 即渲染）；标题开头的图号单独加粗。`astro-wisp/explainers` 新增导出 `RichText`、`Tex`、`loadKatex`、`TexLabel`、`nextSpeed`、`MAX_TICKS`，以及类型 `RichTextProps`、`TexProps`、`TexLabelProps`；`astro-wisp/explainers/core` 新增 `parseInlineMath`、`plainInlineMath`、`hasInlineMath`、`splitFigureLabel` 与类型 `RichSegment`。`usePlayer` 返回值新增 `cycleSpeed`；`PlayerLabels` 新增 `speedCycle`；`Player` 新增 `player` 与 `count` 两个可选 prop。
+- **wisp-diagram**：新增 `migrate` 命令，调色板换代后按令牌名改写旧源文件的颜色、线宽和圆角（`migrate --from <旧 palette.json> <文件|glob>... [--check]`），也处理素材库（`.excalidrawlib`、`<mxlibrary>`）和 `drawio-config.json`；`lint` 新增 `hue-count` 警告（一张图超过 3 种 hue，`slate` 不计）；SKILL 新增「颜色怎么用」一节和「调色板换代（migrate）」一节。
+- **`--wisp-block-gap`**：代码、表格、公式、图、要点块、讲解组件与前后段落之间共用的块级间距（默认 `1.75em`），可在站点样式里覆盖。
+- **构建管线**：新增 `remark-cjk-friendly`，`**文字。**后文` 这类紧挨全角标点的强调也能闭合；主题版本或 Markdown 管线变化时，内容层缓存整体失效（见「修复」）。
+
+### 变更
+
+- **图表（Excalidraw / draw.io）**：题注与动作排在同一行，动作靠右、与题注第一行同基线，窄屏落到题注下一行（触控高度 ≥ 44px）。动作的可见文字缩短为「源文件」和「draw.io」，完整含义在 `aria-label` / `title`；容器由 `.wisp-diagram-actions` 改为 `.wisp-fig-actions`；有题注时 figure 的可访问名称只取题注文字；`.wisp-has-caption` 已删除。
+- **调色板**：8 个 hue 的 stroke / fill 全部重调为「印刷油墨」风格（描边是低彩度的深色墨，填充是近纸色的淡洗，暗色同理），新旧对照见下方「升级说明」。图表的圆角由 8px 改为 4px（`diagram.corner-radius`，与页面 box 圆角一致；draw.io 用 `absoluteArcSize=1;arcSize=8`，Excalidraw 用 `roundness: {type: 3, value: 4}`），线宽由 1 / 1.5 / 2.5 改为 1 / 1.25 / 2。图表默认节点改为中性（`surface` 底 + `muted` 1px 描边 + `fg` 文字），颜色只给语义角色，一张图最多 3 种 hue。
+- **文章页布局**：
+  - 系列栏默认收起，栏顶只留一行吸顶的按钮「系列名 7 / 10 ⌄」，与右侧目录的标题行成对；状态在 `html[data-series="open|collapsed"]`，存 localStorage `wisp-series-open`，首帧前写入；页眉里的「7 / 23 篇」在 ≥80rem 时是同一个开关（按钮）。无 JS 时篇目表完整显示。
+  - 目录栏顶改为带文字标签的标题按钮「目录 ⌄」，收起后仍是这一行；篇目在下方独立滚动的层里，标题行不随之滚动。
+  - DOM 顺序改为系列 → 目录 → 正文，等于键盘顺序，各自的位置由网格决定；60–80rem 两栏时文首的系列 `<details>` 占正文列第一行。
+  - 滚到页面底部时目录高亮最后一节；点击目录项立即高亮被点的那一项。
+  - 侧栏标题行贴着外框边线；目录和系列栏的编号列改为 muted 色（编号是读者找位置用的文字，不再用 subtle）。
+  - 中文章节标题在构建期按词切分并插入 `<wbr>`，配合 `word-break: keep-all`，只在词边界换行（不再出现「矩 / 阵」）。
+- **主题切换**：三种偏好各一个 Lucide 图标（浅色 `sun`、深色 `moon`、跟随系统 `sun-moon`），显示的是当前偏好而不是当前明暗，不再叠「A」角标。
+- **返回顶部**：按钮 44×44（原 40×40），右缘与外框内容边线对齐；页脚进入视口时按钮停在页脚上方，不再盖住页脚链接。
+- **Lightbox**：关闭按钮改为 44×44 方形、固定在视口右上角；窄屏（≤40rem）按图的自然宽度显示（最多 2 倍视口宽）、可上下左右平移并在打开时居中；点图以外的空白处关闭。
+- **正文**：
+  - h2 / h3 的编号是标题第一行里的 inline-block，与标题文字同基线；≥80rem 悬挂在栏间距里，更窄时标题加同宽的左内边距，换行后续行悬挂对齐，列宽随编号位数变化。
+  - 横向溢出提示由右缘内阴影改为边缘渐隐：哪一侧还有内容，哪一侧在 1.5rem 内渐隐到容器底色，滚到头消失；键盘聚焦时去掉渐隐。
+  - 引用块在浅底之外加 1px 发丝线（暗色里单靠底色看不出是一个块）；后面不再需要额外的彩色竖条。
+  - 表格单元格里的行内代码只在空格处换行（记号包进 `.wisp-tok`，复制出来的文字不变），不再在 `file.py:234-358` 的连字符处断开。
+  - 正文段落加 `text-wrap: pretty`，避免段末只剩一个字或标点落单。
+  - 长代码块折叠后点「收起」，会把代码块顶端拉回页眉下方，读者回到这段代码的开头。
+- **首页与路由**：首页目录的篇目行改为「编号 | 标题 | 点线引导 | 阅读时长」，≥80rem 分两栏；归档页每行拆出编号列，标题左缘对齐，系列名一列；分类、标签、归档、404 等页的页头与 `Page` 布局同一规格（标题 + 说明 + 1px 分隔线）；列表里的计数改用对比度足够的颜色；触屏设备上标题链接、标签链接、分页链接的命中区加大（≥ 44px / ≥ 32px）。分页链接的下划线只画在文字下。
+- **页眉**：品牌名、书眉、导航按基线对齐，整行在 56px 里垂直居中；章节标题前的「·」随标题一起淡入。
+- **交互讲解**：
+  - 说明区按全部步骤里最高的一条预留高度，舞台高度只增不减，播放时卡片不再上下跳。
+  - 控制条重排为「上一步 / 播放 / 下一步」+ 步数 + 倍速；倍速由 0.5× / 1× / 2× 三个按钮改为一个循环按钮（0.5× → 1× → 2×），按「最宽的一档」预留宽度；播到最后一步时播放键变成「重新播放」图标（`rotate-ccw`）。
+  - 进度条改为带填充和刻度的轨道（步数 ≤ 24 时每步一个刻度，更多时只画连续的线）；有标题时步数显示在标题行。
+  - 删除「第一步」「最后一步」按钮，键盘 Home / End 保留。
+  - 步数文字、倍速文字用表格数字并预留宽度，切换时周围不移动。
+- **其他**：`Pagination`、`Header` 主导航的 `aria-label`随站点语言切换（中文 / 英文）；系列栏的地标名改为「系列：名称」。
+
+### 修复
+
+- **含行内公式的标题 id**：此前 Astro 在 rehype-katex 之后取文字，KaTeX 的 MathML 与 HTML 两份文字会拼成 `hreshreshres` 这样的乱码。现在由源码生成 id（只留 ASCII 字母数字，`H^{res}` → `Hres`，`\mathcal{H}^{res}` → `Hres`），新增依赖 `github-slugger`。不含公式的标题 id 不变。
+- **内容层缓存**：升级主题后，`.md` 文章仍是 `.astro/data-store.json` 里旧管线的 HTML，而 `.mdx` 每次重新编译，两者渲染不一致。现在主题的插件源码、主题版本和 `pele` / `katex` / `rehype-katex` / `remark-math` / `remark-cjk-friendly` 的版本会作为指纹进入 astro 配置摘要，一变内容层整体失效并重新渲染。
+- **键盘与读屏**：只有确实横向溢出的容器（代码、表格、公式、讲解舞台、Mermaid、`data-wisp-scroll`）才有 `tabindex`，不溢出的不再是无意义的 Tab 停靠点；`aria-label` 的「，可横向滚动」后缀从原始名称重新拼，反复缩放窗口不再叠加。markup 里的 `tabindex=0 data-wisp-tab` 只是无 JS 时的回落。
+- **`astro dev` 里的 katex**：别名的裸 `katex` 现在指向 ESM 入口 `dist/katex.mjs`（此前指到目录，dev 的 SSR 会加载 UMD 入口并报错）。
+- **KaTeX 字体预加载**：含公式的页面预加载最常用的两份 KaTeX 字体（Main 与 Math），公式换上字体时的重排更早发生。
+- **`/page/n/`**：站点有系列时首页是总目录、没有分页列表，此时不再生成 `/page/n/`，首页也不显示分页；没有系列时分页排除精选区的文章，第 1 页与 `/page/2/` 起的切分首尾相接，不再漏文章或重复。
+- **首页分页间距**与分页链接的图标 / 文字对齐。
+
+### 升级说明
+
+- **class 改名**：自定义样式或覆盖组件的站点请检查：`.wisp-diagram-actions` → `.wisp-fig-actions`；`.wisp-has-caption` 已删除（题注永远在图下，不再按有无题注切换样式）；图号新增 `.wisp-fig-no`，动作的题注文字新增 `.wisp-fig-text`。
+- **带标题的 Markdown 图片现在会显示题注**：`![alt](./x.webp '标题')` 的 title 由悬停提示变成图下的 `<figcaption>`。不想要题注就去掉 title。
+- **含公式的标题，锚点 id 会变**：含行内公式的标题 id 改为由源码生成（见「修复」），已有的深链接（外部引用、站内 `#锚点`）需要同步更新。不含公式的标题不受影响。
+- **有系列的站点不再生成 `/page/n/`**：首页是总目录。如有外部链接指向 `/page/2/` 等，请改指向首页。
+- **图表源文件需要迁移调色板**：旧源文件里的十六进制不在新调色板里。不要用 `lint --fix`（按 ΔE 吸附到最近的令牌，最近的不一定是同名令牌，例如旧的紫会吸到新的灰），用 `migrate` 按令牌名改写，并把线宽和圆角一起换掉：
+
+  ```bash
+  W="uv run skills/wisp-diagram/scripts/wisp_diagram.py"   # skill 的安装路径见 SKILL.md
+  git show <旧版本>:packages/astro-wisp/design/palette.json > /tmp/old-palette.json   # 旧版调色板
+  $W migrate --from /tmp/old-palette.json 'src/content/**/diagrams/*.excalidraw' 'src/content/**/diagrams/*.drawio' --check   # 退出码 1 = 有文件要改
+  $W migrate --from /tmp/old-palette.json 'src/content/**/diagrams/*.excalidraw' 'src/content/**/diagrams/*.drawio'
+  $W lint 'src/content/**/diagrams/*.excalidraw' 'src/content/**/diagrams/*.drawio'   # 再看 hue-count 等警告
+  pnpm diagram build --force
+  ```
+
+  已经是新值的文件再跑一遍不会变化；生成的 `.wisp.svg` 和 `diagrams.manifest.json` 需要重新提交。8 个 hue 的新旧值（light 值；dark 值见 `design/palette.json`）：
+
+  | hue    | stroke 旧 → 新        | fill 旧 → 新          |
+  | ------ | --------------------- | --------------------- |
+  | blue   | `#1d4ed8` → `#2f5783` | `#dbeafe` → `#e9f2fb` |
+  | amber  | `#b45309` → `#7b5518` | `#fef3c7` → `#fbf2df` |
+  | green  | `#15803d` → `#2c522d` | `#dcfce7` → `#e9f5e9` |
+  | rose   | `#be123c` → `#984646` | `#ffe4e6` → `#fcedec` |
+  | violet | `#7c3aed` → `#4d335c` | `#ede9fe` → `#f5eef9` |
+  | teal   | `#0f766e`（不变）     | `#ccfbf1` → `#e3f5f3` |
+  | orange | `#c2410c` → `#762f06` | `#ffedd5` → `#fceee4` |
+  | slate  | `#475569` → `#464e57` | `#e2e8f0` → `#eaedf2` |
+
+- **交互讲解**：说明和标题里可以（可选）写 `$…$` 行内公式；`$` 不成对时按原文显示。如果你自己拼了播放器控制条或依赖「第一步 / 最后一步」按钮、三个倍速按钮（`aria-pressed`）的选择器，请改为新的循环倍速按钮（`.wisp-player__speed`）；自定义 `labels` 时可以补上 `speedCycle`。
+- **中文强调后的多余空格不再需要**：`remark-cjk-friendly` 之后，`**文字。**后文` 可以直接紧挨着写，不必为了让 `**` 闭合而在后面加空格；已有的空格可以保留，但可以删掉。
+- **脚注**：写法不变，但文末的列表现在是「参考与注释」，自定义了 `.footnotes` 相关样式的站点请对照 `prose.css` 里新的 `.wisp-cite` / `.wisp-notes`。
+
 ## 0.4.3
 
 - **修复**：改进图表渲染错误的 cause 链，保留底层错误便于定位；修正特殊字符 taxonomy slug 的清理逻辑。

@@ -16,7 +16,7 @@ packages/astro-wisp/src/explainers/
 │  └─ tones.generated.ts         # 由调色板生成（pnpm tokens）
 ├─ react/
 │  ├─ Explainer.tsx              # figure + 标题 + Player
-│  ├─ Player.tsx / usePlayer.ts  # 通用播放器：播放/暂停/单步/进度/速度/键盘/aria-live
+│  ├─ Player.tsx / usePlayer.ts  # 通用播放器：播放/暂停/单步/进度/循环倍速/键盘/aria-live
 │  ├─ labels.ts                  # 界面文字（中文 / 英文，随站点语言；可逐项覆盖）
 │  └─ primitives/                # Stage、Matrix、Cell、Label（SVG 原语，只用令牌）
 └─ explainers.css                # 由 Player 引入，只在用到讲解的页面加载
@@ -37,13 +37,13 @@ packages/astro-wisp/src/explainers/
 
 ## 2. Player 交互约定
 
-| 操作                   | 鼠标           | 键盘（Player 获得焦点时） |
-| ---------------------- | -------------- | ------------------------- |
-| 播放 / 暂停 / 重新播放 | ▶ 按钮         | Space                     |
-| 上一步 / 下一步        | ◀ ▶ 按钮       | ← / →                     |
-| 第一步 / 最后一步      |                | Home / End                |
-| 拖动进度               | range 滑块     |                           |
-| 速度                   | 0.5× / 1× / 2× |                           |
+| 操作                   | 鼠标                            | 键盘（Player 获得焦点时） |
+| ---------------------- | ------------------------------- | ------------------------- |
+| 播放 / 暂停 / 重新播放 | ▶ 按钮                          | Space                     |
+| 上一步 / 下一步        | 上一步 / 下一步按钮             | ← / →                     |
+| 第一步 / 最后一步      | —（无按钮）                     | Home / End                |
+| 拖动进度               | range 滑块                      |                           |
+| 速度                   | 倍速按钮循环切换 0.5× → 1× → 2× |                           |
 
 - caption 区域设置 `aria-live="polite"`。
 - 界面文字（按钮名、进度朗读）随站点语言（`site.lang`，zh* → 中文，其余 → 英文），`lang` / `labels` 属性可覆盖。
