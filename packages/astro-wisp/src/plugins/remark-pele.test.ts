@@ -4,7 +4,7 @@ import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import { describe, expect, it, vi } from 'vitest';
 import { VFile } from 'vfile';
-import { remarkPele } from './remark-pele';
+import { captionOf, remarkPele } from './remark-pele';
 
 const dir = join(__dirname, '../../tests/fixtures/mermaid');
 
@@ -74,6 +74,24 @@ describe('aria-label', () => {
   it('does not nest a second .pele wrapper', () => {
     const v = valueOf(child(run(fence('flowchart LR\n A-->B')), 1));
     expect(v.match(/class="pele[ "]/g)).toHaveLength(1);
+  });
+});
+
+describe('caption', () => {
+  it('reads caption= / title= from the fence meta', () => {
+    expect(captionOf('caption="图 3：调度流程"')).toBe('图 3：调度流程');
+    expect(captionOf("title='Figure 2. Flow'")).toBe('Figure 2. Flow');
+    expect(captionOf('{1,3} caption="a"')).toBe('a');
+    expect(captionOf(null)).toBe('');
+    expect(captionOf('subcaption="x"')).toBe('');
+  });
+  it('renders figcaption below the graphic with the figure label split out', () => {
+    const md = '前言\n\n```mermaid caption="图 3：调度 <流程>"\nflowchart TD\n  A --> B\n```\n';
+    const html = valueOf(child(run(md), 1));
+    expect(html).toMatch(
+      /<\/div><figcaption><span class="wisp-fig-no">图 3：<\/span>调度 &lt;流程&gt;<\/figcaption><\/figure>$/,
+    );
+    expect(valueOf(child(run(fence('flowchart TD\n  A --> B')), 1))).not.toContain('figcaption');
   });
 });
 

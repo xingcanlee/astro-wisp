@@ -3,6 +3,7 @@ import { visit } from 'unist-util-visit';
 import type { Code, Html, Root, Parent } from 'mdast';
 import type { Plugin } from 'unified';
 import type { VFile } from 'vfile';
+import { figureCaptionHtml } from './figure-caption';
 
 export interface RemarkPeleOptions {
   /** true：渲染失败时抛错（构建失败）。 */
@@ -57,6 +58,15 @@ function widthStyle(svg: string): string {
   return Number.isFinite(w) && w > 0 ? ` style="--pele-w:${Math.round(w)}px"` : '';
 }
 
+/**
+ * 题注写在围栏的 meta 里：```mermaid caption="图 3：调度流程"```（也接受 title=，单双引号均可）。
+ * 与图片、图表共用题注语法（图号拆成 .wisp-fig-no）。
+ */
+export function captionOf(meta: string | null | undefined): string {
+  const m = /(?:^|\s)(?:caption|title)=(?:"([^"]*)"|'([^']*)')/.exec(meta ?? '');
+  return (m?.[1] ?? m?.[2] ?? '').trim();
+}
+
 export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[], Root>> {
   const { strict = false, dev = false } = options;
   return (tree: Root, file: VFile) => {
@@ -73,13 +83,16 @@ export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[
         const r = render(node.value, { idPrefix: `pele${seq}-` });
         const label =
           textOf(r.svg, 'title') || textOf(r.svg, 'desc') || TYPE_NAMES[r.type] || '图表';
+        const caption = captionOf(node.meta);
         const html: Html = {
           type: 'html',
           value:
             // 可横向滚动的容器需要能被键盘聚焦（WCAG scrollable-region-focusable），
             // 所以 role=img + aria-label 放在可聚焦的滚动容器上，而不是 figure 上
             `<figure class="wisp-figure wisp-pele">` +
-            `<div class="wisp-pele-body" tabindex="0" role="img" aria-label="${escAttr(label)}"${widthStyle(r.svg)}>${r.svg}</div></figure>`,
+            `<div class="wisp-pele-body" tabindex="0" role="img" aria-label="${escAttr(label)}"${widthStyle(r.svg)}>${r.svg}</div>` +
+            (caption ? `<figcaption>${figureCaptionHtml(caption)}</figcaption>` : '') +
+            `</figure>`,
         };
         parent.children[index] = html;
       } catch (err) {

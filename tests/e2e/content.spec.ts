@@ -67,7 +67,7 @@ test('移动端交互入口有足够的触控高度', async ({ page }) => {
   await page.reload();
   const heights = await page
     .locator(
-      '.wisp-toc-inline summary, .wisp-series-inline summary, .wisp-diagram-actions a, .wisp-copy, .wisp-theme-toggle',
+      '.wisp-toc-inline summary, .wisp-series-inline summary, .wisp-fig-actions a, .wisp-copy, .wisp-theme-toggle',
     )
     .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().height)));
   expect(heights.length).toBeGreaterThan(0);
@@ -84,6 +84,31 @@ test('图表 figure 存在，下载链接返回 200', async ({ page, request }) 
     const href = await links.nth(i).getAttribute('href');
     expect((await request.get(href!)).status(), href!).toBe(200);
   }
+});
+
+test('所有 figure 题注在图下，图号单独排，动作与题注同一行', async ({ page }) => {
+  // 带标题的 Markdown 图片 → figure + 题注，title 不再留在 img 上；不带标题的图片保持原样
+  const img = page.locator('figure.wisp-image');
+  await expect(img).toHaveCount(1);
+  await expect(img.locator('img')).not.toHaveAttribute('title', /.*/);
+  await expect(img.locator('figcaption .wisp-fig-no')).toHaveText('图 5：');
+  await expect(page.locator('.prose p > img:only-child')).toHaveCount(1);
+  // Mermaid 围栏 caption=
+  await expect(page.locator('figure.wisp-pele figcaption .wisp-fig-no')).toHaveText('图 3：');
+  // 图表：≥40rem 时动作在题注第一行右端；更窄时落到题注下一行、贴左缘
+  const fig = page.locator('figure.wisp-diagram[aria-labelledby]').first();
+  const [text, actions] = await Promise.all([
+    fig.locator('.wisp-fig-text').boundingBox(),
+    fig.locator('.wisp-fig-actions').boundingBox(),
+  ]);
+  if (page.viewportSize()!.width >= 640) {
+    expect(actions!.x).toBeGreaterThan(text!.x + text!.width - 1);
+    expect(Math.abs(actions!.y - text!.y)).toBeLessThan(6);
+  } else {
+    expect(actions!.y).toBeGreaterThanOrEqual(text!.y + text!.height - 1);
+    expect(Math.abs(actions!.x - text!.x)).toBeLessThan(2);
+  }
+  await expect(page.locator('figure.wisp-diagram > .wisp-fig-actions')).toHaveCount(1);
 });
 
 test('图表和 Mermaid SVG 可用键盘打开 lightbox，并恢复焦点', async ({ page }) => {

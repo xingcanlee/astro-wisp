@@ -1,0 +1,218 @@
+---
+/**
+ * 引用（GFM 脚注）的客户端增强。页面没有 `a[data-footnote-ref]` 时什么都不做。
+ * - 点击文内标记 / 回链：平滑滚动（减少动态效果时直接跳）到目标，目标短暂标记约 2 秒（data-wisp-flash），
+ *   焦点移到目标，地址栏写入锚点（可以后退）。
+ * - 有指针悬停的设备：悬停或键盘聚焦文内标记时，在标记旁弹出该条注释的内容（Popover API，top layer，
+ *   不被吸顶页眉遮住）；Esc、失焦、滚动时关闭。触屏设备不弹出，点按直接跳转。
+ * - 无 JS：普通锚点跳转，:target 样式标记目标（prose.css）。
+ */
+---
+
+<script>
+  const refs = document.querySelectorAll<HTMLAnchorElement>('a[data-footnote-ref]');
+  if (refs.length) {
+    const root = document.documentElement;
+    root.dataset.wispCite = '';
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+    const canHover = matchMedia('(hover: hover) and (pointer: fine)');
+    const byHash = (a: HTMLAnchorElement) => {
+      const id = decodeURIComponent(a.hash.slice(1));
+      return id ? document.getElementById(id) : null;
+    };
+
+    // ---- 跳转 + 临时标记 ----
+    // 标记从滚动停下时开始计时约 2 秒（长文平滑滚动本身可能要 1 秒多）；不支持 scrollend 时估一个时长
+    const timers = new WeakMap<Element, number>();
+    const flash = (el: Element, scrolling = false) => {
+      clearTimeout(timers.get(el));
+      el.setAttribute('data-wisp-flash', '');
+      const start = () =>
+        timers.set(
+          el,
+          window.setTimeout(() => el.removeAttribute('data-wisp-flash'), 2000),
+        );
+      if (!scrolling) return start();
+      if ('onscrollend' in window) {
+        let done = false;
+        const once = () => {
+          if (done) return;
+          done = true;
+          removeEventListener('scrollend', once);
+          start();
+        };
+        addEventListener('scrollend', once);
+        // 已经在目标位置、不会触发 scrollend 时的兜底
+        window.setTimeout(once, 2500);
+      } else setTimeout(start, 800);
+    };
+    const go = (a: HTMLAnchorElement, e: MouseEvent) => {
+      const target = byHash(a);
+      if (!target) return;
+      e.preventDefault();
+      hide(true);
+      const back = a.hasAttribute('data-footnote-backref');
+      history.pushState(null, '', a.hash);
+      target.scrollIntoView({
+        behavior: reduce.matches ? 'auto' : 'smooth',
+        block: back ? 'center' : 'start',
+      });
+      // 注释条目本身不可聚焦：临时给 tabindex，读屏与键盘从这里继续
+      if (!back && !target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+      (target as HTMLElement).focus({ preventScroll: true });
+      flash(back ? (target.closest('sup') ?? target) : target, !reduce.matches);
+    };
+    document.addEventListener('click', (e) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+        return;
+      const a = (e.target as Element | null)?.closest<HTMLAnchorElement>(
+        'a[data-footnote-ref], a[data-footnote-backref]',
+      );
+      if (a) go(a, e);
+    });
+    // 直接打开带注释锚点的地址：同样标记一下
+    const initial =
+      location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if (initial && initial.closest('section[data-footnotes]')) flash(initial);
+
+    // ---- 悬停预览 ----
+    const pop = document.createElement('div');
+    pop.className = 'wisp-cite-pop';
+    // 纯视觉增强：读屏通过 aria-describedby 和跳转拿到同一内容
+    pop.setAttribute('aria-hidden', 'true');
+    const usePopover = 'showPopover' in HTMLElement.prototype;
+    if (usePopover) pop.setAttribute('popover', 'manual');
+    else pop.hidden = true;
+    document.body.append(pop);
+
+    let current: HTMLAnchorElement | null = null;
+    let showT = 0;
+    let hideT = 0;
+    const isOpen = () => current !== null;
+
+    const place = (a: HTMLAnchorElement) => {
+      const r = a.getBoundingClientRect();
+      const gap = 6;
+      const edge = 8;
+      const header = parseFloat(getComputedStyle(root).getPropertyValue('--wisp-header-h')) || 56;
+      const w = pop.offsetWidth;
+      const h = pop.offsetHeight;
+      let left = r.left + r.width / 2 - 24;
+      left = Math.max(edge, Math.min(left, innerWidth - w - edge));
+      let top = r.bottom + gap;
+      // 下方放不下时放到上方；上方会压到吸顶页眉时仍放下方
+      if (top + h > innerHeight - edge && r.top - gap - h >= header + edge) top = r.top - gap - h;
+      pop.style.left = `${Math.round(left)}px`;
+      pop.style.top = `${Math.round(top)}px`;
+    };
+    const show = (a: HTMLAnchorElement) => {
+      clearTimeout(hideT);
+      if (current === a) return;
+      const li = byHash(a);
+      if (!li) return;
+      const body = li.cloneNode(true) as HTMLElement;
+      body.querySelectorAll('[data-footnote-backref]').forEach((b) => b.remove());
+      body.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
+      body
+        .querySelectorAll('a, button, [tabindex]')
+        .forEach((n) => n.setAttribute('tabindex', '-1'));
+      pop.replaceChildren(...body.childNodes);
+      current = a;
+      if (usePopover) {
+        if (!pop.matches(':popover-open')) pop.showPopover();
+      } else pop.hidden = false;
+      place(a);
+    };
+    function hide(now = false) {
+      clearTimeout(showT);
+      clearTimeout(hideT);
+      const run = () => {
+        if (!isOpen()) return;
+        current = null;
+        if (usePopover) {
+          if (pop.matches(':popover-open')) pop.hidePopover();
+        } else pop.hidden = true;
+      };
+      if (now) run();
+      else hideT = window.setTimeout(run, 180);
+    }
+
+    const refOf = (t: EventTarget | null) =>
+      (t as Element | null)?.closest?.<HTMLAnchorElement>('a[data-footnote-ref]') ?? null;
+    document.addEventListener('pointerover', (e) => {
+      if (e.pointerType !== 'mouse' || !canHover.matches) return;
+      const a = refOf(e.target);
+      if (a) {
+        clearTimeout(hideT);
+        clearTimeout(showT);
+        showT = window.setTimeout(() => show(a), isOpen() ? 0 : 120);
+      } else if (pop.contains(e.target as Node)) clearTimeout(hideT);
+    });
+    document.addEventListener('pointerout', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const from = refOf(e.target) ?? (pop.contains(e.target as Node) ? pop : null);
+      if (!from) return;
+      const to = e.relatedTarget as Node | null;
+      if (to && (pop.contains(to) || refOf(to) === current)) return;
+      clearTimeout(showT);
+      hide();
+    });
+    document.addEventListener('focusin', (e) => {
+      const a = refOf(e.target);
+      if (a && canHover.matches && a.matches(':focus-visible')) show(a);
+    });
+    document.addEventListener('focusout', (e) => {
+      if (refOf(e.target) === current) hide(true);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen()) hide(true);
+    });
+    addEventListener('scroll', () => isOpen() && hide(true), { passive: true });
+    addEventListener('resize', () => isOpen() && hide(true), { passive: true });
+  }
+</script>
+
+<style is:global>
+  @layer components {
+    /* 引用预览：纸白底、1px 发丝线、4px 圆角，没有阴影；在 top layer 里，不会被吸顶页眉盖住 */
+    .wisp-cite-pop {
+      position: fixed;
+      inset: auto;
+      z-index: 60;
+      box-sizing: border-box;
+      width: max-content;
+      max-width: min(22rem, calc(100vw - 16px));
+      margin: 0;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--wisp-border);
+      border-radius: 4px;
+      background: var(--wisp-bg);
+      color: var(--wisp-fg);
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+      text-align: start;
+    }
+    .wisp-cite-pop[hidden] {
+      display: none;
+    }
+    .wisp-cite-pop p {
+      margin: 0;
+    }
+    .wisp-cite-pop p + p {
+      margin-top: 0.375rem;
+    }
+    .wisp-cite-pop a {
+      color: var(--wisp-accent);
+      text-decoration-line: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.2em;
+    }
+    .wisp-cite-pop code {
+      padding: 0.0625em 0.25em;
+      border-radius: 3px;
+      background: var(--wisp-surface);
+      font-size: 0.9em;
+    }
+  }
+</style>

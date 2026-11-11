@@ -1,22 +1,111 @@
 /*
- * 图形容器：Mermaid（remark-pele）、图表（T11）、宽内容。
- * remark-pele 输出：<figure class="wisp-figure wisp-pele"><div class="wisp-pele-body"><svg/></div></figure>
+ * 图形容器：Markdown 图片（rehype-figure）、Mermaid（remark-pele）、图表（render-diagram）、<Figure>、宽内容。
+ *
+ * 所有 figure 同一种题注：图在上、题注在下（中文排版：图题在下，表题在上），题注贴正文栏左缘。
+ *   <figure class="wisp-figure wisp-image|wisp-pele|wisp-diagram">
+ *     <img> | <div class="wisp-pele-body"> | <div class="wisp-diagram-body">
+ *     <figcaption><span class="wisp-fig-no">图 05-1：</span>题注文字</figcaption>
+ *   </figure>
+ * 带动作（图表的「源文件 / draw.io」）时，题注文字包一层，动作排在题注第一行右端、与它同基线：
+ *     <figcaption><span class="wisp-fig-text"><span class="wisp-fig-no">…</span>…</span><span class="wisp-fig-actions">…</span></figcaption>
+ * 只有动作没有题注时，动作单独一行、从栏左缘开始：<span class="wisp-fig-actions"> 直接放在 figure 里。
  */
 
 .wisp-figure {
-  margin: 1.5em 0;
+  margin: var(--wisp-block-gap, 1.75em) 0;
   max-width: 100%;
   max-inline-size: 100%;
   min-width: 0;
 }
 
+/* 题注：muted 0.875rem/1.6，贴栏左缘（图比栏窄时图居中，题注仍与正文左边线对齐） */
 .wisp-figure > figcaption,
-.wisp-figure figcaption {
-  margin-top: 0.5em;
+.prose figcaption {
+  margin-top: 0.625em;
   color: var(--wisp-muted);
   font-size: 0.875rem;
   line-height: 1.6;
   text-align: start;
+}
+/* 图号：墨色、600、表格数字，后面的文字保持 muted */
+.wisp-fig-no {
+  color: var(--wisp-fg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 题注 + 动作：左列题注自由换行，右列动作对齐题注第一行的基线 */
+.wisp-figure > figcaption:has(> .wisp-fig-actions) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 1.5rem;
+}
+.wisp-fig-text {
+  min-width: 0;
+}
+.wisp-fig-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 1rem;
+  color: var(--wisp-muted);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.wisp-figure > .wisp-fig-actions {
+  margin-top: 0.625em;
+}
+.prose .wisp-fig-actions a,
+.wisp-fig-actions a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  color: var(--wisp-muted);
+  font-weight: 400;
+  text-decoration-line: none;
+  transition: color 150ms;
+}
+.prose .wisp-fig-actions a:hover,
+.wisp-fig-actions a:hover {
+  color: var(--wisp-accent);
+}
+.wisp-fig-actions a:focus-visible {
+  outline: 2px solid var(--wisp-accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+/* Lucide 图标：略小于字号，底边落在基线附近 */
+.wisp-fig-actions .wisp-icon {
+  flex: none;
+  align-self: center;
+  width: 0.95em;
+  height: 0.95em;
+}
+
+/* 窄屏：动作落到题注下一行、贴左缘，触控高度 ≥ 44px */
+@media (max-width: 39.99rem) {
+  .wisp-figure > figcaption:has(> .wisp-fig-actions) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wisp-fig-actions {
+    flex-wrap: wrap;
+    gap: 0 1.25rem;
+  }
+  .wisp-figure > .wisp-fig-actions {
+    margin-top: 0.25em;
+  }
+  .prose .wisp-fig-actions a,
+  .wisp-fig-actions a {
+    align-items: center;
+    min-height: 2.75rem;
+  }
+}
+
+/* 位图：1px 发丝线定出图片边缘（白底截图在深色页面上不再发光）；不加滤镜、不反色 */
+.wisp-figure > img:not([src$='.svg' i]) {
+  border: 1px solid var(--wisp-border);
 }
 
 /* Mermaid 渲染体：图表始终在容器内缩小，不创建横向滚动区 */
@@ -96,9 +185,10 @@
   scrollbar-width: thin;
 }
 .wisp-pele-body[style*='--pele-w'] > svg {
-  width: 100%;
+  /* 上限写在 width 里：Pele 在 SVG 的内联 style 里写了 max-width:100%，样式表的 max-width 盖不过它，
+   * 小图会被放大到整栏宽 */
+  width: min(100%, var(--pele-w));
   min-width: min(var(--pele-w), calc(var(--pele-w) * 0.75));
-  max-width: var(--pele-w);
 }
 /* 横向可滚动时的边缘提示（经典 scroll shadow：local 背景遮罩 + scroll 背景阴影，纯 CSS） */
 .wisp-pele-body[style*='--pele-w'] {
