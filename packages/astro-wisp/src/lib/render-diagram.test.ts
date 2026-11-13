@@ -111,6 +111,13 @@ describe('prepareSvg', () => {
       '<svg viewBox="0 0 10 10" aria-labelledby="f-title-1" role="img"><title id="f-title-1">x</title><rect/></svg>',
     );
   });
+  it('strips drawio-cli MathJax crispEdges style rule', () => {
+    const legacy =
+      '<svg viewBox="0 0 10 10"><defs><style xmlns="http://www.w3.org/1999/xhtml" type="text/css">.MathJax svg{shape-rendering:crispEdges}</style></defs><rect/></svg>';
+    const r = prepareSvg(legacy, { suffix: '1', fallbackTitleId: 't' });
+    expect(r.svg).not.toContain('crispEdges');
+    expect(r.svg).not.toContain('<defs>');
+  });
 });
 
 describe('renderDiagram', () => {

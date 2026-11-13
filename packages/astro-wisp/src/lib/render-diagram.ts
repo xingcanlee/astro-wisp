@@ -269,8 +269,15 @@ export function prepareSvg(
   const rootMatch = /<svg\b[^>]*>/i.exec(out);
   if (!rootMatch) throw new DiagramProblem('产物不是 SVG');
 
-  // 1. 根元素：去掉 width/height，记录自然宽度
-  let rootTag = rootMatch[0];
+  // 1. 清理旧版 drawio-cli 产物遗留的 `.MathJax svg{shape-rendering:crispEdges}`（避免关闭矢量抗锯齿并污染全页）
+  out = out
+    .replace(/\.MathJax[\w-]*\s+svg\s*\{\s*shape-rendering\s*:\s*crispEdges\s*;?\s*\}/gi, '')
+    .replace(/<style\b[^>]*>\s*<\/style>/gi, '')
+    .replace(/<defs\b[^>]*>\s*<\/defs>/gi, '');
+
+  // 2. 根元素：去掉 width/height，记录自然宽度
+  const rootMatch2 = /<svg\b[^>]*>/i.exec(out)!;
+  let rootTag = rootMatch2[0];
   const vb = /\sviewBox="([^"]+)"/
     .exec(rootTag)?.[1]
     ?.trim()
@@ -279,9 +286,10 @@ export function prepareSvg(
   const wAttr = /\swidth="([\d.]+)(?:px)?"/.exec(rootTag)?.[1];
   const width = vb && vb.length === 4 && vb[2]! > 0 ? vb[2] : wAttr ? Number(wAttr) : undefined;
   rootTag = rootTag.replace(/\s(?:width|height)="[^"]*"/g, '');
-  out = out.slice(0, rootMatch.index) + rootTag + out.slice(rootMatch.index + rootMatch[0].length);
+  out =
+    out.slice(0, rootMatch2.index) + rootTag + out.slice(rootMatch2.index + rootMatch2[0].length);
 
-  // 2. id 唯一化（只匹配独立的 id 属性，不碰 data-cell-id 等）
+  // 3. id 唯一化（只匹配独立的 id 属性，不碰 data-cell-id 等）
   const ids = new Map<string, string>();
   for (const m of out.matchAll(/\sid="([^"]+)"/g)) ids.set(m[1]!, `${m[1]}-${opts.suffix}`);
   if (ids.size) {

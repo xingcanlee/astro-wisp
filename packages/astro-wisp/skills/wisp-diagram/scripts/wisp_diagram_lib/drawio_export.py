@@ -228,6 +228,10 @@ def clean_drawio_svg(svg: str) -> str:
     s = re.sub(r"<style\b[^>]*>[^<]*--ge-adaptive[^<]*</style>", "", s)
     # MathJax 的全局样式表（含 ::before 等伪元素选择器，svgo 无法处理）：公式是自带尺寸的内联 SVG，不依赖它
     s = re.sub(r'<style\b[^>]*\bid="MJX-SVG-styles"[^>]*>[\s\S]*?</style>', "", s)
+    # draw.io 桌面端（CLI / Docker）会注入 `.MathJax svg{shape-rendering:crispEdges}`，关闭抗锯齿会让公式笔画断裂发虚，且内联进页面后污染全页
+    s = re.sub(r"\.MathJax[\w-]*\s+svg\s*\{\s*shape-rendering\s*:\s*crispEdges\s*;?\s*\}", "", s, flags=re.I)
+    s = re.sub(r"<style\b[^>]*>\s*</style>", "", s, flags=re.I)
+    s = re.sub(r"<defs\b[^>]*>\s*</defs>", "", s, flags=re.I)
     # 公式的排版样式直接写在元素上，不依赖宿主页面的 CSS（Tailwind preflight 会把所有 svg 设成 display:block，
     # 公式就会一个一行）；行内公式两侧留 0.2em，因为紧挨行内块的空格会被折叠掉。<img> 引用时同样生效。
     def mjx(m: re.Match) -> str:

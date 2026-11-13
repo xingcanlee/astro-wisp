@@ -66,9 +66,11 @@
     line-height: 0;
     white-space: nowrap;
   }
-  svg.wisp-d mjx-container > svg {
+  svg.wisp-d mjx-container > svg,
+  svg.wisp-d .MathJax svg {
     display: inline;
     overflow: visible;
+    shape-rendering: auto;
   }
   svg.wisp-d mjx-container[display='true'] {
     display: block;

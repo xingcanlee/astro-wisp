@@ -84,3 +84,17 @@ def test_clean_inlines_math_layout():
     assert '<mjx-container class="MathJax" jax="SVG" style="display:inline-block;margin:0 0.2em;line-height:0"><svg style="display:inline;overflow:visible;vertical-align:-0.6ex" width="1ex">' in out
     assert 'display="true" style="display:block;' in out
     assert clean_drawio_svg(out) == out  # 幂等
+
+
+def test_clean_strips_cli_mathjax_crisp_edges():
+    raw = (
+        '<svg xmlns="http://www.w3.org/2000/svg">'
+        '<defs><style xmlns="http://www.w3.org/1999/xhtml" type="text/css">.MathJax svg{shape-rendering:crispEdges}</style></defs>'
+        '<foreignObject><span class="MathJax"><mjx-container jax="SVG"><svg width="1ex"></svg></mjx-container></span></foreignObject>'
+        "</svg>"
+    )
+    out = clean_drawio_svg(raw)
+    assert "crispEdges" not in out
+    assert "<style" not in out
+    assert "<defs>" not in out
+    assert clean_drawio_svg(out) == out
