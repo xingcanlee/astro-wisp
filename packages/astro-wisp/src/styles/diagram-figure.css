@@ -5,12 +5,10 @@
  *
  * remark-diagram / Diagram.astro 输出（render-diagram.ts）：
  *   题注 + 动作：
- *   <figure class="wisp-figure wisp-diagram" data-style="hand|clean" aria-labelledby="x-caption-1">
- *     <div class="wisp-diagram-body" style="--wd-w:848px"><svg class="wisp-d" viewBox=…>…</svg></div>
- *     <figcaption>
- *       <span class="wisp-fig-text" id="x-caption-1"><span class="wisp-fig-no">图 05-1：</span>…</span>
- *       <span class="wisp-fig-actions"><a class="wisp-diagram-dl" download>源文件</a><a class="wisp-diagram-open">draw.io</a></span>
- *     </figcaption>
+ *   <figure class="wisp-figure wisp-diagram" data-style="hand|clean" aria-labelledby="x-caption-1" style="--wd-w:848px">
+ *     <div class="wisp-diagram-body"><svg class="wisp-d" viewBox=…>…</svg></div>
+ *     <figcaption id="x-caption-1"><span class="wisp-fig-no">图 05-1：</span>…</figcaption>
+ *     <span class="wisp-fig-actions"><a class="wisp-diagram-dl" download>源文件</a><a class="wisp-diagram-open">draw.io</a></span>
  *   </figure>
  *   只有题注：<figcaption><span class="wisp-fig-no">…</span>…</figcaption>
  *   只有动作：<span class="wisp-fig-actions">…</span> 直接跟在 .wisp-diagram-body 后面

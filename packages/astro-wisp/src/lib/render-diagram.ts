@@ -6,7 +6,7 @@
  * - 用 diagrams.manifest.json 校验源文件与 .wisp.svg 的哈希（与 `pnpm diagram check` 同一套逻辑）；
  * - 选择 draw.io 页面（页名或 1 起的序号）；
  * - 处理 SVG：id 页面内唯一化、alt 写入 <title>、去掉根元素 width/height；
- * - 生成 <figure>：题注（图号拆成 .wisp-fig-no）与动作（下载源文件、可选的“在 draw.io 中打开”）同一行。
+ * - 生成 <figure>：题注独占全宽，动作（下载源文件、可选的“在 draw.io 中打开”）在桌面端悬浮于图表右上角、触屏与窄屏回退到底部换行。
  * 产物缺失或过期：dev 返回醒目的占位块；build 抛错。
  *
  * 只依赖 node 内置模块：remark 插件会被打进 SSR 构建。manifest 由 skill 的 Python CLI 写入，
@@ -418,7 +418,7 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     const href = key !== undefined ? downloadHrefFor(key, env.base) : undefined;
     const file = basename(abs);
     const links: string[] = [];
-    // 动作跟在题注第一行的右端：可见文字取短词（「源文件」「draw.io」），完整含义放在 aria-label / title
+    // 动作（桌面端悬浮在图右上角，窄屏与触屏回退在题注下方）：可见文字取短词（「源文件」「draw.io」），完整含义放在 aria-label / title
     if (showDl && href) {
       links.push(
         `<a class="wisp-diagram-dl" href="${escAttr(href)}" download="${escAttr(file)}" type="${escAttr(contentTypeFor(file).split(';')[0]!)}"` +
@@ -436,23 +436,22 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     const seq = String(ref.seq);
     const caption = ref.caption?.trim();
     const actions = links.length ? `<span class="wisp-fig-actions">${links.join('')}</span>` : '';
-    // 题注与动作同一行时，figure 的可访问名称只取题注文字，不把链接文字算进去
+    // figure 内同时存在动作链接时，显式绑定 aria-labelledby 只取题注文字作为可访问名称
     const captionId = caption && actions ? `${stem}-caption-${seq}` : '';
-    const foot = caption
-      ? actions
-        ? `<figcaption><span class="wisp-fig-text" id="${escAttr(captionId)}">${figureCaptionHtml(caption)}</span>${actions}</figcaption>`
-        : `<figcaption>${figureCaptionHtml(caption)}</figcaption>`
-      : actions;
+    const figCaption = caption
+      ? `<figcaption${captionId ? ` id="${escAttr(captionId)}"` : ''}>${figureCaptionHtml(caption)}</figcaption>`
+      : '';
     const cls = ['wisp-figure', 'wisp-diagram', ...(ref.wide ? ['wisp-wide'] : [])].join(' ');
     const pageAttr =
       style === 'clean' && pages[pageIndex] ? ` data-page="${escAttr(pages[pageIndex]!)}"` : '';
     const labelledBy = captionId ? ` aria-labelledby="${escAttr(captionId)}"` : '';
-    const bodyStyle = width ? ` style="--wd-w:${Math.round(width * 100) / 100}px"` : '';
+    const figStyle = width ? ` style="--wd-w:${Math.round(width * 100) / 100}px"` : '';
     const html =
-      `<figure class="${cls}" data-style="${style}"${pageAttr}${labelledBy}>` +
+      `<figure class="${cls}" data-style="${style}"${pageAttr}${labelledBy}${figStyle}>` +
       // 窄屏下可横向滚动：容器需可键盘聚焦（WCAG scrollable-region-focusable）
-      `<div class="wisp-diagram-body" tabindex="0" role="group" aria-label="${escAttr(ref.alt?.trim() || '图表')}"${bodyStyle}>${svg}</div>` +
-      foot +
+      `<div class="wisp-diagram-body" tabindex="0" role="group" aria-label="${escAttr(ref.alt?.trim() || '图表')}">${svg}</div>` +
+      figCaption +
+      actions +
       `</figure>`;
     return { html, ok: true, style, source: abs, downloadHref: showDl ? href : undefined };
   } catch (err) {

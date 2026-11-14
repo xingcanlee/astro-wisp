@@ -255,142 +255,94 @@
   }
 
   /*
-   * 滚动条：全站一套规则。颜色只来自令牌（fg 与 bg 混合），轨道透明，滑块 999px 圆角。
-   * - 页面主滚动条：系统宽度，只改颜色。
-   * - 所有内部滚动区（下面的 :where() 列表）：细滚动条；有指针的设备上滑块平时透明，
-   *   指针移入容器或焦点进入容器时才显示。只改颜色、不改宽度，所以出现时不会让布局跳动。
-   *   触屏（hover: none）不隐藏滑块，交给系统的叠加式滚动条。
-   * 侧栏（系列、目录）的篇目滚动层带 .wisp-scroll，走同一条规则；它们自己算滚动条宽度并外移，这里不预留 gutter。
-   * 站点自己的滚动容器：加 class="wisp-scroll" 或 data-wisp-scroll 属性即可加入
-   * （data-wisp-scroll 同时参与横向溢出渐隐，见下方与 Base 布局的脚本）。
-   * :where() 让这些规则的特异性为 0，站点 customCss 随时可以覆盖。
-   * color-scheme 由 tokens.css 在 :root / [data-theme=dark] 上设置，原生滚动条随主题切换。
+   * 滚动条：全站一套四层规则。滑块用半透明前景色（而非与纸白混合的实色），在纸白、代码底、着色块与灯箱上都能自然压暗/提亮；
+   * 轨道透明、999px 圆角、无步进三角箭头（▲/▼/◄/►）。
+   * - 页面主滚动条（html）：桌面端 10px 命中区 + 2px 透明内衬 = 6px 悬浮圆角滑块（按住加宽到 8px），消除 Windows 原生悬空三角箭头；
+   * - 导航轨道（[data-rail-scroll]、.wisp-nav ul）：各自隐藏滚动条，仅靠渐隐遮罩提示可滚；
+   * - 全部内部滚动容器（:where(body *)，0 特异性，无需枚举类名）：桌面端 8px 命中区 + 2px 透明内衬 = 4px 悬浮圆角滑块，
+   *   平时通过自定义属性 --wisp-sb: transparent 完全隐身，指针移入、焦点进入或鼠标拖拽时切换 --wisp-sb 立即重绘显现
+   *   （避开 Blink 对容器 :hover::-webkit-scrollbar-thumb 不触发重绘的引擎缺陷），指向滑块本体时柔和展宽至 6px；
+   * - Firefox 与触屏设备回退标准 scrollbar-width / scrollbar-color（Chromium 下严禁给 html 设 scrollbar-color，否则会废弃 ::-webkit-scrollbar）。
    */
   :root {
-    --wisp-scroll-thumb: color-mix(in srgb, var(--wisp-fg) 30%, var(--wisp-bg));
-    --wisp-scroll-thumb-hover: color-mix(in srgb, var(--wisp-fg) 48%, var(--wisp-bg));
+    --wisp-scroll-thumb: color-mix(in srgb, var(--wisp-fg) 26%, transparent);
+    --wisp-scroll-thumb-hover: color-mix(in srgb, var(--wisp-fg) 46%, transparent);
   }
-  html {
-    scrollbar-color: var(--wisp-scroll-thumb) transparent;
-  }
-  :where(
-    .wisp-scroll,
-    [data-wisp-scroll],
-    .wisp-pre,
-    .prose pre,
-    .prose table,
-    .prose .wisp-table,
-    .katex-display,
-    .prose .katex,
-    .wisp-pele-body,
-    .wisp-explainer__scroll,
-    .wisp-lightbox-media,
-    .wisp-series-inline ol
-  ) {
-    scrollbar-width: thin;
-    scrollbar-color: var(--wisp-scroll-thumb) transparent;
+  @media (hover: none) {
+    html {
+      scrollbar-color: var(--wisp-scroll-thumb) transparent;
+    }
+    :where(body *) {
+      scrollbar-width: thin;
+      scrollbar-color: var(--wisp-scroll-thumb) transparent;
+    }
   }
   @media (hover: hover) {
-    :where(
-      .wisp-scroll,
-      [data-wisp-scroll],
-      .wisp-pre,
-      .prose pre,
-      .prose table,
-      .prose .wisp-table,
-      .katex-display,
-      .prose .katex,
-      .wisp-pele-body,
-      .wisp-explainer__scroll,
-      .wisp-lightbox-media,
-      .wisp-series-inline ol
-    ):where(:not(:hover, :focus-within)) {
-      scrollbar-color: transparent transparent;
-    }
-  }
-  /* 回落：仅支持 ::-webkit-scrollbar 而不支持 scrollbar-color 的浏览器（旧版 Safari），同一套行为 */
-  @supports not (scrollbar-color: auto) {
-    :where(
-      .wisp-scroll,
-      [data-wisp-scroll],
-      .wisp-pre,
-      .prose pre,
-      .prose table,
-      .prose .wisp-table,
-      .katex-display,
-      .prose .katex,
-      .wisp-pele-body,
-      .wisp-explainer__scroll,
-      .wisp-lightbox-media,
-      .wisp-series-inline ol
-    )::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-      background: transparent;
-    }
-    :where(
-      .wisp-scroll,
-      [data-wisp-scroll],
-      .wisp-pre,
-      .prose pre,
-      .prose table,
-      .prose .wisp-table,
-      .katex-display,
-      .prose .katex,
-      .wisp-pele-body,
-      .wisp-explainer__scroll,
-      .wisp-lightbox-media,
-      .wisp-series-inline ol
-    )::-webkit-scrollbar-thumb {
-      border: 2px solid transparent;
-      border-radius: 999px;
-      background: var(--wisp-scroll-thumb);
-      background-clip: content-box;
-    }
-    @media (hover: hover) {
-      :where(
-          .wisp-scroll,
-          [data-wisp-scroll],
-          .wisp-pre,
-          .prose pre,
-          .prose table,
-          .prose .wisp-table,
-          .katex-display,
-          .prose .katex,
-          .wisp-pele-body,
-          .wisp-explainer__scroll,
-          .wisp-lightbox-media,
-          .wisp-series-inline ol
-        ):where(:not(:hover, :focus-within))::-webkit-scrollbar-thumb {
+    @supports selector(::-webkit-scrollbar) {
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
         background: transparent;
       }
+      ::-webkit-scrollbar-button {
+        display: none;
+        width: 0;
+        height: 0;
+      }
+      ::-webkit-scrollbar-track,
+      ::-webkit-scrollbar-corner {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-track:vertical {
+        margin-block: 4px;
+      }
+      ::-webkit-scrollbar-track:horizontal {
+        margin-inline: 4px;
+      }
+      ::-webkit-scrollbar-thumb {
+        border: 2px solid transparent;
+        border-radius: 999px;
+        background-clip: content-box;
+        background-color: var(--wisp-sb, var(--wisp-scroll-thumb));
+      }
+      ::-webkit-scrollbar-thumb:hover,
+      ::-webkit-scrollbar-thumb:active {
+        border-width: 1px;
+        background-color: var(--wisp-scroll-thumb-hover);
+      }
+      :where(body *) {
+        --wisp-sb: transparent;
+      }
+      :where(body *):where(:hover, :focus-within),
+      [data-wisp-dragging] {
+        --wisp-sb: var(--wisp-scroll-thumb);
+      }
+      :where(body *)::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
     }
-    :where(
-        .wisp-scroll,
-        [data-wisp-scroll],
-        .wisp-pre,
-        .prose pre,
-        .prose table,
-        .prose .wisp-table,
-        .katex-display,
-        .prose .katex,
-        .wisp-pele-body,
-        .wisp-explainer__scroll,
-        .wisp-lightbox-media,
-        .wisp-series-inline ol
-      )::-webkit-scrollbar-thumb:hover {
-      background: var(--wisp-scroll-thumb-hover);
-      background-clip: content-box;
+    @supports not selector(::-webkit-scrollbar) {
+      html {
+        scrollbar-color: var(--wisp-scroll-thumb) transparent;
+      }
+      :where(body *) {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+      }
+      :where(body *):where(:hover, :focus-within),
+      [data-wisp-dragging] {
+        scrollbar-color: var(--wisp-scroll-thumb) transparent;
+      }
     }
   }
 
   /*
-   * 横向溢出提示：还有内容的那一侧，内容在 1.5rem 内渐隐到容器底色（mask，与底色无关，
-   * 代码底、纸白、浅底上都成立）；滚到头时该侧的渐隐消失。不用阴影。
-   * data-wisp-overflow="start|end|both" 由 Base 布局的内联脚本在确实溢出时才打上，并随滚动更新。
-   * 键盘聚焦时去掉渐隐：mask 会连焦点环一起裁掉，聚焦后读者已经在用方向键滚动。
+   * 横向与纵向溢出提示：还有内容的那一侧，内容在渐隐带内柔和过渡到容器底色（mask-image，与底色无关）；
+   * 滚到头时该侧的渐隐消失。不用阴影。
    */
   [data-wisp-overflow] {
+    --wisp-fade-size: 1.5rem;
     --wisp-fade-start: 0px;
     --wisp-fade-end: 0px;
     mask-image: linear-gradient(
@@ -403,13 +355,36 @@
   }
   [data-wisp-overflow='start'],
   [data-wisp-overflow='both'] {
-    --wisp-fade-start: 1.5rem;
+    --wisp-fade-start: var(--wisp-fade-size);
   }
   [data-wisp-overflow='end'],
   [data-wisp-overflow='both'] {
-    --wisp-fade-end: 1.5rem;
+    --wisp-fade-end: var(--wisp-fade-size);
   }
   [data-wisp-overflow]:focus-visible {
     mask-image: none;
+  }
+  [data-wisp-vfade] {
+    --wisp-vfade-top: 0rem;
+    --wisp-vfade-bottom: 0rem;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black var(--wisp-vfade-top),
+      black calc(100% - var(--wisp-vfade-bottom)),
+      transparent
+    );
+  }
+  [data-wisp-vfade~='top'] {
+    --wisp-vfade-top: 1.5rem;
+  }
+  [data-wisp-vfade~='bottom'] {
+    --wisp-vfade-bottom: 1.75rem;
+  }
+  [data-wisp-dragging],
+  [data-wisp-dragging] * {
+    cursor: grabbing !important;
+    user-select: none;
+    -webkit-user-select: none;
   }
 }

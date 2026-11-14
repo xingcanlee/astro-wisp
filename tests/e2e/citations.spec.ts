@@ -27,15 +27,42 @@ test('有引用的行与没有引用的行行距一致', async ({ page }) => {
   expect(Math.abs(h / lh - Math.round(h / lh))).toBeLessThan(0.01);
 });
 
-test('文末「参考与注释」：可见标题、图标回链、没有 ↩ 字符', async ({ page }) => {
+test('文末「参考与注释」：可见标题、单枚图标回链、没有 ↩ 字符与序号尾巴', async ({ page }) => {
   const sec = page.locator('section[data-footnotes]');
   await expect(sec.locator('h2')).toHaveText('参考与注释');
   await expect(sec.locator('h2')).toBeVisible();
   await expect(sec).not.toContainText('↩');
   await expect(sec.locator('a[data-footnote-backref] svg').first()).toBeVisible();
-  await expect(sec.locator('a[aria-label="返回正文第 2 处引用"]')).toHaveCount(1);
+  const itemCount = await sec.locator('li').count();
+  await expect(sec.locator('a[data-footnote-backref]')).toHaveCount(itemCount);
+  await expect(sec.locator('.wisp-backref-n')).toHaveCount(0);
   // 不进目录
   await expect(page.locator('[data-toc-link="footnote-label"]')).toHaveCount(0);
+});
+
+test('多处引用的同一条注释：点击第 2 处跳下后，单枚回链精准原路返回第 2 处', async ({ page }) => {
+  const refs = page.locator('a[data-footnote-ref][href="#user-content-fn-attention"]');
+  await expect(refs).toHaveCount(2);
+  const second = refs.nth(1);
+  const secondId = (await second.getAttribute('id'))!;
+  await second.click();
+  const li = page.locator('#user-content-fn-attention');
+  await expect(li).toHaveAttribute('data-wisp-flash', '');
+  const backref = li.locator('a[data-footnote-backref]');
+  await expect(backref).toHaveCount(1);
+  await backref.click();
+  await expect(page.locator(`#${secondId}`).locator('..')).toHaveAttribute('data-wisp-flash', '');
+  await expect(second).toBeFocused();
+});
+
+test('中文页里的纯西文强调保持斜体，中文强调显示着重号', async ({ page }) => {
+  const zhEm = page.locator('.prose p em', { hasText: '强调' }).first();
+  const enEm = page.locator('.prose p em', { hasText: 'emphasis' }).first();
+  await expect(enEm).toHaveAttribute('lang', 'en');
+  expect(await zhEm.evaluate((el) => getComputedStyle(el).fontStyle)).toBe('normal');
+  expect(await zhEm.evaluate((el) => getComputedStyle(el).textEmphasisStyle)).not.toBe('none');
+  expect(await enEm.evaluate((el) => getComputedStyle(el).fontStyle)).toBe('italic');
+  expect(await enEm.evaluate((el) => getComputedStyle(el).textEmphasisStyle)).toBe('none');
 });
 
 test('点击引用跳到注释并短暂标记，焦点移到注释', async ({ page }) => {

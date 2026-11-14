@@ -25,7 +25,7 @@ const addClass = (node: Element, name: string) => {
  * - 文末列表：section 加 .wisp-notes；remark-gfm 的读屏专用标题（sr-only "Footnotes"）改成按语言的可见标题
  *   （「参考与注释」/「References」），它不是正文的直接子元素，不参与 h2 编号；Post 布局也把它排除在目录外
  * - 回链：「↩」字符换成 Lucide arrow-up 图标（构建期内联 SVG），按语言写 aria-label；
- *   同一条被引用多次时，每个回链带序号（1、2…）以便区分
+ *   同一条被引用多次时只保留唯一一枚回链（去掉 `1…N` 数字尾巴），由 Citations 组件在点击跳转时动态把该回链指回来源处
  */
 export default function rehypeCitations(options: RehypeCitationsOptions = {}) {
   return (tree: Root, file: VFile) => {
@@ -62,29 +62,32 @@ export default function rehypeCitations(options: RehypeCitationsOptions = {}) {
       }
       visit(node, 'element', (li) => {
         if (li.tagName !== 'li') return;
-        const backs: Element[] = [];
-        visit(li, 'element', (a) => {
-          if (a.tagName === 'a' && a.properties?.dataFootnoteBackref !== undefined) backs.push(a);
-        });
-        backs.forEach((a, i) => {
-          const many = backs.length > 1;
-          a.properties.className = ['wisp-backref'];
-          a.properties.ariaLabel = zh
-            ? many
-              ? `返回正文第 ${i + 1} 处引用`
-              : '返回正文'
-            : many
-              ? `Back to citation ${i + 1} in text`
-              : 'Back to text';
-          const children: ElementContent[] = [iconHast('arrow-up')];
-          if (many)
-            children.push({
-              type: 'element',
-              tagName: 'span',
-              properties: { className: ['wisp-backref-n'], ariaHidden: 'true' },
-              children: [{ type: 'text', value: String(i + 1) }],
-            });
-          a.children = children;
+        let kept = false;
+        visit(li, 'element', (el) => {
+          for (let i = 0; i < el.children.length; i++) {
+            const child = el.children[i];
+            if (
+              child.type !== 'element' ||
+              child.tagName !== 'a' ||
+              child.properties?.dataFootnoteBackref === undefined
+            )
+              continue;
+            if (!kept) {
+              kept = true;
+              child.properties.className = ['wisp-backref'];
+              child.properties.ariaLabel = zh ? '返回正文' : 'Back to text';
+              child.children = [iconHast('arrow-up')];
+            } else {
+              const prev = i > 0 ? el.children[i - 1] : undefined;
+              if (prev && prev.type === 'text' && /^[ \t\r\n]+$/.test(prev.value)) {
+                el.children.splice(i - 1, 2);
+                i -= 2;
+              } else {
+                el.children.splice(i, 1);
+                i -= 1;
+              }
+            }
+          }
         });
         return 'skip';
       });

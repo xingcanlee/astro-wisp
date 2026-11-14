@@ -41,6 +41,7 @@
   background: transparent;
   border-radius: 0 0 3px 3px;
   overflow-x: auto; /* 默认长行横向滚动；换行见下方「自动换行」 */
+  overscroll-behavior-x: contain;
   font-family: var(--wisp-font-mono);
   font-size: var(--wisp-code-size);
   line-height: 1.7;

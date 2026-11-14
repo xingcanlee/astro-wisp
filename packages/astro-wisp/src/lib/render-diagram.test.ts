@@ -135,11 +135,11 @@ describe('renderDiagram', () => {
     expect(r.ok).toBe(true);
     expect(r.style).toBe('hand');
     expect(r.html).toMatch(
-      /^<figure class="wisp-figure wisp-diagram" data-style="hand" aria-labelledby="flow-caption-1"><div class="wisp-diagram-body" tabindex="0" role="group" aria-label="流程" style="--wd-w:848px"><svg /,
+      /^<figure class="wisp-figure wisp-diagram" data-style="hand" aria-labelledby="flow-caption-1" style="--wd-w:848px"><div class="wisp-diagram-body" tabindex="0" role="group" aria-label="流程"><svg /,
     );
-    // 题注与动作同一行：图号拆成 .wisp-fig-no，动作在 figcaption 末尾
+    // 题注独占全宽，图号拆成 .wisp-fig-no；动作作为 figure 子元素排在末尾（桌面悬浮右上角，窄屏/触屏落底）
     expect(r.html).toMatch(
-      /<figcaption><span class="wisp-fig-text" id="flow-caption-1"><span class="wisp-fig-no">图 1：<\/span>&lt;b&gt;<\/span><span class="wisp-fig-actions"><a class="wisp-diagram-dl"[^>]*>[\s\S]*?<\/a><\/span><\/figcaption><\/figure>$/,
+      /<figcaption id="flow-caption-1"><span class="wisp-fig-no">图 1：<\/span>&lt;b&gt;<\/figcaption><span class="wisp-fig-actions"><a class="wisp-diagram-dl"[^>]*>[\s\S]*?<\/a><\/span><\/figure>$/,
     );
     expect(r.html).toContain('href="/diagrams/demo/flow.excalidraw" download="flow.excalidraw"');
     expect(r.html).toContain('aria-label="下载源文件 flow.excalidraw（Excalidraw）"');
@@ -165,7 +165,9 @@ describe('renderDiagram', () => {
     ).html;
     expect(captionOnly).toMatch(/<\/div><figcaption>自注意力<\/figcaption><\/figure>$/);
     expect(captionOnly).not.toContain('wisp-fig-no');
-    expect(captionOnly).toMatch(/^<figure class="wisp-figure wisp-diagram" data-style="hand"><div/);
+    expect(captionOnly).toMatch(
+      /^<figure class="wisp-figure wisp-diagram" data-style="hand" style="--wd-w:848px"><div/,
+    );
     // 都没有
     const bare = renderDiagram({ ...base, download: false }, env()).html;
     expect(bare).toMatch(/<\/svg><\/div><\/figure>$/);

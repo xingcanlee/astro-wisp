@@ -302,12 +302,14 @@ const posLabel = zh ? `${running?.position}（系列篇目）` : `${running?.pos
       gap: 0.25rem;
     }
     .wisp-nav ul {
+      --wisp-fade-size: 1rem;
       display: flex;
       min-width: 0;
       overflow-x: auto;
+      overscroll-behavior-x: contain;
       gap: 0.25rem;
-      margin: 0;
-      padding: 0;
+      margin: -0.25rem;
+      padding: 0.25rem;
       list-style: none;
       scrollbar-width: none;
     }

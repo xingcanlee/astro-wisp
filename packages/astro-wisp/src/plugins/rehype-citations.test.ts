@@ -45,11 +45,14 @@ describe('rehypeCitations', () => {
     expect(html).toMatch(/<a [^>]*class="wisp-backref"[^>]*><svg[^>]*class="wisp-icon"/);
     expect(html).toContain('aria-label="返回正文"');
   });
-  it('同一条被引用两次：两个回链带序号、aria-label 可区分', async () => {
+  it('同一条被引用多次：只保留单枚回链，不堆砌序号尾巴', async () => {
     const html = await render(MD);
-    expect(html).toContain('aria-label="返回正文第 1 处引用"');
-    expect(html).toContain('aria-label="返回正文第 2 处引用"');
-    expect(html).toMatch(/<span class="wisp-backref-n" aria-hidden="true">2<\/span>/);
+    // MD 共两条脚注（[^a] 引用 2 次、[^b] 引用 1 次），总共只应输出 2 枚回链
+    expect((html.match(/data-footnote-backref/g) ?? []).length).toBe(2);
+    expect(html).not.toContain('wisp-backref-n');
+    expect(html).not.toContain('第 2 处引用');
+    const en = await render(MD, 'en');
+    expect((en.match(/aria-label="Back to text"/g) ?? []).length).toBe(2);
   });
   it('没有脚注时不改动', async () => {
     const html = await render('普通段落。');

@@ -40,6 +40,36 @@ test('1440px 系列栏默认收起，打开后刷新保持且首帧不闪烁', a
     display: 'block',
   });
   await expect(page.locator('.wisp-series-aside a[aria-current="page"]')).toBeInViewport();
+
+  const metrics = await page.evaluate(() => {
+    const toggle = document.querySelector<HTMLElement>('.wisp-series-aside [data-series-toggle]')!;
+    const scrollBox = document.querySelector<HTMLElement>('.wisp-series-aside [data-rail-scroll]')!;
+    const list = document.querySelector<HTMLElement>('.wisp-series-aside ol#wisp-series-list')!;
+    const firstLink = list.querySelector<HTMLElement>('li:first-child > a')!;
+    const firstText = firstLink.querySelector<HTMLElement>('.wisp-series-text')!;
+    const secondNo = list.querySelector<HTMLElement>('li:nth-child(2) .wisp-series-no')!;
+    const active = list.querySelector<HTMLElement>('a[aria-current="page"]')!;
+    const before = getComputedStyle(active, '::before');
+    return {
+      hasFirstNo: Boolean(firstLink.querySelector('.wisp-series-no')),
+      toggleX: toggle.getBoundingClientRect().left,
+      firstTextX: firstText.getBoundingClientRect().left,
+      secondNoX: secondNo.getBoundingClientRect().left,
+      listBorderLeft: getComputedStyle(list).borderLeftWidth,
+      scrollbarWidth: getComputedStyle(scrollBox).scrollbarWidth,
+      tickWidth: before.width,
+      tickLeftOffset: parseFloat(before.insetInlineStart || before.left),
+      scrollBoxLeft: scrollBox.getBoundingClientRect().left,
+      activeLeft: active.getBoundingClientRect().left,
+    };
+  });
+  expect(metrics.hasFirstNo).toBe(false);
+  expect(Math.abs(metrics.firstTextX - metrics.toggleX)).toBeLessThan(1);
+  expect(Math.abs(metrics.secondNoX - metrics.toggleX)).toBeLessThan(1);
+  expect(metrics.listBorderLeft).toBe('0px');
+  expect(metrics.scrollbarWidth).toBe('none');
+  expect(metrics.tickWidth).toBe('2px');
+  expect(metrics.activeLeft + metrics.tickLeftOffset).toBeGreaterThanOrEqual(metrics.scrollBoxLeft);
 });
 
 test('书眉位置按钮切换系列栏', async ({ page }) => {

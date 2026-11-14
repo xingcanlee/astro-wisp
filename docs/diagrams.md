@@ -154,26 +154,31 @@ src/content/posts/attention-explained/
 `remark-diagram` 识别 `.excalidraw` / `.drawio` 结尾的图片节点后：
 
 1. 读取同目录下对应的 `.wisp.svg`。如果不存在或哈希不一致，在 dev 环境中显示一个醒目的占位块，并提示运行 `pnpm diagram build`；在 build 环境中直接报错。
-2. 把 alt 写入 `<title>`，把 title 写入 `<figcaption>`（开头的图号拆成 `.wisp-fig-no`）；题注与动作（源文件 / draw.io）在同一行。
+2. 把 alt 写入 `<title>`，把 title 写入 `<figcaption>`（开头的图号拆成 `.wisp-fig-no`）；题注独占全宽，动作（源文件 / draw.io）作为 `.wisp-fig-actions` 放在 `figure` 末尾（桌面端悬停浮现于图表右上角，窄屏与触屏回退在题注下方）。
 3. 输出：
 
 ```html
-<figure class="wisp-figure wisp-diagram" data-style="hand">
-  <svg class="wisp-d" …>…</svg>
-  <figcaption>
-    <span class="wisp-fig-text" id="attention-flow-caption-1"
-      ><span class="wisp-fig-no">图 1：</span>Q·Kᵀ → softmax → ·V</span
-    >
-    <span class="wisp-fig-actions">
-      <a
-        class="wisp-diagram-dl"
-        href="/diagrams/attention-explained/attention-flow.excalidraw"
-        download
-        title="下载源文件 attention-flow.excalidraw"
-        >源文件</a
-      >
-    </span>
+<figure
+  class="wisp-figure wisp-diagram"
+  data-style="hand"
+  aria-labelledby="attention-flow-caption-1"
+  style="--wd-w:848px"
+>
+  <div class="wisp-diagram-body" tabindex="0" role="group" aria-label="自注意力计算流程">
+    <svg class="wisp-d" …>…</svg>
+  </div>
+  <figcaption id="attention-flow-caption-1">
+    <span class="wisp-fig-no">图 1：</span>Q·Kᵀ → softmax → ·V
   </figcaption>
+  <span class="wisp-fig-actions">
+    <a
+      class="wisp-diagram-dl"
+      href="/diagrams/attention-explained/attention-flow.excalidraw"
+      download="attention-flow.excalidraw"
+      title="下载源文件 attention-flow.excalidraw"
+      >源文件</a
+    >
+  </span>
 </figure>
 ```
 

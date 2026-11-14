@@ -52,6 +52,11 @@
       e.preventDefault();
       hide(true);
       const back = a.hasAttribute('data-footnote-backref');
+      // 从正文某处引用跳下时，把该条注释唯一的回链动态指回刚点击的这处引用（一键原路返回）
+      if (!back && a.id) {
+        const backref = target.querySelector<HTMLAnchorElement>('a[data-footnote-backref]');
+        if (backref) backref.setAttribute('href', `#${encodeURIComponent(a.id)}`);
+      }
       history.pushState(null, '', a.hash);
       target.scrollIntoView({
         behavior: reduce.matches ? 'auto' : 'smooth',
@@ -100,8 +105,9 @@
       let left = r.left + r.width / 2 - 24;
       left = Math.max(edge, Math.min(left, innerWidth - w - edge));
       let top = r.bottom + gap;
-      // 下方放不下时放到上方；上方会压到吸顶页眉时仍放下方
+      // 下方放不下时放到上方；仍放不下时钳在吸顶页眉与底边之间，配合内部滚动读完长注
       if (top + h > innerHeight - edge && r.top - gap - h >= header + edge) top = r.top - gap - h;
+      top = Math.max(header + edge, Math.min(top, Math.max(header + edge, innerHeight - h - edge)));
       pop.style.left = `${Math.round(left)}px`;
       pop.style.top = `${Math.round(top)}px`;
     };
@@ -182,6 +188,9 @@
       box-sizing: border-box;
       width: max-content;
       max-width: min(22rem, calc(100vw - 16px));
+      max-height: min(18rem, calc(100dvh - var(--wisp-header-h, 3.5rem) - 1.5rem));
+      overflow-y: auto;
+      overscroll-behavior: contain;
       margin: 0;
       padding: 0.5rem 0.75rem;
       border: 1px solid var(--wisp-border);
@@ -211,8 +220,21 @@
     .wisp-cite-pop code {
       padding: 0.0625em 0.25em;
       border-radius: 3px;
-      background: var(--wisp-surface);
-      font-size: 0.9em;
+      background: var(--wisp-code-bg);
+      font-size: 0.875em;
+    }
+    .wisp-cite-pop :is(em, i):lang(zh) {
+      font-style: normal;
+      -webkit-text-emphasis: dot;
+      text-emphasis: dot;
+      -webkit-text-emphasis-position: under right;
+      text-emphasis-position: under right;
+    }
+    .wisp-cite-pop :is(em, i):lang(zh) :lang(en),
+    .wisp-cite-pop :is(em, i):lang(en) {
+      font-style: italic;
+      -webkit-text-emphasis: none;
+      text-emphasis: none;
     }
   }
 </style>

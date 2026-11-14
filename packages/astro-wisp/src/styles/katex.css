@@ -17,10 +17,11 @@
 
   .katex-display {
     margin: var(--wisp-block-gap, 1.75em) 0;
-    padding-block: 0.25em;
+    padding-block: 0.375em 0.5em;
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
+    overscroll-behavior-x: contain;
   }
   .katex-display > .katex {
     font-size: 1.1em;
@@ -28,13 +29,6 @@
     display: block;
     width: max-content;
     min-width: 100%;
-  }
-
-  /* 行内公式：不可断行的 span 序列过长时撑破正文栏，限制在栏内横向滚动 */
-  .prose :not(.katex-display) > .katex {
-    max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
   }
 
   /* KaTeX 中的分数线、根号线等均使用 currentColor；错误提示使用语义错误色 */

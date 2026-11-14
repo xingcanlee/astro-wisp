@@ -86,7 +86,7 @@ test('图表 figure 存在，下载链接返回 200', async ({ page, request }) 
   }
 });
 
-test('所有 figure 题注在图下，图号单独排，动作与题注同一行', async ({ page }) => {
+test('所有 figure 题注在图下全宽左对齐，桌面端动作悬浮于右上角、窄屏落底', async ({ page }) => {
   // 带标题的 Markdown 图片 → figure + 题注，title 不再留在 img 上；不带标题的图片保持原样
   const img = page.locator('figure.wisp-image');
   await expect(img).toHaveCount(1);
@@ -95,20 +95,27 @@ test('所有 figure 题注在图下，图号单独排，动作与题注同一行
   await expect(page.locator('.prose p > img:only-child')).toHaveCount(1);
   // Mermaid 围栏 caption=
   await expect(page.locator('figure.wisp-pele figcaption .wisp-fig-no')).toHaveText('图 3：');
-  // 图表：≥40rem 时动作在题注第一行右端；更窄时落到题注下一行、贴左缘
+  // 图表：桌面有 hover 时动作悬浮在图表右上角（默认隐藏、hover 显现）；窄屏落到题注下一行贴左缘
   const fig = page.locator('figure.wisp-diagram[aria-labelledby]').first();
-  const [text, actions] = await Promise.all([
-    fig.locator('.wisp-fig-text').boundingBox(),
+  const [body, caption, actions] = await Promise.all([
+    fig.locator('.wisp-diagram-body').boundingBox(),
+    fig.locator('figcaption').boundingBox(),
     fig.locator('.wisp-fig-actions').boundingBox(),
   ]);
-  if (page.viewportSize()!.width >= 640) {
-    expect(actions!.x).toBeGreaterThan(text!.x + text!.width - 1);
-    expect(Math.abs(actions!.y - text!.y)).toBeLessThan(6);
+  const hasHover = await page.evaluate(
+    () => matchMedia('(min-width: 40rem) and (hover: hover) and (pointer: fine)').matches,
+  );
+  if (hasHover) {
+    await expect(fig.locator('.wisp-fig-actions')).toHaveCSS('opacity', '0');
+    await fig.hover();
+    await expect(fig.locator('.wisp-fig-actions')).toHaveCSS('opacity', '1');
+    expect(Math.abs(actions!.y - body!.y)).toBeLessThan(30);
+    expect(actions!.x + actions!.width).toBeLessThanOrEqual(body!.x + body!.width + 2);
   } else {
-    expect(actions!.y).toBeGreaterThanOrEqual(text!.y + text!.height - 1);
-    expect(Math.abs(actions!.x - text!.x)).toBeLessThan(2);
+    expect(actions!.y).toBeGreaterThanOrEqual(caption!.y + caption!.height - 1);
+    expect(Math.abs(actions!.x - caption!.x)).toBeLessThan(2);
   }
-  await expect(page.locator('figure.wisp-diagram > .wisp-fig-actions')).toHaveCount(1);
+  await expect(page.locator('figure.wisp-diagram > .wisp-fig-actions')).toHaveCount(4);
 });
 
 test('图表和 Mermaid SVG 可用键盘打开 lightbox，并恢复焦点', async ({ page }) => {

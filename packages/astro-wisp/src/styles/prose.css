@@ -188,9 +188,9 @@
   -webkit-text-emphasis-position: under right;
   text-emphasis-position: under right;
 }
-/* 中文段落里的纯西文强调（例如 *emphasis*）保留斜体：由作者用 lang="en" 标注；默认按段落语言处理 */
-.prose em:lang(zh) :lang(en),
-.prose em:lang(en) {
+/* 中文段落里的纯西文强调（例如英文论文名、*emphasis*）：rehype-a11y 自动补 lang="en"，保留真斜体 */
+.prose :is(em, i):lang(zh) :lang(en),
+.prose :is(em, i):lang(en) {
   font-style: italic;
   -webkit-text-emphasis: none;
   text-emphasis: none;
@@ -345,6 +345,7 @@
   margin-block: var(--wisp-block-gap);
   max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 .prose :is(figure, div) > pre {
   margin-block: 0;
@@ -357,27 +358,45 @@
   width: max-content;
   max-width: 100%;
   overflow-x: auto;
-  margin-block: var(--wisp-block-gap);
-  border-collapse: collapse;
+  overscroll-behavior-x: contain;
+  margin-top: var(--wisp-block-gap);
+  padding-bottom: 0.4375rem;
+  margin-bottom: calc(var(--wisp-block-gap) - 0.4375rem);
+  /* 用 separate + 0 间距替代 collapse：让吸左固定的首列（sticky + z-index:1）自带完整表头线与行分隔线，不被底色遮盖 */
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.9375em;
   line-height: 1.6;
   font-variant-numeric: tabular-nums;
 }
 .prose .wisp-table {
   overflow-x: auto;
-  margin-block: var(--wisp-block-gap);
+  overscroll-behavior-x: contain;
+  /* 底部留出呼吸间距，让悬停显现的极细横向滑块与三线表底边隔开，同时总下外边距仍等于 --wisp-block-gap */
+  margin-top: var(--wisp-block-gap);
+  padding-bottom: 0.4375rem;
+  margin-bottom: calc(var(--wisp-block-gap) - 0.4375rem);
+}
+/* 宽屏：与代码清单一样向两侧轻度外扩 1rem，临界多列表不必挤出滚动条 */
+@media (min-width: 48rem) {
+  .prose > .wisp-table:not(.wisp-wide) {
+    margin-inline: -1rem;
+  }
 }
 .prose .wisp-table > table {
   display: table;
   width: 100%;
   margin-block: 0;
+  padding-bottom: 0;
 }
-/* 三线表（booktabs）：顶线、表头线、底线，行间只有很淡的分隔 */
-.prose table {
+/* 三线表（booktabs）：顶线、表头线、底线全部画在单元格上，确保吸左固定的首列（z-index:1）不会因亚像素取整遮住顶底墨线 */
+.prose table > :first-child > tr:first-child > :is(th, td) {
   border-top: 1px solid var(--wisp-fg);
+}
+.prose table > :last-child > tr:last-child > :is(th, td) {
   border-bottom: 1px solid var(--wisp-fg);
 }
-.prose thead {
+.prose thead :is(th, td) {
   border-bottom: 1px solid color-mix(in srgb, var(--wisp-fg) 45%, var(--wisp-border));
 }
 /*
@@ -406,12 +425,53 @@
   /* 不在单词中间断开（继承的 overflow-wrap:anywhere 会把 TypeScript 拆开）；放不下时整表横向滚动 */
   overflow-wrap: normal;
   word-break: normal;
-  min-width: 4em;
+  min-width: 2.5em;
+}
+/* 多列数据表（≥6 列）收紧列间右内边距，避免大量短数字列撑出不必要的滚动 */
+.prose tr:has(> :nth-child(6)) > :is(th, td):not(:last-child) {
+  padding-inline-end: 0.875em;
+}
+/* 长描述列（rehype-a11y 标记）：保底阅读宽度，不再被短数字列挤压成三四字宽的细条 */
+.prose td[data-wisp-prose] {
+  min-width: 11.5em;
 }
 .prose :is(th, td):last-child {
   padding-inline-end: 0;
 }
-.prose tbody tr + tr {
+/* 超宽溢出表格：首列吸左固定，向右滚看指标时行名不丢失；左侧不再做透明 mask 以免把吸左首列左缘洗淡 */
+.prose .wisp-table[data-wisp-overflow] {
+  --wisp-fade-start: 0px;
+}
+.prose .wisp-table[data-wisp-overflow] :is(th, td):first-child:not([colspan]) {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  background-color: var(--wisp-bg);
+}
+@media (max-width: 40rem) {
+  .prose .wisp-table[data-wisp-overflow] th:first-child:not([colspan]) {
+    max-width: 9.5rem;
+    white-space: normal;
+  }
+}
+.prose
+  .wisp-table:is([data-wisp-overflow='start'], [data-wisp-overflow='both'])
+  :is(th, td):first-child:not([colspan])::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  inset-inline-end: 0;
+  width: 1px;
+  background-color: var(--wisp-border);
+  pointer-events: none;
+}
+.prose
+  .wisp-table:is([data-wisp-overflow='start'], [data-wisp-overflow='both'])
+  :is(th, td):nth-child(2) {
+  padding-inline-start: 0.75em;
+}
+.prose tbody tr + tr > :is(th, td) {
   border-top: 1px solid var(--wisp-border);
 }
 .prose td {
@@ -512,10 +572,10 @@
   border-top: 1px solid var(--wisp-border);
   color: var(--wisp-muted);
   font-size: 0.875rem;
-  line-height: 1.7;
+  line-height: 1.65;
 }
 .prose section[data-footnotes] > h2 {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.875rem;
   padding: 0;
   color: var(--wisp-fg);
   font-size: 0.875rem;
@@ -526,31 +586,36 @@
 .prose section[data-footnotes] > h2::before {
   content: none;
 }
-/* 与系列栏、目录同一种编号语法：编号列（表格数字、muted）+ 悬挂对齐的正文；左侧 1px 轨道 */
+/* 与文内上标 [1] 呼应的顺序编码：去掉悬空左竖轨，[n] 与标题左对齐，正文悬挂缩进 */
 .prose section[data-footnotes] ol {
   margin: 0;
   padding: 0;
   list-style: none;
   counter-reset: wisp-note;
-  border-inline-start: 1px solid var(--wisp-border);
 }
 .prose section[data-footnotes] li {
   display: grid;
-  grid-template-columns: 2.25rem minmax(0, 1fr);
-  margin: 0 0 0 -1px;
-  padding: 0.3rem 0 0.3rem 0.625rem;
-  border-inline-start: 1px solid transparent;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  align-items: baseline;
+  margin: 0;
+  padding: 0;
   counter-increment: wisp-note;
-  overflow-wrap: anywhere;
-  transition:
-    border-color 600ms var(--wisp-ease),
-    color 600ms var(--wisp-ease);
+  overflow-wrap: break-word;
+  transition: color 600ms var(--wisp-ease);
+}
+.prose section[data-footnotes] ol:has(li:nth-child(10)) > li {
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+}
+.prose section[data-footnotes] li + li {
+  margin-top: 0.6875rem;
 }
 .prose section[data-footnotes] li::before {
-  content: counter(wisp-note);
+  content: '[' counter(wisp-note) ']';
   grid-column: 1;
   color: var(--wisp-muted);
-  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
   transition: color 600ms var(--wisp-ease);
 }
 .prose section[data-footnotes] li > * {
@@ -562,6 +627,12 @@
 .prose section[data-footnotes] li p + p {
   margin-top: 0.375rem;
 }
+.prose section[data-footnotes] :not(pre) > code {
+  color: inherit;
+  font-size: 0.85em;
+  padding: 0.075em 0.25em;
+  background-color: var(--wisp-code-bg);
+}
 .prose section[data-footnotes] a:not([data-footnote-backref]) {
   color: var(--wisp-muted);
   text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
@@ -570,17 +641,17 @@
   color: var(--wisp-accent);
   text-decoration-color: currentColor;
 }
-/* 到达的那一条：编号变 teal、正文变墨色、左侧轨道这一段换成 1px teal；约 2 秒后淡回。
+/* 到达的那一条：[n] 编号变 teal、正文变墨色；约 2 秒后淡回。
  * 有 JS 时由 Citations 组件写 data-wisp-flash；无 JS 时用 :target（html[data-wisp-cite] 表示 JS 已接管）。 */
 .prose section[data-footnotes] li[data-wisp-flash],
 html:not([data-wisp-cite]) .prose section[data-footnotes] li:target {
-  border-inline-start-color: var(--wisp-accent);
   color: var(--wisp-fg);
   transition: none;
 }
 .prose section[data-footnotes] li[data-wisp-flash]::before,
 html:not([data-wisp-cite]) .prose section[data-footnotes] li:target::before {
   color: var(--wisp-accent);
+  font-weight: 600;
   transition: none;
 }
 .prose section[data-footnotes] li:focus {
@@ -590,34 +661,27 @@ html:not([data-wisp-cite]) .prose section[data-footnotes] li:target::before {
   outline: 2px solid var(--wisp-accent);
   outline-offset: 2px;
 }
-/* 回链：Lucide arrow-up 图标；同一条被引用多次时后面跟序号 */
+/* 回链：每条末尾仅一枚安静的 Lucide arrow-up（多处引用时由 Citations 动态指回来源处） */
 .prose a[data-footnote-backref] {
   display: inline-flex;
   align-items: center;
-  gap: 0.0625rem;
-  margin-inline-start: 0.375rem;
-  padding: 0.125rem 0.1875rem;
+  margin-inline-start: 0.25rem;
+  padding: 0.125rem;
   border-radius: 3px;
-  color: var(--wisp-muted);
-  vertical-align: -0.125em;
+  color: var(--wisp-subtle);
+  vertical-align: -0.15em;
   line-height: 1;
   text-decoration: none;
-  font-variant-numeric: tabular-nums;
   transition: color 150ms;
 }
-.prose a[data-footnote-backref] + a[data-footnote-backref] {
-  margin-inline-start: 0.125rem;
-}
-.prose a[data-footnote-backref]:hover {
+.prose a[data-footnote-backref]:hover,
+.prose a[data-footnote-backref]:focus-visible {
   color: var(--wisp-accent);
 }
 .prose a[data-footnote-backref] .wisp-icon {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 0.8125rem;
+  height: 0.8125rem;
   vertical-align: 0;
-}
-.prose .wisp-backref-n {
-  font-size: 0.75rem;
 }
 
 /* ---------- 定义列表 / 其他 ---------- */
@@ -648,10 +712,11 @@ html:not([data-wisp-cite]) .prose section[data-footnotes] li:target::before {
 /* ---------- KaTeX 块级公式：溢出时横向滚动（更多细节见 katex.css） ---------- */
 .prose .katex-display {
   margin-block: var(--wisp-block-gap);
-  padding-block: 0.25em;
+  padding-block: 0.375em 0.5em;
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  overscroll-behavior-x: contain;
 }
 
 /* ---------- 交互组件/图表等宽内容的竖向节奏 ---------- */

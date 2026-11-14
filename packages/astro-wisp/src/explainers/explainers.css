@@ -78,6 +78,10 @@
 
   .wisp-explainer__scroll {
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  .wisp-explainer__scroll[data-wisp-overflow] {
+    padding-bottom: 0.375rem;
   }
   .wisp-explainer__svg {
     display: block;

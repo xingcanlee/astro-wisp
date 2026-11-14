@@ -260,9 +260,9 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
 
     /*
      * 侧栏共用：吸顶、限高。标题行固定在栏顶，只有下面的篇目（[data-rail-scroll]）独立滚动，
-     * 所以标题行永远贴着外框边线、两栏标题同一基线，不受滚动条影响。
-     * 滚动条样式（平时透明、指针移入或聚焦时出现，不预留槽位）由 global.css 统一处理。
-     * 「还有内容」由上下缘的渐隐表达：哪一头有没显示的内容，哪一头才渐隐（data-fade 由下方脚本维护）。
+     * 所以标题行永远贴着外框边线、两栏标题同一基线。
+     * 侧栏隐藏滚动条轨道（不与文字争抢窄栏宽度、不形成双竖线夹心），滚轮 / 触控板 / 键盘正常滚动；
+     * 「还有内容」由上下缘的渐隐遮罩表达：哪一头有没显示的内容，哪一头才渐隐（data-fade 由下方脚本维护）。
      * 无 JS 时保持底部渐隐。
      */
     .wisp-post-aside-inner,
@@ -281,10 +281,9 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
       min-height: 0;
     }
     /*
-     * 篇目滚动层：四周留 0.375rem 再用负外边距抵消——滚动容器会裁剪溢出，
-     * 这样链接的焦点环（2px + 2px 偏移，链接本身还向左伸出 1px 盖住轨道）完整可见，文字边线不动。
-     * 经典（占位）滚动条出现时，--wisp-rail-sb（脚本量出的滚动条宽度）把容器再向外伸出同样宽度，
-     * 内容宽度和文字边线仍然不变。
+     * 篇目滚动层：四周留缓冲内边距再用负外边距抵消——滚动容器会裁剪溢出，
+     * 这样链接的焦点环（2px + 2px 偏移）及系列栏当前篇左外侧悬挂的 2px 短竖标（-0.5rem）完整可见，
+     * 同时文字边线与栏顶标题严丝合缝对齐。
      */
     .wisp-post-aside-inner :global([data-rail-scroll]),
     .wisp-post-series-aside-inner :global([data-rail-scroll]) {
@@ -292,9 +291,11 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
       --wisp-fade-bottom: 3rem;
       flex: 0 1 auto;
       min-height: 0;
+      overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior: contain;
-      margin-inline: -0.375rem calc(-0.375rem - var(--wisp-rail-sb, 0px));
+      scrollbar-width: none;
+      margin-inline: -0.375rem;
       padding: 0.375rem 0.375rem 2rem;
       mask-image: linear-gradient(
         to bottom,
@@ -303,6 +304,14 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
         black calc(100% - var(--wisp-fade-bottom)),
         transparent
       );
+    }
+    .wisp-post-aside-inner :global([data-rail-scroll])::-webkit-scrollbar,
+    .wisp-post-series-aside-inner :global([data-rail-scroll])::-webkit-scrollbar {
+      display: none;
+    }
+    .wisp-post-series-aside-inner :global([data-rail-scroll]) {
+      margin-inline-start: -0.75rem;
+      padding-inline-start: 0.75rem;
     }
     .wisp-post-aside-inner :global([data-rail-scroll][data-fade]),
     .wisp-post-series-aside-inner :global([data-rail-scroll][data-fade]) {
@@ -393,8 +402,7 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
 </style>
 
 <script>
-  // 侧栏篇目滚动层：打开文章时把系列栏滚到当前篇；标记上下哪一头还有没显示的内容（渐隐只画在那一头）；
-  // 量出经典滚动条的宽度，让容器向外伸出同样宽度，文字边线不因滚动条出现而内缩。
+  // 侧栏篇目滚动层：打开文章时把系列栏滚到当前篇；标记上下哪一头还有没显示的内容（渐隐只画在那一头）。
   const boxes = [
     ...document.querySelectorAll<HTMLElement>(
       '.wisp-post-aside-inner [data-rail-scroll], .wisp-post-series-aside-inner [data-rail-scroll]',
@@ -406,9 +414,6 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
       .filter(Boolean)
       .join(' ');
     if (box.dataset.fade !== fade) box.dataset.fade = fade;
-    const sb = `${box.offsetWidth - box.clientWidth}px`;
-    if (box.style.getPropertyValue('--wisp-rail-sb') !== sb)
-      box.style.setProperty('--wisp-rail-sb', sb);
   };
   const reveal = (box: HTMLElement) => {
     const cur = box.querySelector<HTMLElement>('.wisp-series a[aria-current="page"]');

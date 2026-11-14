@@ -156,7 +156,10 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
       (() => {
         const zh = document.documentElement.lang.startsWith('zh');
         const SEL =
-          '.wisp-pre, .wisp-table, .katex-display, .wisp-explainer__scroll, .wisp-pele-body, [data-wisp-scroll]';
+          '.wisp-pre, .prose pre:not(.wisp-pre), .wisp-table, .prose > table, .katex-display, .wisp-explainer__scroll, .wisp-pele-body, [data-wisp-scroll]';
+        const FADE_ONLY_SEL = '.wisp-nav ul';
+        const V_SEL = '.wisp-series-inline ol, .wisp-toc-inline > ol, [data-wisp-vscroll]';
+        const ALL_SCROLL_SEL = `${SEL}, ${FADE_ONLY_SEL}, ${V_SEL}`;
         const side = (el) => {
           const max = el.scrollWidth - el.clientWidth;
           if (max <= 1) return '';
@@ -169,6 +172,18 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
           if (v) el.setAttribute('data-wisp-overflow', v);
           else el.removeAttribute('data-wisp-overflow');
           return v;
+        };
+        const markV = (el) => {
+          const max = el.scrollHeight - el.clientHeight;
+          const v =
+            max <= 2
+              ? ''
+              : [el.scrollTop > 4 && 'top', el.scrollTop < max - 4 && 'bottom']
+                  .filter(Boolean)
+                  .join(' ');
+          if ((el.getAttribute('data-wisp-vfade') || '') === v) return;
+          if (v) el.setAttribute('data-wisp-vfade', v);
+          else el.removeAttribute('data-wisp-vfade');
         };
         const label = (el, overflow) => {
           // 键盘：只有溢出的容器是 Tab 停靠点。主题写的 tabindex 带 data-wisp-tab（无 JS 回落），
@@ -193,11 +208,11 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
           }
           const base =
             own ||
-            (el.classList.contains('wisp-pre')
+            (el.classList.contains('wisp-pre') || el.tagName === 'PRE'
               ? zh
                 ? '代码'
                 : 'Code'
-              : el.classList.contains('wisp-table')
+              : el.classList.contains('wisp-table') || el.tagName === 'TABLE'
                 ? zh
                   ? '表格'
                   : 'Table'
@@ -205,9 +220,17 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
                   ? zh
                     ? '公式'
                     : 'Formula'
-                  : zh
-                    ? '内容'
-                    : 'Content');
+                  : el.classList.contains('wisp-pele-body')
+                    ? zh
+                      ? '图表'
+                      : 'Diagram'
+                    : el.classList.contains('wisp-explainer__scroll')
+                      ? zh
+                        ? '交互图示'
+                        : 'Interactive diagram'
+                      : zh
+                        ? '内容'
+                        : 'Content');
           if (!el.hasAttribute('role')) {
             el.setAttribute('role', 'region');
             el.dataset.wispRole = '';
@@ -230,6 +253,8 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
             b.toggleAttribute('data-wisp-wide', wide[i]);
           });
           document.querySelectorAll(SEL).forEach((el) => label(el, mark(el) !== ''));
+          document.querySelectorAll(FADE_ONLY_SEL).forEach((el) => mark(el));
+          document.querySelectorAll(V_SEL).forEach((el) => markV(el));
         };
         let queued = false;
         const schedule = () => {
@@ -243,6 +268,7 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
         update();
         addEventListener('resize', schedule, { passive: true });
         document.addEventListener('wisp:overflow', schedule);
+        document.addEventListener('toggle', schedule, true);
         if (window.ResizeObserver) new ResizeObserver(schedule).observe(document.body);
         // 公式、思源黑体等字体换上后宽度会变，而 body 尺寸未必变
         document.fonts?.ready.then(schedule);
@@ -252,16 +278,88 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
           'scroll',
           (e) => {
             const el = e.target;
-            if (!(el instanceof Element) || !el.matches(SEL)) return;
+            if (!(el instanceof Element) || !el.matches(ALL_SCROLL_SEL)) return;
             if (pending.has(el)) return;
             pending.add(el);
             requestAnimationFrame(() => {
               pending.delete(el);
-              mark(el);
+              if (el.matches(V_SEL)) markV(el);
+              else mark(el);
             });
           },
           { capture: true, passive: true },
         );
+        // 超宽非代码容器（表格、宽 Mermaid、块级公式、讲解舞台）与灯箱大图：支持鼠标按住拖拽平移（1D/2D 自适应，不影响选词与代码框选）
+        const DRAG_SEL =
+          '.wisp-table[data-wisp-overflow], .prose > table[data-wisp-overflow], .wisp-pele-body[data-wisp-overflow], .katex-display[data-wisp-overflow], .wisp-explainer__scroll[data-wisp-overflow], [data-wisp-scroll][data-wisp-overflow], .wisp-lightbox-media';
+        document.addEventListener('pointerdown', (e) => {
+          if (
+            e.pointerType !== 'mouse' ||
+            e.button !== 0 ||
+            e.altKey ||
+            e.ctrlKey ||
+            e.metaKey ||
+            e.shiftKey
+          )
+            return;
+          const target = e.target;
+          if (!(target instanceof Element)) return;
+          if (target.closest('a, button, input, select, textarea, summary, label')) return;
+          const box = target.closest(DRAG_SEL);
+          if (!(box instanceof HTMLElement)) return;
+          const canX = box.scrollWidth > box.clientWidth + 1;
+          const canY = box.scrollHeight > box.clientHeight + 1;
+          if (!canX && !canY) return;
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const startLeft = box.scrollLeft;
+          const startTop = box.scrollTop;
+          const pid = e.pointerId;
+          let active = false;
+          const onMove = (ev) => {
+            if (ev.pointerId !== pid) return;
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+            if (!active) {
+              const started = canY
+                ? Math.hypot(dx, dy) >= 6
+                : Math.abs(dx) >= 6 && Math.abs(dx) > Math.abs(dy);
+              if (!started) return;
+              active = true;
+              box.setAttribute('data-wisp-dragging', '');
+              try {
+                box.setPointerCapture(pid);
+              } catch {}
+              getSelection()?.removeAllRanges();
+            }
+            ev.preventDefault();
+            if (canX) box.scrollLeft = startLeft - dx;
+            if (canY) box.scrollTop = startTop - dy;
+          };
+          const onEnd = (ev) => {
+            if (ev.pointerId !== pid) return;
+            removeEventListener('pointermove', onMove);
+            removeEventListener('pointerup', onEnd);
+            removeEventListener('pointercancel', onEnd);
+            if (!active) return;
+            box.removeAttribute('data-wisp-dragging');
+            try {
+              if (box.hasPointerCapture(pid)) box.releasePointerCapture(pid);
+            } catch {}
+            // 刚完成拖拽平移时吞掉紧随其后的合成 click，避免松手误触发图表灯箱
+            addEventListener(
+              'click',
+              (ce) => {
+                ce.stopPropagation();
+                ce.preventDefault();
+              },
+              { capture: true, once: true },
+            );
+          };
+          addEventListener('pointermove', onMove, { passive: false });
+          addEventListener('pointerup', onEnd);
+          addEventListener('pointercancel', onEnd);
+        });
       })();
     </script>
   </body>
