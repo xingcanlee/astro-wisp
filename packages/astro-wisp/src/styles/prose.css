@@ -64,7 +64,6 @@
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: 0.01em;
-  text-wrap: balance;
   /* 锚点跳转的让位由 html 的 scroll-padding-top（header-h + 1.5rem）统一负责，这里不再叠加 */
 }
 .prose h1 {
@@ -395,6 +394,10 @@
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
+
+.prose :is(h1, h2, h3, h4, h5, h6) :not(pre) > code {
+  overflow-wrap: break-word;
+}
 .prose code::before,
 .prose code::after {
   content: none;
@@ -552,6 +555,10 @@
   .prose .wisp-table[data-wisp-overflow] td code .wisp-tok {
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+
+  .prose blockquote {
+    padding-inline: 1rem;
   }
 }
 .prose

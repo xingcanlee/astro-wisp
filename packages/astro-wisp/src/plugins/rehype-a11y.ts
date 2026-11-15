@@ -1,5 +1,6 @@
-import type { Element, Root } from 'hast';
+import type { Element, ElementContent, Root } from 'hast';
 import { visit } from 'unist-util-visit';
+import { splitSubwordTokens } from '../utils/title';
 
 /**
  * 补齐 Markdown 产物的无障碍与多语种排版属性：
@@ -21,6 +22,7 @@ const LATIN_LETTER_RE = /\p{Script=Latin}/u;
 export default function rehypeA11y() {
   return (tree: Root) => {
     visit(tree, 'element', (node: Element, index, parent) => {
+      if (/^h[1-6]$/.test(node.tagName)) splitHeadingSubwords(node);
       if (node.tagName === 'table') splitCellCode(node);
       if (node.tagName === 'table' && parent && index !== undefined && !isTableWrap(parent)) {
         parent.children[index] = {
@@ -31,12 +33,7 @@ export default function rehypeA11y() {
         };
         return 'skip';
       }
-      const cls: unknown = node.properties?.className;
-      const classes = Array.isArray(cls)
-        ? cls.map(String)
-        : typeof cls === 'string'
-          ? cls.split(/\s+/)
-          : [];
+      const classes = getClassList(node);
 
       if (classes.includes('katex-display')) {
         node.properties.tabIndex = 0;
@@ -113,10 +110,57 @@ function cellVisualWidth(text: string): number {
   return w;
 }
 
+function getClassList(node: Element): string[] {
+  const cls: unknown = node.properties?.className;
+  if (Array.isArray(cls)) return cls.map(String);
+  if (typeof cls === 'string') return cls.split(/\s+/).filter(Boolean);
+  return [];
+}
+
+/**
+ * Splits long identifiers and slash paths inside Markdown headings (`h1`–`h6`,
+ * including inline `<code>`) with `<wbr>` so narrow viewports wrap cleanly on
+ * semantic subword boundaries without touching KaTeX or SVG subtrees.
+ */
+function splitHeadingSubwords(node: Element): void {
+  const next: ElementContent[] = [];
+  let changed = false;
+
+  for (const child of node.children) {
+    if (child.type === 'text') {
+      const tokens = splitSubwordTokens(child.value);
+      if (tokens.length <= 1) {
+        next.push(child);
+        continue;
+      }
+      changed = true;
+      for (let i = 0; i < tokens.length; i += 1) {
+        if (i > 0) {
+          next.push({ type: 'element', tagName: 'wbr', properties: {}, children: [] });
+        }
+        next.push({ type: 'text', value: tokens[i]! });
+      }
+      continue;
+    }
+
+    if (child.type === 'element') {
+      const classes = getClassList(child);
+      const skip =
+        child.tagName === 'svg' ||
+        child.tagName === 'math' ||
+        child.tagName === 'wbr' ||
+        classes.some((c) => c === 'katex' || c.startsWith('katex-'));
+      if (!skip) splitHeadingSubwords(child);
+    }
+    next.push(child);
+  }
+
+  if (changed) node.children = next;
+}
+
 function isTableWrap(node: { type: string; properties?: Element['properties'] }): boolean {
   if (node.type !== 'element') return false;
-  const cls = node.properties?.className;
-  return (Array.isArray(cls) ? cls.map(String) : []).includes('wisp-table');
+  return getClassList(node as Element).includes('wisp-table');
 }
 
 function findCheckbox(node: Element): Element | undefined {

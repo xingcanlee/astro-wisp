@@ -13,6 +13,7 @@ import type { MarkdownHeading } from 'astro';
 import katex from 'katex';
 import Icon from 'virtual:wisp/components/Icon';
 import config from 'virtual:wisp/config';
+import { escapeHtml, formatTitleHtml } from '../utils/title';
 
 export interface Props {
   /** 已过滤好的标题（通常 depth 2–3） */
@@ -66,8 +67,7 @@ const no = (slug: string) => (numberOn ? numbers.get(slug) : undefined);
 // 标题中的 $...$ 行内公式：正文已由 rehype-katex 渲染，目录链接需在构建时同样渲染，
 // 否则侧边栏/折叠目录里显示原始 $...$ 源码。非公式段做 HTML 转义后经 set:html 输出。
 function renderHeadingText(text: string): string {
-  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  if (!config.features.math || !text.includes('$')) return esc(text);
+  if (!config.features.math || !text.includes('$')) return formatTitleHtml(text);
   return text
     .split(/(\$[^$]+\$)/g)
     .map((seg) => {
@@ -75,10 +75,10 @@ function renderHeadingText(text: string): string {
         try {
           return katex.renderToString(seg.slice(1, -1), { throwOnError: false });
         } catch {
-          return esc(seg);
+          return escapeHtml(seg);
         }
       }
-      return esc(seg);
+      return formatTitleHtml(seg);
     })
     .join('');
 }
@@ -185,12 +185,6 @@ function renderHeadingText(text: string): string {
     .wisp-toc li {
       margin: 0;
     }
-    .wisp-toc li[data-level='1'] {
-      padding-inline-start: 0.9rem;
-    }
-    .wisp-toc li[data-level='2'] {
-      padding-inline-start: 1.8rem;
-    }
     /* 编号 + 标题两列：编号等宽数字、muted 色（读者靠它找位置，是文字，不用 subtle），换行后标题悬挂对齐 */
     .wisp-toc a {
       display: flex;
@@ -208,7 +202,7 @@ function renderHeadingText(text: string): string {
       font-variant-numeric: tabular-nums;
       transition: color 150ms;
     }
-    li ol .wisp-toc-no {
+    :is(li ol, li[data-level='1'], li[data-level='2']) .wisp-toc-no {
       min-width: 1.75rem;
     }
     .wisp-toc a:hover,
@@ -407,6 +401,30 @@ function renderHeadingText(text: string): string {
       scroll-padding-block: 1.5rem;
       margin-inline: -0.375rem -0.625rem;
       padding: 0.125rem 0.625rem 0.75rem 0.375rem;
+    }
+    .wisp-toc-inline li {
+      border-inline-start: 1px solid var(--wisp-border);
+    }
+    .wisp-toc-inline a {
+      margin-inline-start: -1px;
+      padding-inline: calc(0.875rem - 1px) 0.25rem;
+      border-inline-start: 2px solid transparent;
+      line-height: 1.5;
+      transition:
+        color 150ms,
+        border-color 150ms;
+    }
+    .wisp-toc-inline a[aria-current='true'] {
+      border-inline-start-color: var(--wisp-accent);
+      font-weight: 500;
+    }
+    .wisp-toc-inline li[data-level='1'] a {
+      padding-inline-start: calc(1.625rem - 1px);
+      font-size: 0.78125rem;
+    }
+    .wisp-toc-inline li[data-level='2'] a {
+      padding-inline-start: calc(2.375rem - 1px);
+      font-size: 0.78125rem;
     }
     @media (pointer: coarse), (max-width: 47.99rem) {
       .wisp-toc-inline a {

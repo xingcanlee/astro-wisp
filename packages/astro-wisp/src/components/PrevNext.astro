@@ -18,6 +18,7 @@ export interface Props {
 import Icon from 'virtual:wisp/components/Icon';
 import config from 'virtual:wisp/config';
 import { sitePath } from '../utils/paths';
+import { formatTitleHtml } from '../utils/title';
 
 const { prev, next, lang = config.site.lang } = Astro.props;
 const zh = /^zh\b/i.test(lang);
@@ -30,7 +31,7 @@ const zh = /^zh\b/i.test(lang);
         <span class="label">
           <Icon name="arrow-left" /> {zh ? '上一篇' : 'Previous'}
         </span>
-        <span class="title">{prev.title}</span>
+        <span class="title" set:html={formatTitleHtml(prev.title)} />
       </a>
     ) : (
       <span />
@@ -40,7 +41,7 @@ const zh = /^zh\b/i.test(lang);
         <span class="label">
           {zh ? '下一篇' : 'Next'} <Icon name="arrow-right" />
         </span>
-        <span class="title">{next.title}</span>
+        <span class="title" set:html={formatTitleHtml(next.title)} />
       </a>
     ) : (
       <span />
@@ -98,7 +99,6 @@ const zh = /^zh\b/i.test(lang);
       font-weight: 600;
       line-height: 1.5;
       transition: color 150ms;
-      text-wrap: pretty;
     }
     .wisp-prevnext a:hover .title {
       color: var(--wisp-accent);

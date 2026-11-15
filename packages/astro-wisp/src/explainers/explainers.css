@@ -331,6 +331,25 @@
       --wisp-player-btn: 2.75rem;
     }
   }
+  @media (hover: none), (pointer: coarse) {
+    .wisp-player__range {
+      top: -18px;
+      height: 36px;
+    }
+    .wisp-player__range::-webkit-slider-runnable-track {
+      height: 36px;
+    }
+    .wisp-player__range::-moz-range-track {
+      height: 36px;
+    }
+    .wisp-player__range::-webkit-slider-thumb {
+      margin-top: calc((36px - var(--wisp-player-thumb)) / 2);
+      opacity: 1;
+    }
+    .wisp-player__range::-moz-range-thumb {
+      opacity: 1;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .wisp-player button {
       transition: none;

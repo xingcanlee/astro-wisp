@@ -105,6 +105,7 @@ test('所有 figure 题注在图下全宽左对齐，桌面端动作悬浮于右
   const hasHover = await page.evaluate(
     () => matchMedia('(min-width: 40rem) and (hover: hover) and (pointer: fine)').matches,
   );
+  await expect(fig.locator('.wisp-fig-actions')).toHaveCSS('border-top-width', '1px');
   if (hasHover) {
     await expect(fig.locator('.wisp-fig-actions')).toHaveCSS('opacity', '0');
     await fig.hover();

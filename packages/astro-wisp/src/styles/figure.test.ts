@@ -16,6 +16,10 @@ describe('wide figure layout', () => {
       /\.prose \.wisp-wide\s*\{[\s\S]*?margin-inline: calc\(\(100% - var\(--wisp-wide-w\)\) \/ 2\);/,
     );
   });
+  it('styles diagram actions with a unified bordered toolbar pill and divider across mobile and desktop', () => {
+    expect(css).toMatch(/\.wisp-fig-actions\s*\{[\s\S]*?border: 1px solid var\(--wisp-border\);/);
+    expect(css).toMatch(/\.wisp-fig-actions > a \+ a::before\s*\{[\s\S]*?width: 1px;/);
+  });
   it('floats diagram actions at top-right on hover-capable desktop and falls back below on touch/narrow', () => {
     expect(css).toContain('@media (min-width: 40rem) and (hover: hover) and (pointer: fine)');
     expect(css).toMatch(/\.wisp-diagram > \.wisp-fig-actions\s*\{[\s\S]*?position: absolute;/);

@@ -16,6 +16,7 @@ import { getPosts, homePagedPosts, summarizeSeries } from '../utils/posts';
 import { getReadingTimes } from '../utils/reading';
 import { formatDate, toISODate } from '../utils/date';
 import { sitePath } from '../utils/paths';
+import { formatTitleHtml } from '../utils/title';
 import config from 'virtual:wisp/config';
 
 const all = await getPosts();
@@ -57,6 +58,7 @@ const totalPages = Math.max(
 );
 
 const recent = all.slice(0, 5);
+const revNumbered = recent.some((p) => split(p.data.title).no);
 const lastUpdated = all[0]?.data.pubDate;
 const start = series[0]
   ? {
@@ -128,9 +130,12 @@ const colophon = zh
                   <li>
                     <a href={href(item.id)}>
                       <span class="part-item-no">{no}</span>
-                      <span class="part-item-title">
-                        {item.id === s.firstId && !no ? (zh ? '总览' : 'Overview') : text}
-                      </span>
+                      <span
+                        class="part-item-title"
+                        set:html={formatTitleHtml(
+                          item.id === s.firstId && !no ? (zh ? '总览' : 'Overview') : text,
+                        )}
+                      />
                       <span class="part-item-time">{minutes(seriesTimes.get(item.id))}</span>
                     </a>
                   </li>
@@ -163,17 +168,25 @@ const colophon = zh
         <h2 id="recent-title" class="home-h2">
           {zh ? '修订记录' : 'Recent changes'}
         </h2>
-        <ol class="home-revisions">
+        <ol class:list={['home-revisions', { numbered: revNumbered }]}>
           {recent.map((p) => {
             const d = p.data.updatedDate ?? p.data.pubDate;
             const owner = p.data.series
               ? series.find((s) => s.id === p.data.series!.id)
               : undefined;
+            const { no, text } = split(p.data.title);
             return (
               <li>
                 <time datetime={toISODate(d)}>{toISODate(d)}</time>
                 <a href={href(p.id)} lang={p.data.lang}>
-                  {p.data.title}
+                  {revNumbered ? (
+                    <>
+                      <span class="home-rev-no">{no}</span>
+                      <span set:html={formatTitleHtml(text)} />
+                    </>
+                  ) : (
+                    <span set:html={formatTitleHtml(p.data.title)} />
+                  )}
                 </a>
                 <span class="home-rev-part">{owner ? seriesName(owner.title) : ''}</span>
               </li>
@@ -357,7 +370,6 @@ const colophon = zh
       min-width: 0;
       overflow-x: clip;
       transition: color 150ms;
-      text-wrap: pretty;
     }
     .part-item-title::after {
       content: '';
@@ -436,6 +448,21 @@ const colophon = zh
     .home-revisions a:hover {
       color: var(--wisp-accent);
     }
+    .home-revisions.numbered a {
+      display: grid;
+      grid-template-columns: 1.5rem minmax(0, 1fr);
+      column-gap: 0.5rem;
+      align-items: baseline;
+    }
+    .home-rev-no {
+      color: var(--wisp-muted);
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
+      transition: color 150ms;
+    }
+    .home-revisions a:hover .home-rev-no {
+      color: var(--wisp-accent);
+    }
     /* 触屏及窄屏：标题链接的命中区铺满整行（≥44px），外观不变 */
     @media (pointer: coarse), (max-width: 47.99rem) {
       .home-revisions li {
@@ -450,11 +477,33 @@ const colophon = zh
     }
     @media (max-width: 39.99rem) {
       .home-revisions li {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 0.125rem;
+        grid-template-columns: auto minmax(0, 1fr);
+        row-gap: 0.25rem;
+        column-gap: 0.5rem;
+      }
+      .home-revisions time {
+        grid-column: 1;
+        grid-row: 1;
       }
       .home-rev-part {
+        grid-column: 2;
+        grid-row: 1;
+        font-size: 0.75rem;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .home-rev-part:empty {
         display: none;
+      }
+      .home-rev-part:not(:empty)::before {
+        content: '· ';
+        color: var(--wisp-subtle);
+      }
+      .home-revisions a {
+        grid-column: 1 / -1;
+        grid-row: 2;
       }
     }
     .home-more {

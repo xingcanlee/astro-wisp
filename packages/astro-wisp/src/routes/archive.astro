@@ -5,6 +5,7 @@ import { formatDate } from '../utils/date';
 import { toISODate } from '../utils/date';
 import config from 'virtual:wisp/config';
 import { sitePath } from '../utils/paths';
+import { formatTitleHtml } from '../utils/title';
 
 const posts = await getPosts();
 const groups = groupByYear(posts);
@@ -42,10 +43,11 @@ const short = (d: Date) =>
               <a href={sitePath(import.meta.env.BASE_URL, `/posts/${p.id}/`)} lang={p.data.lang}>
                 {numbered ? (
                   <>
-                    <span class="no">{no}</span> <span class="title">{text}</span>
+                    <span class="no">{no}</span>{' '}
+                    <span class="title" set:html={formatTitleHtml(text)} />
                   </>
                 ) : (
-                  p.data.title
+                  <span class="title" set:html={formatTitleHtml(p.data.title)} />
                 )}
               </a>
               <span class="part">{p.data.series ? seriesName.get(p.data.series.id) : ''}</span>
