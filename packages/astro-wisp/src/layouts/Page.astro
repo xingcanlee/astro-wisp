@@ -43,7 +43,12 @@ const { title, description, lang, prose = true, hasMath = false } = Astro.props;
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
     .wisp-page {
-      padding-top: 3.5rem;
+      padding-top: 2.25rem;
+    }
+    @media (min-width: 48rem) {
+      .wisp-page {
+        padding-top: 3.5rem;
+      }
     }
     .wisp-page-header {
       margin-bottom: 2.75rem;

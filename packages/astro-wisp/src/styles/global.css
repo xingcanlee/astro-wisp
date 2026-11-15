@@ -191,6 +191,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    max-width: 100%;
     min-height: 2.75rem;
     padding: 0 1.125rem;
     border: 1px solid var(--wisp-border);
@@ -206,6 +207,15 @@
       background-color 160ms,
       border-color 160ms,
       color 160ms;
+  }
+  @media (max-width: 22.5rem) {
+    .wisp-btn {
+      padding: 0.5rem 0.875rem;
+      font-size: 0.875rem;
+      line-height: 1.35;
+      white-space: normal;
+      text-align: center;
+    }
   }
   .wisp-btn:hover {
     border-color: var(--wisp-muted);

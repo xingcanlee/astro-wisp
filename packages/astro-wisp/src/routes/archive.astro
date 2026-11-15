@@ -124,10 +124,11 @@ const short = (d: Date) =>
     a:hover .no {
       color: var(--wisp-accent);
     }
-    /* 触屏：标题链接的命中区铺满整行（≥44px），外观不变 */
-    @media (pointer: coarse) {
+    /* 触屏及窄屏：标题链接的命中区铺满整行（≥44px），外观不变 */
+    @media (pointer: coarse), (max-width: 47.99rem) {
       li {
         position: relative;
+        min-height: 2.75rem;
       }
       a::after {
         content: '';
@@ -138,9 +139,20 @@ const short = (d: Date) =>
     @media (max-width: 39.99rem) {
       li {
         grid-template-columns: 3.25rem minmax(0, 1fr);
+        row-gap: 0.125rem;
+        column-gap: 0.75rem;
+        padding-block: 0.625rem;
       }
-      .part {
+      .part:empty {
         display: none;
+      }
+      .part:not(:empty) {
+        grid-column: 2;
+        font-size: 0.75rem;
+        line-height: 1.4;
+      }
+      .numbered .part:not(:empty) {
+        padding-inline-start: 2rem;
       }
     }
   }

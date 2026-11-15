@@ -53,6 +53,14 @@
     margin-inline: auto;
     overflow: visible;
   }
+  /* 窄屏图表保留在容器内缩放不裁切，轻度向两侧外扩 0.5rem 争取额外画布宽度，题注仍贴正文左缘 */
+  @media (max-width: 40rem) {
+    .prose > .wisp-diagram:not(.wisp-wide) > .wisp-diagram-body {
+      max-width: none;
+      max-inline-size: none;
+      margin-inline: -0.5rem;
+    }
+  }
 
   /*
  * draw.io 标签里的行内公式（MathJax 输出的 <mjx-container><svg>）：

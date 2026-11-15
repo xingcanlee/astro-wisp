@@ -37,7 +37,12 @@ const recent = (await getPosts()).slice(0, 3);
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
     .nf {
-      padding-top: 3.5rem;
+      padding-top: 2.25rem;
+    }
+    @media (min-width: 48rem) {
+      .nf {
+        padding-top: 3.5rem;
+      }
     }
     h1 {
       margin: 0;
@@ -61,7 +66,7 @@ const recent = (await getPosts()).slice(0, 3);
       text-decoration-thickness: inherit;
       text-underline-offset: 0.25em;
     }
-    @media (pointer: coarse) {
+    @media (pointer: coarse), (max-width: 47.99rem) {
       .nf-home {
         min-height: 2.75rem;
       }

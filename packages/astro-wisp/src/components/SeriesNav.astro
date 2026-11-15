@@ -327,6 +327,12 @@ const split = (t: string) => {
       min-height: 2.25rem;
       align-content: center;
     }
+    @media (pointer: coarse), (max-width: 47.99rem) {
+      .wisp-series-inline a {
+        min-height: 2.75rem;
+        padding-block: 0.5625rem;
+      }
+    }
     @media (prefers-reduced-motion: no-preference) {
       .wisp-series-inline .wisp-series-toggle-ico :global(.wisp-icon) {
         transition: transform 150ms;

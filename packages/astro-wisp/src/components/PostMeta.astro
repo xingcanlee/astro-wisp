@@ -109,8 +109,12 @@ const slugMap = config.taxonomy.slugMap;
       flex-wrap: wrap;
       column-gap: 0.75em;
     }
-    /* 触屏：标签链接命中高度 ≥32px，彼此间距 ≥8px */
-    @media (pointer: coarse) {
+    /* 触屏及窄屏：元信息链接补齐 ≥44px 触控区，标签链接命中高度 ≥32px、行距 ≥8px */
+    @media (pointer: coarse), (max-width: 47.99rem) {
+      .wisp-meta-item a {
+        padding-block: 0.8125rem;
+        margin-block: -0.8125rem;
+      }
       .wisp-meta-tags {
         row-gap: 0.5rem;
       }

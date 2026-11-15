@@ -133,8 +133,8 @@
   }
 }
 
-/* 位图：1px 发丝线定出图片边缘（白底截图在深色页面上不再发光）；不加滤镜、不反色 */
-.wisp-figure > img:not([src$='.svg' i]) {
+/* 配图（含位图与独立 SVG 论文图）：1px 发丝线定出图片边缘（白底配图在深浅背景上都有边界）；不加滤镜、不反色 */
+.wisp-figure > img {
   border: 1px solid var(--wisp-border);
 }
 

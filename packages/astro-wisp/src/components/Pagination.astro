@@ -75,7 +75,7 @@ const nextUrl = Astro.props.nextUrl ?? (current < total ? urlOf(current + 1) : u
       text-decoration-thickness: 1px;
       text-underline-offset: 0.25em;
     }
-    @media (pointer: coarse) {
+    @media (pointer: coarse), (max-width: 47.99rem) {
       .wisp-pagination a {
         min-height: 2.75rem;
       }

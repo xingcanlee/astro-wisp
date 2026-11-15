@@ -41,15 +41,19 @@ const terms = await getTags();
     .terms a:hover {
       color: var(--wisp-accent);
     }
-    /* 触屏：链接命中高度 ≥32px，行间距仍 ≥8px */
-    @media (pointer: coarse) {
+    /* 触屏及窄屏：索引目录链接命中高度 ≥44px */
+    @media (pointer: coarse), (max-width: 47.99rem) {
       .terms {
-        row-gap: 0.5rem;
+        row-gap: 0.25rem;
+      }
+      .terms li {
+        display: inline-flex;
+        align-items: center;
       }
       .terms a {
         display: inline-flex;
         align-items: center;
-        min-height: 2rem;
+        min-height: 2.75rem;
       }
     }
     .n {

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(new URL('./figure.css', import.meta.url), 'utf8');
+const proseCss = readFileSync(new URL('./prose.css', import.meta.url), 'utf8');
 
 describe('wide figure layout', () => {
   it('keeps wide content inside a desktop series rail', () => {
@@ -25,5 +26,15 @@ describe('wide figure layout', () => {
   it('delegates Mermaid horizontal overflow cue to mask-image without legacy gradient scroll shadows', () => {
     expect(css).toContain('overscroll-behavior-x: contain');
     expect(css).not.toContain('no-repeat scroll');
+  });
+  it('frames all figure images including standalone SVG figures with a 1px semantic border', () => {
+    expect(css).toMatch(/\.wisp-figure > img\s*\{[\s\S]*?border: 1px solid var\(--wisp-border\);/);
+    expect(css).not.toContain(".wisp-figure > img:not([src$='.svg' i])");
+  });
+  it('lifts max-width:100% on narrow overflow tables so sticky col-1 and data columns keep readable bounds', () => {
+    expect(proseCss).toContain('@media (max-width: 40rem)');
+    expect(proseCss).toMatch(
+      /\.prose \.wisp-table\[data-wisp-overflow\] > table\s*\{[\s\S]*?max-width: none;/,
+    );
   });
 });

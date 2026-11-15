@@ -198,7 +198,7 @@ const colophon = zh
     /* ---------- 扉页 ---------- */
     .home-title {
       max-width: 44rem;
-      padding-block: 4rem 3.5rem;
+      padding-block: 2.5rem 2.25rem;
     }
     @media (min-width: 48rem) {
       .home-title {
@@ -243,7 +243,12 @@ const colophon = zh
       line-height: 1.35;
     }
     .home-section {
-      margin-top: 5rem;
+      margin-top: 3.25rem;
+    }
+    @media (min-width: 48rem) {
+      .home-section {
+        margin-top: 5rem;
+      }
     }
     .home-section > .home-list,
     .home-section > .home-revisions,
@@ -375,9 +380,10 @@ const colophon = zh
     .part-list a:hover .part-item-no {
       color: var(--wisp-accent);
     }
-    /* 触屏：行高不变，上下内边距加大到 ≥44px 的命中高度 */
-    @media (pointer: coarse) {
+    /* 触屏及窄屏：行高不变，上下内边距与最小高度保证 ≥44px 的命中高度 */
+    @media (pointer: coarse), (max-width: 47.99rem) {
       .part-list a {
+        min-height: 2.75rem;
         padding-block: 0.6875rem;
       }
     }
@@ -430,10 +436,11 @@ const colophon = zh
     .home-revisions a:hover {
       color: var(--wisp-accent);
     }
-    /* 触屏：标题链接的命中区铺满整行（≥44px），外观不变 */
-    @media (pointer: coarse) {
+    /* 触屏及窄屏：标题链接的命中区铺满整行（≥44px），外观不变 */
+    @media (pointer: coarse), (max-width: 47.99rem) {
       .home-revisions li {
         position: relative;
+        min-height: 2.75rem;
       }
       .home-revisions a::after {
         content: '';
@@ -454,6 +461,14 @@ const colophon = zh
       display: inline-block;
       margin-top: 1rem;
       font-size: 0.875rem;
+    }
+    @media (pointer: coarse), (max-width: 47.99rem) {
+      .home-more {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+        margin-top: 0.5rem;
+      }
     }
 
     @media (prefers-reduced-motion: no-preference) {

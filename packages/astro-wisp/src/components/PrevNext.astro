@@ -107,8 +107,16 @@ const zh = /^zh\b/i.test(lang);
       .wisp-prevnext {
         grid-template-columns: 1fr;
       }
+      .wisp-prevnext > span {
+        display: none;
+      }
+      .wisp-prevnext a {
+        padding-block: 0.875rem;
+      }
       .is-next {
         grid-column: 1;
+      }
+      .is-prev + .is-next {
         border-top: 1px solid var(--wisp-border);
       }
     }

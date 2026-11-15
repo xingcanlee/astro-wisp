@@ -40,7 +40,12 @@ const times = await getReadingTimes(term.posts);
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
     .tax {
-      padding-top: 3.5rem;
+      padding-top: 2.25rem;
+    }
+    @media (min-width: 48rem) {
+      .tax {
+        padding-top: 3.5rem;
+      }
     }
     /* 与 Page 布局的页头同一规格：标题 + 说明，下方 1px rule */
     .tax-header {
@@ -57,6 +62,12 @@ const times = await getReadingTimes(term.posts);
     .tax-header p {
       margin: 0.5rem 0 0;
       color: var(--wisp-muted);
+    }
+    @media (pointer: coarse), (max-width: 47.99rem) {
+      .tax-header p a {
+        padding-block: 0.8125rem;
+        margin-block: -0.8125rem;
+      }
     }
     /* 同级文章之间 1px rule（与分页列表一致） */
     .tax-list {
