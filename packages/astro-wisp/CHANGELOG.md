@@ -2,6 +2,16 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.5.5 (2026-11-18)
+
+### 变更
+
+- `wisp-writer` 移除 `check_post.py` 中机械的 `MAX_PARA = 300`（`long-paragraph`）与 `MAX_MERMAID_LABEL = 12`（`mermaid-label-long`）字数限制；更新 `style-guide.md` 补充正面判断、禁防御性套话与业界共识术语准则。
+
+### 修复
+
+- `wisp-writer` 收紧 `similar_names` 标签与分类相近判定为仅大小写、空白、下划线或连字符差异，修复 `DSA`、`CSA`、`NSA` 等独立短技术缩写被编辑距离误报 `tag-similar` 的问题。
+
 ## 0.5.4 (2026-11-15)
 
 ### 变更
