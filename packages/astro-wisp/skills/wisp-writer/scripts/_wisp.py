@@ -175,22 +175,10 @@ def norm_key(s: str) -> str:
 
 
 def similar_names(name: str, existing: dict[str, int]) -> list[str]:
-    """返回与 name 大小写不同或写法相近的已有名字（不含完全相同的）。"""
+    """返回与 name 仅大小写、空格、下划线或连字符不同的已有名字（不含完全相同的）。"""
     if name in existing:
         return []
-    out = []
-    for e in existing:
-        if norm_key(e) == norm_key(name):
-            out.append(e)
-    if out:
-        return out
-    import difflib
-
-    if name.isascii() and len(name) >= 4:
-        for e in existing:
-            if e.isascii() and len(e) >= 4 and difflib.SequenceMatcher(None, name.casefold(), e.casefold()).ratio() >= 0.86:
-                out.append(e)
-    return out
+    return [e for e in existing if norm_key(e) == norm_key(name)]
 
 
 def collect_taxonomy(root: Path, exclude: Path | None = None) -> tuple[dict[str, int], dict[str, int]]:

@@ -29,8 +29,6 @@ BOOL_KEYS = ("draft", "featured", "toc")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$")
 CJK = r"㐀-䶿一-鿿豈-﫿"
 CJK_RE = re.compile(f"[{CJK}]")
-MAX_MERMAID_LABEL = 12
-MAX_PARA = 300
 
 
 @dataclass
@@ -76,7 +74,6 @@ class Checker:
         self.check_fences()
         self.check_hardcoded(masked)
         self.check_punct(masked)
-        self.check_paragraphs(masked)
         self.check_todo(masked)
         self.check_footnotes(masked)
         return sorted(self.findings, key=lambda f: (f.line, f.rule))
@@ -279,27 +276,12 @@ class Checker:
             if n not in names and n != "Fragment":
                 self.add(ln, "error", "mdx-import", f"使用了 <{n}> 但没有 import（例如 import {n} from './{n}'）")
 
-    # ------------------------------------------------------------ 代码块与 Mermaid
+    # ------------------------------------------------------------ 代码块
     def check_fences(self) -> None:
         for start, end, info, body in self.fences:
             lang = info.split()[0].split("{")[0] if info else ""
             if not lang:
                 self.add(start, "warning", "code-lang", "代码块缺少语言标识（纯文本用 text）")
-                continue
-            if lang == "mermaid":
-                self.check_mermaid(start, body)
-
-    def check_mermaid(self, start: int, body: list[str]) -> None:
-        kind = next((l.split()[0] for l in body if l.strip() and not l.strip().startswith(("%%", "---"))), "")
-        flow = kind in ("flowchart", "graph")
-        for off, l in enumerate(body, 1):
-            labels = re.findall(r'"([^"]*)"', l)
-            if flow:
-                labels += re.findall(r"(?<![\"\w])[\w-]+\s*[\[({]+([^\"\[\](){}|]+)[\])}]+", l)
-            for lab in labels:
-                n = len(CJK_RE.findall(lab))
-                if n > MAX_MERMAID_LABEL:
-                    self.add(start + off, "warning", "mermaid-label-long", f"Mermaid 节点标签有 {n} 个汉字（建议不超过 {MAX_MERMAID_LABEL}）：{lab[:20]}…")
 
     # ------------------------------------------------------------ 硬编码颜色
     def check_hardcoded(self, masked: list[str]) -> None:
@@ -331,24 +313,7 @@ class Checker:
                 uniq = "".join(dict.fromkeys(found))
                 self.add(i, "warning", "halfwidth-punct", f"中文语境中使用了半角标点 {uniq}，请改为全角")
 
-    # ------------------------------------------------------------ 段落
-    def check_paragraphs(self, masked: list[str]) -> None:
-        para: list[tuple[int, str]] = []
-
-        def flush() -> None:
-            if para:
-                n = sum(len(re.sub(r"\s+", "", t)) for _, t in para)
-                if n > MAX_PARA:
-                    self.add(para[0][0], "info", "long-paragraph", f"段落约 {n} 字，超过 {MAX_PARA}，考虑拆分")
-            para.clear()
-
-        for i, l in enumerate(masked, 1):
-            if not l.strip() or re.match(r"^\s*([#>|]|[-*+]\s|\d+[.)]\s|<|import\s|export\s|\[\^|-{3,}|:::)", l):
-                flush()
-                continue
-            para.append((i, l))
-        flush()
-
+    # ------------------------------------------------------------ TODO 占位
     def check_todo(self, masked: list[str]) -> None:
         for i, l in enumerate(masked, 1):
             if "TODO" in l:

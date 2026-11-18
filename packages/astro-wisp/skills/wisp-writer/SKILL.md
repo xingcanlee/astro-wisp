@@ -79,6 +79,6 @@ scripts/     new_post.py  check_post.py  tests/   （Python + uv，PEP 723 内�
 - `.md` 文件里写组件，或 `.mdx` 里忘了 `import`；交互组件忘了 `client:visible`。
 - 图片没有 alt；引用了尚未生成的 `.excalidraw`（先画图，再引用）；引用 `.wisp.svg` 而不是源文件。
 - 同一概念用了新标签（`Llm`、`大模型` 与已有 `LLM` 并存）。
-- Mermaid 节点文字过长，渲染后重叠；应缩短到约 12 个汉字以内。
+- Mermaid 节点堆砌长句导致渲染拥挤；节点应写简短架构短语，细节放进正文。
 - 留下 `TODO` 占位就交付；`check_post.py --strict` 能发现。
 - 只写代码不解释：代码前说明目的，代码后说明关键点或预期输出。

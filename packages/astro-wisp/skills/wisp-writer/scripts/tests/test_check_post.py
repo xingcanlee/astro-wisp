@@ -54,6 +54,13 @@ def test_tag_case_vs_existing(site, write_post, check):
     assert "tag-similar" not in rules(check(p2, site))
 
 
+def test_distinct_acronyms_not_flagged(site, write_post, check):
+    write_post("a", fm(tags="[DSA, CSA, KV-Cache]") + "正文。\n")
+    p = write_post("b", fm(tags="[NSA, kv_cache]") + "正文。\n")
+    f = [x for x in check(p, site) if x.rule == "tag-similar"]
+    assert len(f) == 1 and "KV-Cache" in f[0].message and "NSA" not in f[0].message
+
+
 def test_category_similar(site, write_post, check):
     write_post("a", fm(category="机器学习") + "正文。\n")
     write_post("b0", fm(category="Algorithms") + "正文。\n")
@@ -116,19 +123,6 @@ def test_component_in_md(site, write_post, check):
     assert "md-component" in rules(check(p, site))
 
 
-def test_mermaid_label(site, write_post, check):
-    body = '```mermaid\nflowchart LR\n    A["这是一个特别特别特别长的节点标签"] --> B["短"]\n    C[另一个同样特别特别长的节点标签文字] --> B\n```\n'
-    p = write_post("x", fm() + body)
-    f = [x for x in check(p, site) if x.rule == "mermaid-label-long"]
-    assert len(f) == 2
-
-
-def test_mermaid_sequence_messages_not_flagged(site, write_post, check):
-    body = "```mermaid\nsequenceDiagram\n    R->>P: 这是一条很长很长很长很长很长的消息文字\n```\n"
-    p = write_post("x", fm() + body)
-    assert "mermaid-label-long" not in rules(check(p, site))
-
-
 def test_hardcoded_color(site, write_post, check):
     p = write_post("x", fm() + '颜色 #ff0000 不行。<span style="color:red">x</span>\n')
     r = rules(check(p, site))
@@ -155,12 +149,6 @@ def test_halfwidth_exclusions(site, write_post, check):
     )
     p = write_post("x", fm() + body)
     assert "halfwidth-punct" not in rules(check(p, site))
-
-
-def test_long_paragraph_info(site, write_post, check):
-    p = write_post("x", fm() + "字" * 320 + "\n")
-    f = check(p, site)
-    assert [x.level for x in f] == ["info"]
 
 
 def test_todo(site, write_post, check):
