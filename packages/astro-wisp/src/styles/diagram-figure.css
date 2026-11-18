@@ -32,15 +32,16 @@
   }
 
   /*
- * 图表本体：SVG 去掉了 width/height，按容器宽度缩放，但不超过自然宽度（--wd-w）。
- * 所有图表都允许缩小到容器宽度，避免 min-width 触发横向滚动或页面溢出。
+ * 图表本体：SVG 去掉了 width/height，按容器宽度缩放，但不超过自然宽度（--wd-w）；
+ * 窄屏设置可读下限（min(31rem, 72%)），放不下时在容器内横向滚动，避免压成微型文字。
  */
   .wisp-diagram-body {
     max-width: 100%;
     max-inline-size: 100%;
     min-width: 0;
-    overflow-x: clip;
-    overflow-y: clip;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
     padding-block: 0.125em;
   }
   .wisp-diagram-body > svg {
@@ -52,6 +53,10 @@
     height: auto;
     margin-inline: auto;
     overflow: visible;
+  }
+  .wisp-diagram[style*='--wd-w'] > .wisp-diagram-body > svg {
+    min-width: min(var(--wd-w), max(100%, min(31rem, calc(var(--wd-w) * 0.72))));
+    max-inline-size: none;
   }
   /* 窄屏图表保留在容器内缩放不裁切，轻度向两侧外扩 0.5rem 争取额外画布宽度，题注仍贴正文左缘 */
   @media (max-width: 40rem) {

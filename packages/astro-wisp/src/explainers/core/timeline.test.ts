@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampIndex, focusOf, itemId, record, cellId } from './timeline';
+import { clampIndex, focusOf, itemId, record, cellId, stepAt } from './timeline';
 import { toneFill, toneStroke } from './tones';
 
 describe('timeline', () => {
@@ -9,6 +9,17 @@ describe('timeline', () => {
     expect(clampIndex(1.7, 3)).toBe(1);
     expect(clampIndex(Number.NaN, 3)).toBe(0);
     expect(clampIndex(2, 0)).toBe(0);
+  });
+  it('stepAt 越界夹紧且空时间线抛错', () => {
+    const steps = [
+      { state: 'a', caption: '第一步' },
+      { state: 'b', caption: '第二步' },
+    ];
+    expect(stepAt(steps, -2)).toBe(steps[0]);
+    expect(stepAt(steps, 1.9)).toBe(steps[1]);
+    expect(stepAt(steps, 99)).toBe(steps[1]);
+    expect(stepAt(steps, Number.NaN)).toBe(steps[0]);
+    expect(() => stepAt([], 0)).toThrow(/空/);
   });
   it('record 每次 emit 保存独立快照', () => {
     const steps = record({ arr: [3, 1, 2] }, (s, emit) => {

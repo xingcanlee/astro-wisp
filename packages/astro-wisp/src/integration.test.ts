@@ -1,11 +1,11 @@
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import type { Root as HastRoot } from 'hast';
 import { raw } from 'hast-util-raw';
 import { toHtml } from 'hast-util-to-html';
 import { unified as astroUnified } from '@astrojs/markdown-remark';
 import type { RehypePlugins, RemarkPlugins } from '@astrojs/markdown-remark';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { HookParameters } from 'astro';
 import { describe, expect, it } from 'vitest';
@@ -164,10 +164,79 @@ describe('astro-wisp 集成', () => {
     );
   });
 
-  it('virtual.d.ts 为每个可覆盖组件声明了类型', () => {
+  it('virtual.d.ts 为每个可覆盖组件及虚拟模块声明了类型', () => {
     const dts = readFileSync(new URL('../virtual.d.ts', import.meta.url), 'utf8');
+    expect(dts).toContain("declare module 'virtual:wisp/cjk-font-url'");
     for (const n of [...OVERRIDABLE_COMPONENTS, ...OVERRIDABLE_LAYOUTS]) {
       expect(dts, n).toContain(`declare module 'virtual:wisp/components/${n}'`);
+    }
+  });
+
+  it('cjk-font-url 虚拟模块按 fonts.cjkDisplay 指向原始 CSS 或 codegen 改写版，且 palette 与 font 共用同一 codegen 目录', () => {
+    const opt = setup({
+      fonts: { cjkDisplay: 'optional' },
+      palette: { color: { base: { accent: { light: '#0a5c36', dark: '#5ad19a' } } } },
+    });
+    const notoFile = join(opt.codegen, 'noto-sans-sc.css');
+    const cjkMod = opt.load('virtual:wisp/cjk-font-url');
+    expect(cjkMod).toContain(JSON.stringify(`${notoFile.replaceAll('\\', '/')}?url`));
+    const notoCss = readFileSync(notoFile, 'utf8');
+    expect(notoCss).toContain('font-display:optional');
+    expect(notoCss).not.toContain('url(./files/');
+    expect(readFileSync(join(opt.codegen, 'theme.css'), 'utf8')).toContain(
+      '--wisp-accent: #0a5c36;',
+    );
+
+    const fb = setup({ fonts: { cjkDisplay: 'fallback' } });
+    expect(readFileSync(join(fb.codegen, 'noto-sans-sc.css'), 'utf8')).toContain(
+      'font-display:fallback',
+    );
+
+    const swap = setup();
+    const swapMod = swap.load('virtual:wisp/cjk-font-url');
+    expect(swapMod).toContain('@fontsource-variable/noto-sans-sc/index.css?url');
+    expect(swapMod).not.toContain('noto-sans-sc.css');
+  });
+
+  it('hasExcalifont 随调色板手写字体栈变化，并控制 Astro Fonts API 是否注册 Excalifont', () => {
+    const withHand = setup();
+    const cfgDefault = JSON.parse(
+      withHand.load('virtual:wisp/config').replace(/^export default |;$/g, ''),
+    );
+    expect(cfgDefault.hasExcalifont).toBe(true);
+    expect(cfgDefault.fonts).toEqual({ cjkDisplay: 'swap' });
+
+    const withoutHand = setup({
+      palette: { font: { hand: ['Inter Variable', 'sans-serif'] } },
+    });
+    const cfgNoHand = JSON.parse(
+      withoutHand.load('virtual:wisp/config').replace(/^export default |;$/g, ''),
+    );
+    expect(cfgNoHand.hasExcalifont).toBe(false);
+    expect(withoutHand.updates[0]!.fonts.map((f) => f.cssVariable)).toEqual([
+      '--font-wisp-sans',
+      '--font-wisp-mono',
+    ]);
+  });
+
+  it('支持通过 JSON 文件覆盖部分调色板，格式错误时抛出明确错误', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wisp-int-pal-'));
+    try {
+      const okFile = join(dir, 'palette.json');
+      writeFileSync(
+        okFile,
+        JSON.stringify({ color: { base: { accent: { light: '#0a5c36', dark: '#5ad19a' } } } }),
+      );
+      const { load, codegen } = setup({ palette: okFile });
+      expect(load('virtual:wisp/theme-css')).toBe(
+        `import ${JSON.stringify(join(codegen, 'theme.css'))};`,
+      );
+
+      const badFile = join(dir, 'bad.json');
+      writeFileSync(badFile, JSON.stringify({ color: { base: { accent: '#0a5c36' } } }));
+      expect(() => setup({ palette: badFile })).toThrow(/\[astro-wisp\] palette/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 
@@ -238,12 +307,14 @@ async function renderBoth(source: string) {
     });
   const shared = { syntaxHighlight: 'shiki' as const, shikiConfig };
   const md = await withCapture('md').createRenderer(shared as never);
-  await md.render(source, { fileURL: new URL('file:///site/src/content/posts/p.md') } as never);
+  await md.render(source, {
+    fileURL: pathToFileURL(resolve('/site/src/content/posts/p.md')),
+  } as never);
   const mdx = await withCapture('mdx').createMdxRenderer!(
     shared as never,
-    { srcDir: new URL('file:///site/src/') } as never,
+    { srcDir: pathToFileURL(`${resolve('/site/src')}/`) } as never,
   );
-  await mdx.process(source, '/site/src/content/posts/p.mdx', {});
+  await mdx.process(source, resolve('/site/src/content/posts/p.mdx'), {});
   return captured;
 }
 
@@ -266,12 +337,16 @@ describe('Markdown 管线：.md 与 .mdx 一致', () => {
     expect(mdx).toBe(md);
   }, 30_000);
 
-  it('管线指纹进入 astro 配置摘要：主题插件变化会让内容层缓存的 .md 渲染结果失效', () => {
-    const { updates } = setup();
+  it('管线指纹进入 astro 配置摘要：主题插件或关键配置变化会让内容层缓存的 .md 渲染结果失效', () => {
+    const a = setup();
+    const b = setup({ features: { math: false }, site: { lang: 'en' } });
     const digest = pipelineDigest();
     expect(digest).toMatch(/^[0-9a-f]{16}$/);
     // Astro 用 JSON 序列化（content/utils 的 safeStringify）判断配置是否变化；插件函数会被丢掉，
     // 指纹必须以普通值的形式出现在里面
-    expect(JSON.stringify(updates[0]!.markdown)).toContain(digest);
+    const jsonA = JSON.stringify(a.updates[0]!.markdown);
+    const jsonB = JSON.stringify(b.updates[0]!.markdown);
+    expect(jsonA).toContain(digest);
+    expect(jsonB).not.toBe(jsonA);
   });
 });

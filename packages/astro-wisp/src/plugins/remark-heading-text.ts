@@ -62,31 +62,46 @@ function hasMath(nodes: PhrasingContent[]): boolean {
   );
 }
 
+export interface TocHeadingEntry {
+  depth: number;
+  text: string;
+  slug?: string;
+}
+
 /**
  * remark 插件：按文档顺序收集所有标题的"渲染前"纯文本，
- * 写入 `file.data.astro.frontmatter.tocHeadingTexts`（字符串数组）；并给含行内公式的标题写入由源码生成的 id。
- * 路由层用它按序号覆盖 render() 返回的 headings[i].text，
+ * 写入 `file.data.astro.frontmatter.tocHeadingTexts`（字符串数组）与
+ * `file.data.astro.frontmatter.tocHeadingEntries`（含 depth / text / 可选 slug）；
+ * 并给含行内公式的标题写入由源码生成的 id。
+ * 路由层用它覆盖 render() 返回的 headings[i].text（同时按 depth/slug 对齐以避开 MDX 中的 JSX 标题），
  * 供 Toc 组件在构建时用 KaTeX 渲染标题中的行内公式。
  */
 const remarkHeadingText: Plugin<[], Root> = () => (tree, file) => {
   const texts: string[] = [];
+  const entries: TocHeadingEntry[] = [];
   // 含行内公式的标题：id 由源码生成。否则 Astro 在 rehype-katex 之后从渲染结果取文字，
   // KaTeX 的 MathML + HTML 两份文字会拼成 `hreshreshres` 这样的乱码。
   // 只处理含公式的标题：其他标题仍由 Astro 生成 id，已有的深链接不变。
   const slugger = new GithubSlugger();
   visit(tree, 'heading', (node: Heading) => {
-    texts.push(rawText(node.children));
-    if (!hasMath(node.children)) return;
+    const text = rawText(node.children);
+    texts.push(text);
+    if (!hasMath(node.children)) {
+      entries.push({ depth: node.depth, text });
+      return;
+    }
     const data = (node.data ??= {}) as { hProperties?: Record<string, unknown> };
     data.hProperties ??= {};
     if (typeof data.hProperties.id !== 'string')
       data.hProperties.id = slugger.slug(slugText(node.children).replace(/\s+/g, ' ').trim());
+    entries.push({ depth: node.depth, text, slug: String(data.hProperties.id) });
   });
 
   const data = file.data as AstroFileData;
   data.astro ??= {};
   data.astro.frontmatter ??= {};
   data.astro.frontmatter.tocHeadingTexts = texts;
+  data.astro.frontmatter.tocHeadingEntries = entries;
 };
 
 export default remarkHeadingText;

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { plainInlineMath, splitFigureLabel } from '../core/math';
-import type { Step } from '../core/timeline';
+import { clampIndex, type Step } from '../core/timeline';
 import type { PlayerLabels } from './labels';
 import Player, { StepCount } from './Player';
 import { RichText } from './RichText';
@@ -64,7 +64,7 @@ export default function Explainer<S>({
       {title && (
         <figcaption className="wisp-explainer__title">
           <Title title={title} />
-          <StepCount index={player.index} total={steps.length} />
+          <StepCount index={clampIndex(player.index, steps.length)} total={steps.length} />
         </figcaption>
       )}
       <Player

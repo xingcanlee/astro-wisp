@@ -1,10 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { genAll } from '../../scripts/gen-tokens';
-import { genTokens, genPele, genDiagram } from './generate';
-import { checkContrast } from './contrast';
+import { genTokens, genPele, genDiagram, quoteFontFamily } from './generate';
+import { checkContrast, mixSrgb } from './contrast';
 import { oklch } from 'culori';
-import { mergePalette, palette, resolveColor, nearestToken } from './palette';
+import {
+  mergePalette,
+  palette,
+  readPalette,
+  readPaletteOverride,
+  resolveColor,
+  nearestToken,
+  type Palette,
+} from './palette';
 
 describe('palette', () => {
   it('跳过 $ 注释键', () => {
@@ -46,22 +56,41 @@ describe('生成', () => {
   it('tokens.css 结构', () => {
     const css = genTokens();
     expect(css).toContain('自动生成，勿手改');
+    expect(css).toContain('@layer theme {');
+    expect(css).toContain('@media print {');
     expect(css).toContain('--wisp-bg: #fcfcfb;');
     expect(css).toContain('--wisp-bg: #111214;');
     expect(css).toContain('[data-theme="dark"]');
     expect(css).toContain('--wisp-sem-q: var(--wisp-hue-blue);');
     expect(css).toContain('--wisp-sem-q-fill: var(--wisp-hue-blue-fill);');
     expect(css).toContain('"Noto Sans SC Variable"');
+    expect(css).toContain('"Wisp CJK Fallback"');
+    expect(css).toContain('"Microsoft YaHei", monospace');
     expect(css).not.toContain('$comment');
+  });
+  it('quoteFontFamily 转义与引号处理', () => {
+    expect(quoteFontFamily('Inter Variable')).toBe('"Inter Variable"');
+    expect(quoteFontFamily('sans-serif')).toBe('sans-serif');
+    expect(quoteFontFamily('ui-monospace')).toBe('ui-monospace');
+    expect(quoteFontFamily('-apple-system')).toBe('-apple-system');
+    expect(quoteFontFamily('Excalifont')).toBe('Excalifont');
+    expect(quoteFontFamily('Font "Quote" \\ Slash')).toBe('"Font \\"Quote\\" \\\\ Slash"');
+    expect(quoteFontFamily('Bad;color:red')).toBe('"Bad;color:red"');
   });
   it('pele.css', () => {
     const css = genPele();
+    expect(css).toContain('@layer utilities {');
+    expect(css).toContain('@media print {');
+    expect(css).toContain('--pele-radius: 4px;');
     expect(css).toContain('--pele-series-1: var(--wisp-hue-blue);');
     expect(css).toContain('--pele-series-1-fill: color-mix(in srgb, var(--wisp-hue-blue) 58%');
     expect(css).toContain('--pele-series-8: var(--wisp-hue-slate);');
+    const fallbackCss = genPele({ ...palette, radius: {} as Palette['radius'] });
+    expect(fallbackCss).toContain('--pele-radius: 4px;');
   });
   it('diagram.css', () => {
     const css = genDiagram();
+    expect(css).toContain('@layer utilities {');
     expect(css).toContain('[data-theme] .wisp-d');
     expect(css).toContain('--wd-blue-fill: var(--wisp-hue-blue-fill);');
     expect(css).toContain('--wd-font-hand: var(--wisp-font-hand);');
@@ -95,6 +124,45 @@ describe('覆盖调色板', () => {
       expect(actual, rel).toBe(content.replace(/\r\n/g, '\n'));
     }
   });
+  it('校验格式错误的调色板与覆盖配置并给出清晰错误', () => {
+    expect(() => mergePalette({ color: { base: { accent: '#0a5c36' as never } } })).toThrow(
+      /\[astro-wisp\] palette/,
+    );
+    expect(() =>
+      mergePalette({
+        color: { hue: { custom: { stroke: { light: '#111111', dark: '#eeeeee' } } } },
+      } as never),
+    ).toThrow(/\[astro-wisp\] palette/);
+    expect(() => mergePalette({ font: { sans: 'Inter' as never } })).toThrow(
+      /\[astro-wisp\] palette/,
+    );
+    expect(() => mergePalette({ radius: { md: '4px' as never } })).toThrow(
+      /\[astro-wisp\] palette/,
+    );
+    expect(() =>
+      mergePalette({ color: { base: { accent: { light: 'not-a-color', dark: '#ffffff' } } } }),
+    ).toThrow(/\[astro-wisp\] palette/);
+
+    const dir = mkdtempSync(join(tmpdir(), 'wisp-pal-'));
+    try {
+      const badFull = join(dir, 'bad-full.json');
+      writeFileSync(badFull, JSON.stringify({ version: 1, color: {} }));
+      expect(() => readPalette(badFull)).toThrow(/\[astro-wisp\] palette/);
+
+      const badOver = join(dir, 'bad-over.json');
+      writeFileSync(badOver, JSON.stringify({ color: { hue: { blue: { stroke: '#000' } } } }));
+      expect(() => readPaletteOverride(badOver)).toThrow(/\[astro-wisp\] palette/);
+
+      const goodOver = join(dir, 'good-over.json');
+      writeFileSync(
+        goodOver,
+        JSON.stringify({ color: { base: { accent: { light: '#0a5c36', dark: '#5ad19a' } } } }),
+      );
+      expect(mergePalette(readPaletteOverride(goodOver)).color.base.accent.light).toBe('#0a5c36');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('对比度', () => {
@@ -102,5 +170,11 @@ describe('对比度', () => {
     const rows = checkContrast();
     expect(rows.length).toBe(2 * (3 + 24));
     expect(rows.filter((r) => !r.pass)).toEqual([]);
+  });
+  it('mixSrgb 支持 #rgb、#rrggbbaa 与 oklch(...) 并夹紧通道', () => {
+    expect(mixSrgb('#f00', '#00f', 50)).toBe('#800080');
+    expect(mixSrgb('#ff000080', '#0000ff80', 50)).toBe('#800080');
+    expect(mixSrgb('oklch(0.6 0.1 200)', '#ffffff', 50)).toMatch(/^#[0-9a-f]{6}$/);
+    expect(mixSrgb('oklch(0.95 0.35 140)', '#ffffff', 100)).toMatch(/^#[0-9a-f]{6}$/);
   });
 });

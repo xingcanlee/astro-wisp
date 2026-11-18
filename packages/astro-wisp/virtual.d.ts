@@ -6,6 +6,10 @@ declare module 'virtual:wisp/config' {
 declare module 'virtual:wisp/locale' {
   export const lang: string;
 }
+declare module 'virtual:wisp/cjk-font-url' {
+  const src: string;
+  export default src;
+}
 declare module 'virtual:wisp/theme-css' {}
 declare module 'virtual:wisp/user-css' {}
 declare module 'virtual:wisp/components/BackToTop' {

@@ -241,6 +241,27 @@ describe('renderDiagram', () => {
       ).html,
     ).toMatch(/^<figure class="wisp-figure wisp-diagram wisp-wide"/);
   });
+  it('switches UI labels to English for non-zh lang', () => {
+    const r = renderDiagram(
+      { src: './diagrams/model.drawio', from: repo.post, seq: 1 },
+      env({ lang: 'en' }),
+    );
+    expect(r.html).toContain('aria-label="Diagram"');
+    expect(r.html).toContain('aria-label="Download source model.drawio (draw.io)"');
+    expect(r.html).toContain('title="Download source model.drawio"');
+    expect(r.html).toContain('>Source</a>');
+    expect(r.html).toContain('aria-label="Open in draw.io (new tab)"');
+    expect(r.html).toContain('title="Open in draw.io"');
+
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const missing = renderDiagram(
+      { src: './diagrams/none.excalidraw', from: repo.post, seq: 1 },
+      env({ dev: true }),
+      'en',
+    );
+    warn.mockRestore();
+    expect(missing.html).toContain('<strong>Diagram not ready</strong>');
+  });
   it('same diagram twice → disjoint ids', () => {
     const a = ids(
       renderDiagram({ src: './diagrams/flow.excalidraw', from: repo.post, seq: 1 }, env()).html,

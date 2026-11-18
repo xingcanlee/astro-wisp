@@ -207,6 +207,12 @@
 .prose a:hover {
   text-decoration-thickness: 2px;
 }
+.prose a[data-cjk-start] {
+  margin-inline-start: 0.16em;
+}
+.prose a[data-cjk-end] {
+  margin-inline-end: 0.16em;
+}
 
 /* ---------- 列表 ---------- */
 .prose :is(ul, ol) {
@@ -529,30 +535,30 @@
   .prose :is(th, td):not(:last-child) {
     padding-inline-end: 0.875em;
   }
-  .prose .wisp-table[data-wisp-overflow] > table {
+  .prose .wisp-table > table {
     width: max-content;
     min-width: 100%;
     max-width: none;
   }
-  .prose .wisp-table[data-wisp-overflow] :is(th, td):first-child:not([colspan]) {
+  .prose .wisp-table :is(th, td):first-child:not([colspan]) {
     min-width: min(5.5rem, 28vw);
     max-width: min(7rem, 30vw);
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
-  .prose .wisp-table[data-wisp-overflow] :is(th, td):not(:first-child):not([colspan]) {
+  .prose .wisp-table :is(th, td):not(:first-child):not([colspan]) {
     max-width: min(14rem, calc(100vw - 3.25rem - min(7rem, 30vw)));
     white-space: normal;
     overflow-wrap: break-word;
   }
-  .prose .wisp-table[data-wisp-overflow] td[data-wisp-prose]:not(:first-child) {
+  .prose .wisp-table td[data-wisp-prose]:not(:first-child) {
     min-width: min(12rem, calc(100vw - 3.25rem - min(7rem, 30vw)));
   }
-  .prose .wisp-table[data-wisp-overflow] td code {
+  .prose .wisp-table td code {
     word-break: normal;
     overflow-wrap: anywhere;
   }
-  .prose .wisp-table[data-wisp-overflow] td code .wisp-tok {
+  .prose .wisp-table td code .wisp-tok {
     white-space: normal;
     overflow-wrap: anywhere;
   }
@@ -657,9 +663,16 @@
   content: ']';
 }
 /* 紧挨着的引用 [1][2] → [1, 2]（rehype-citations 标记）：前一个右括号换成逗号，后一个不画左括号 */
+.prose sup.wisp-cite--joined > a[data-footnote-ref] {
+  margin-inline-end: 0;
+  padding-inline-end: 0.2em;
+}
 .prose sup.wisp-cite--joined > a[data-footnote-ref]::after {
   content: ',';
-  margin-inline-end: 0.2em;
+}
+.prose sup.wisp-cite--cont > a[data-footnote-ref] {
+  margin-inline-start: 0;
+  padding-inline-start: 0.2em;
 }
 .prose sup.wisp-cite--cont > a[data-footnote-ref]::before {
   content: '\2060';

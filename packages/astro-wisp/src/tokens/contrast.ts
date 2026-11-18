@@ -1,4 +1,4 @@
-import { wcagContrast } from 'culori';
+import { formatHex, rgb, wcagContrast } from 'culori';
 import { PELE_FILL_STROKE_PERCENT } from './generate';
 import { hueNamesOf, palette as defaultPalette, type Mode, type Palette } from './palette';
 
@@ -10,17 +10,19 @@ export interface Row {
 }
 export const MIN_CONTRAST = 4.5;
 
-const mixSrgb = (a: string, b: string, aPercent: number) => {
-  const ar = parseInt(a.slice(1), 16);
-  const br = parseInt(b.slice(1), 16);
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+
+export const mixSrgb = (a: string, b: string, aPercent: number): string => {
+  const ca = rgb(a);
+  const cb = rgb(b);
+  if (!ca || !cb) throw new Error(`无法解析颜色: ${!ca ? a : b}`);
   const weight = aPercent / 100;
-  return `#${[16, 8, 0]
-    .map((shift) =>
-      Math.round(((ar >> shift) & 255) * weight + ((br >> shift) & 255) * (1 - weight))
-        .toString(16)
-        .padStart(2, '0'),
-    )
-    .join('')}`;
+  return formatHex({
+    mode: 'rgb',
+    r: clamp01(ca.r * weight + cb.r * (1 - weight)),
+    g: clamp01(ca.g * weight + cb.g * (1 - weight)),
+    b: clamp01(ca.b * weight + cb.b * (1 - weight)),
+  });
 };
 
 /** fg / muted / accent 与 8 个 hue stroke 在两种主题下与背景（及各自 fill）的对比度。 */

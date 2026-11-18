@@ -10,6 +10,8 @@ export interface RemarkPeleOptions {
   strict?: boolean;
   /** 开发模式：错误提示中附带 Pele 的源码片段。 */
   dev?: boolean;
+  /** 站点语言（默认 'zh-CN'）；文章 frontmatter 的 lang 优先 */
+  lang?: string;
 }
 
 const TYPE_NAMES: Record<string, string> = {
@@ -35,6 +37,31 @@ const TYPE_NAMES: Record<string, string> = {
   architecture: '架构图',
   radar: '雷达图',
   treemap: '矩形树图',
+};
+
+const TYPE_NAMES_EN: Record<string, string> = {
+  flowchart: 'Flowchart',
+  sequence: 'Sequence diagram',
+  class: 'Class diagram',
+  state: 'State diagram',
+  er: 'ER diagram',
+  pie: 'Pie chart',
+  gantt: 'Gantt chart',
+  gitGraph: 'Git graph',
+  mindmap: 'Mindmap',
+  timeline: 'Timeline',
+  journey: 'User journey',
+  xychart: 'XY chart',
+  quadrantChart: 'Quadrant chart',
+  requirement: 'Requirement diagram',
+  c4: 'C4 diagram',
+  sankey: 'Sankey diagram',
+  block: 'Block diagram',
+  packet: 'Packet diagram',
+  kanban: 'Kanban',
+  architecture: 'Architecture diagram',
+  radar: 'Radar chart',
+  treemap: 'Treemap',
 };
 
 const escAttr = (s: string) =>
@@ -68,8 +95,11 @@ export function captionOf(meta: string | null | undefined): string {
 }
 
 export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[], Root>> {
-  const { strict = false, dev = false } = options;
+  const { strict = false, dev = false, lang: defaultLang = 'zh-CN' } = options;
   return (tree: Root, file: VFile) => {
+    const fm = (file.data as { astro?: { frontmatter?: { lang?: unknown } } }).astro?.frontmatter;
+    const lang = typeof fm?.lang === 'string' && fm.lang ? fm.lang : defaultLang;
+    const zh = /^zh\b/i.test(lang);
     const jobs: Array<{ parent: Parent; index: number; node: Code }> = [];
     visit(tree, 'code', (node, index, parent) => {
       if (node.lang === 'mermaid' && parent && index !== undefined)
@@ -82,7 +112,9 @@ export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[
         const seq = i;
         const r = render(node.value, { idPrefix: `pele${seq}-` });
         const label =
-          textOf(r.svg, 'title') || textOf(r.svg, 'desc') || TYPE_NAMES[r.type] || '图表';
+          textOf(r.svg, 'title') ||
+          textOf(r.svg, 'desc') ||
+          (zh ? TYPE_NAMES[r.type] || '图表' : TYPE_NAMES_EN[r.type] || 'Diagram');
         const caption = captionOf(node.meta);
         const html: Html = {
           type: 'html',
@@ -104,13 +136,18 @@ export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[
         const loc = line !== undefined ? `${where}:${line}` : where;
         const first = (e.message ?? String(err)).split('\n')[0];
         if (strict) {
-          throw new Error(`Mermaid 渲染失败 (${loc}): ${e.message ?? err}`, { cause: err });
+          const prefix = zh ? 'Mermaid 渲染失败' : 'Mermaid render failed';
+          throw new Error(`${prefix} (${loc}): ${e.message ?? err}`, { cause: err });
         }
-        console.warn(`[wisp] Mermaid 渲染失败 (${loc}): ${first}`);
+        console.warn(
+          zh
+            ? `[wisp] Mermaid 渲染失败 (${loc}): ${first}`
+            : `[wisp] Mermaid render failed (${loc}): ${first}`,
+        );
         const detail = dev ? (e.message ?? first) : first;
         const note: Html = {
           type: 'html',
-          value: `<div class="wisp-pele-error" role="note">Mermaid 渲染失败：${escText(detail)}</div>`,
+          value: `<div class="wisp-pele-error" role="note">${zh ? 'Mermaid 渲染失败：' : 'Mermaid render failed: '}${escText(detail)}</div>`,
         };
         parent.children.splice(index, 0, note);
       }

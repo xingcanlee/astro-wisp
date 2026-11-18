@@ -1,3 +1,5 @@
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 import rehypeFigure from './rehype-figure';
@@ -42,7 +44,7 @@ describe('splitFigureCaption', () => {
 
 async function render(md: string) {
   const p = await createMarkdownProcessor({ rehypePlugins: [rehypeFigure] });
-  return (await p.render(md, { fileURL: new URL('file:///repo/src/content/posts/a/index.md') }))
+  return (await p.render(md, { fileURL: pathToFileURL(resolve('src/content/posts/a/index.md')) }))
     .code;
 }
 

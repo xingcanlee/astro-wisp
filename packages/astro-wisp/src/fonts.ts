@@ -22,6 +22,7 @@ import type { AstroUserConfig } from 'astro';
 type FontFamily = NonNullable<AstroUserConfig['fonts']>[number];
 
 import { FONT_VARS } from './tokens/font-vars';
+import type { Palette } from './tokens/palette';
 
 export { FONT_STACK_VARS, FONT_VARS } from './tokens/font-vars';
 
@@ -186,10 +187,15 @@ const EXCALIFONT: Array<{ subset: string; unicodeRange: string[] }> = [
   { subset: 'combining', unicodeRange: ['U+300-301', 'U+303'] },
 ];
 
+export function paletteUsesExcalifont(p: Palette): boolean {
+  return p.font.hand.some((f) => /excalifont/i.test(f));
+}
+
 /** Astro 的回退字体优化会在字体栈中插入通用族（sans-serif），挡住后面的中文字体，因此关闭（fallbacks: []），由令牌中的字体栈负责回退。 */
-export function wispFonts(): FontFamily[] {
+export function wispFonts(options: { includeExcalifont?: boolean } = {}): FontFamily[] {
+  const { includeExcalifont = true } = options;
   const npm = localFontsource();
-  return [
+  const families: unknown[] = [
     {
       provider: npm,
       name: 'Inter Variable',
@@ -208,7 +214,9 @@ export function wispFonts(): FontFamily[] {
       fallbacks: [],
       options: { package: '@fontsource-variable/jetbrains-mono' },
     },
-    {
+  ];
+  if (includeExcalifont) {
+    families.push({
       provider: withSubsetFromFile(
         fontProviders.local(),
         (url) => /excalifont-([a-z-]+)\.woff2$/.exec(url)?.[1],
@@ -224,6 +232,7 @@ export function wispFonts(): FontFamily[] {
           unicodeRange: v.unicodeRange,
         })),
       },
-    },
-  ] as unknown as FontFamily[]; // 各族的 options 按各自 provider 类型化；Astro 公开类型只提供未特化的 FontFamily
+    });
+  }
+  return families as FontFamily[]; // 各族的 options 按各自 provider 类型化；Astro 公开类型只提供未特化的 FontFamily
 }

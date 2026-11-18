@@ -29,10 +29,15 @@ import {
   type WispConfigInput,
   type WispRuntime,
 } from './config';
-import { mergePalette, readPalette, type PaletteOverride } from './tokens/palette';
+import {
+  mergePalette,
+  palette as defaultPalette,
+  readPaletteOverride,
+  type PaletteOverride,
+} from './tokens/palette';
 import { genThemeCss } from './tokens/generate';
 import { checkContrast } from './tokens/contrast';
-import { wispFonts } from './fonts';
+import { paletteUsesExcalifont, wispFonts } from './fonts';
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -79,7 +84,7 @@ function installedVersion(name: string): string {
 export function pipelineDigest(): string {
   const h = createHash('sha256');
   const files = [
-    ...['./plugins/', './lib/'].flatMap((dir) =>
+    ...['./plugins/', './lib/', './utils/'].flatMap((dir) =>
       readdirSync(here(dir))
         .filter((f) => f.endsWith('.ts') && !/\.(test|fixture)\.ts$/.test(f))
         .sort()
@@ -95,7 +100,12 @@ export function pipelineDigest(): string {
 }
 
 /** 只携带指纹的空插件（见 pipelineDigest）。 */
-const wispPipeline = (_options: { digest: string }) => undefined;
+const wispPipeline = (_options: {
+  digest: string;
+  features: WispConfig['features'];
+  lang: string;
+  fonts: WispConfig['fonts'];
+}) => undefined;
 
 const astroFiles = (dir: string) =>
   readdirSync(here(dir))
@@ -183,7 +193,17 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
             : here(`./components/${name}.astro`);
         };
 
+        let codegenDir: string | undefined;
+        const ensureCodegenDir = () => {
+          if (!codegenDir) {
+            codegenDir = fileURLToPath(createCodegenDir());
+            mkdirSync(codegenDir, { recursive: true });
+          }
+          return codegenDir;
+        };
+
         // ---- 调色板：有覆盖时生成到 codegen 目录，否则直接用包内提交的产物 ----
+        let activePalette = defaultPalette;
         let themeCss = [
           here('./styles/tokens.css'),
           here('./styles/pele.css'),
@@ -194,19 +214,36 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
           if (typeof config.palette === 'string') {
             const file = fromRoot(root, config.palette);
             addWatchFile(file);
-            override = readPalette(file);
+            override = readPaletteOverride(file);
           } else {
             override = config.palette as PaletteOverride;
           }
-          const palette = mergePalette(override);
-          const bad = checkContrast(palette).filter((r) => !r.pass);
+          activePalette = mergePalette(override);
+          const bad = checkContrast(activePalette).filter((r) => !r.pass);
           for (const r of bad)
             logger.warn(`调色板对比度不足 4.5:1 —— [${r.mode}] ${r.pair}: ${r.ratio.toFixed(2)}`);
-          const dir = fileURLToPath(createCodegenDir());
-          mkdirSync(dir, { recursive: true });
-          const file = join(dir, 'theme.css');
-          writeFileSync(file, genThemeCss(palette));
+          const file = join(ensureCodegenDir(), 'theme.css');
+          writeFileSync(file, genThemeCss(activePalette));
           themeCss = [file];
+        }
+        const hasExcalifont = paletteUsesExcalifont(activePalette);
+
+        // ---- CJK 字体（Noto Sans SC）按配置的 font-display 解析或改写到 codegen 目录 ----
+        const requireFromTheme = createRequire(import.meta.url);
+        const resolvedNotoCssPath = requireFromTheme.resolve(
+          '@fontsource-variable/noto-sans-sc/index.css',
+        );
+        let cjkFontUrlModule: string;
+        if (config.fonts.cjkDisplay === 'swap') {
+          cjkFontUrlModule = `import u from ${JSON.stringify(`${resolvedNotoCssPath.replaceAll('\\', '/')}?url`)}; export default u;`;
+        } else {
+          const notoDirForwardSlash = dirname(resolvedNotoCssPath).replaceAll('\\', '/');
+          const rewrittenNotoCss = readFileSync(resolvedNotoCssPath, 'utf8')
+            .replaceAll('url(./files/', `url(${notoDirForwardSlash}/files/`)
+            .replace(/font-display:\s*swap/g, `font-display:${config.fonts.cjkDisplay}`);
+          const codegenNotoFile = join(ensureCodegenDir(), 'noto-sans-sc.css');
+          writeFileSync(codegenNotoFile, rewrittenNotoCss);
+          cjkFontUrlModule = `import u from ${JSON.stringify(`${codegenNotoFile.replaceAll('\\', '/')}?url`)}; export default u;`;
         }
 
         const runtime: WispRuntime = {
@@ -217,17 +254,20 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
           features: config.features,
           mermaid: config.mermaid,
           rss: config.rss,
+          fonts: config.fonts,
           taxonomy: config.taxonomy,
           routes: config.routes,
           root,
           siteUrl: String(site),
           base: astroConfig.base,
+          hasExcalifont,
         };
 
         const virtualModules: Record<string, string> = {
           'virtual:wisp/config': `export default ${JSON.stringify(runtime)};`,
           // 客户端 island 只需要语言；不要把整份配置（含项目根路径）打进浏览器 bundle
           'virtual:wisp/locale': `export const lang = ${JSON.stringify(config.site.lang)};`,
+          'virtual:wisp/cjk-font-url': cjkFontUrlModule,
           'virtual:wisp/theme-css': themeCss.map((f) => `import ${JSON.stringify(f)};`).join('\n'),
           'virtual:wisp/user-css': config.customCss
             .map((f) => `import ${JSON.stringify(cssSpecifier(root, f))};`)
@@ -240,8 +280,16 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
 
         // ---- Markdown 管线 ----
         const remarkPlugins: RemarkPlugins = [
-          // 第一项：不做任何转换，只让管线指纹进入 astro 配置摘要（见 pipelineDigest）
-          [wispPipeline, { digest: pipelineDigest() }],
+          // 第一项：不做任何转换，只让管线指纹与关键配置进入 astro 配置摘要（见 pipelineDigest）
+          [
+            wispPipeline,
+            {
+              digest: pipelineDigest(),
+              features: config.features,
+              lang: config.site.lang,
+              fonts: config.fonts,
+            },
+          ],
           // 中文强调：`**文字。**后文` 这类紧挨全角标点的 ** / * 也能闭合（CommonMark 的分界规则不认 CJK）
           remarkCjkFriendly,
           // GFM 删除线同样需要绕过 CommonMark 对中文标点的分界规则；必须在 Astro 的 GFM 扩展之后运行。
@@ -250,7 +298,10 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
         const rehypePlugins: RehypePlugins = [];
         if (config.features.math) remarkPlugins.push(remarkMath);
         if (config.features.mermaid)
-          remarkPlugins.push([remarkPele, { strict: config.mermaid.strict, dev }]);
+          remarkPlugins.push([
+            remarkPele,
+            { strict: config.mermaid.strict, dev, lang: config.site.lang },
+          ]);
         remarkPlugins.push([
           remarkDiagram,
           {
@@ -264,7 +315,7 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
         remarkPlugins.push(remarkReadingTime, remarkHasMath, remarkHeadingText);
         if (config.features.math) rehypePlugins.push(rehypeKatex);
         // 带标题的独立图片 → figure + 题注（Astro 的图片优化在用户 rehype 插件之后运行，不受影响）
-        rehypePlugins.push(rehypeFigure, rehypeA11y);
+        rehypePlugins.push(rehypeFigure, [rehypeA11y, { lang: config.site.lang }]);
         // GFM 脚注 → 引用：可见的「参考与注释」标题、Lucide 回链图标、按语言的 aria-label
         rehypePlugins.push([rehypeCitations, { lang: config.site.lang }]);
 
@@ -278,7 +329,7 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
         updateConfig({
           integrations,
           // Astro Fonts API：与站点自己的 fonts 配置合并（数组拼接），站点可以再注册其他字体
-          fonts: wispFonts(),
+          fonts: wispFonts({ includeExcalifont: hasExcalifont }),
           markdown: {
             // Astro 7 默认使用 Sätteri；Wisp 依赖 remark/rehype 生态，显式使用 unified 处理器
             processor: unified({ remarkPlugins, rehypePlugins }),

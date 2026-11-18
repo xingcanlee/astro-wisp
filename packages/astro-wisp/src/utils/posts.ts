@@ -68,12 +68,27 @@ export function seriesNeighbors(series: SeriesItem[], currentId: string): Series
   };
 }
 
+const cachedPosts = new Map<boolean, Promise<PostEntry[]>>();
+
 /**
  * 唯一的取数入口。默认在生产环境过滤草稿，dev 环境显示草稿；
- * 显式传 includeDrafts 可覆盖。
+ * 显式传 includeDrafts 可覆盖。生产构建期按 includeDrafts 缓存结果，避免每个路由重复扫描集合。
  */
 export async function getPosts(opts: { includeDrafts?: boolean } = {}): Promise<PostEntry[]> {
   const includeDrafts = opts.includeDrafts ?? import.meta.env.DEV;
+  if (import.meta.env?.PROD) {
+    let pending = cachedPosts.get(includeDrafts);
+    if (!pending) {
+      pending = getCollection('posts')
+        .then((entries) => filterAndSortPosts(entries, { includeDrafts }))
+        .catch((err) => {
+          cachedPosts.delete(includeDrafts);
+          throw err;
+        });
+      cachedPosts.set(includeDrafts, pending);
+    }
+    return pending;
+  }
   return filterAndSortPosts(await getCollection('posts'), { includeDrafts });
 }
 
@@ -102,22 +117,45 @@ export function summarizeSeries<
     };
   },
 >(posts: T[]): SeriesSummary[] {
-  const ids = [...new Set(posts.map((p) => p.data.series?.id).filter((id): id is string => !!id))];
-  return ids
-    .map((id) => {
-      const items = filterAndSortSeries(posts, id);
-      const members = posts.filter((p) => p.data.series?.id === id);
-      const first = members.find((p) => p.id === items[0]!.id)!;
-      return {
-        id,
-        title: first.data.title,
-        description: first.data.description,
-        firstId: first.id,
-        items,
-        updated: new Date(Math.max(...members.map((p) => p.data.pubDate.getTime()))),
-      };
-    })
-    .sort((a, b) => b.updated.getTime() - a.updated.getTime() || a.id.localeCompare(b.id));
+  const groups = new Map<string, T[]>();
+  for (const p of posts) {
+    const id = p.data.series?.id;
+    if (!id) continue;
+    let members = groups.get(id);
+    if (!members) {
+      members = [];
+      groups.set(id, members);
+    }
+    members.push(p);
+  }
+  const summaries: SeriesSummary[] = [];
+  for (const [id, members] of groups) {
+    members.sort(
+      (a, b) =>
+        a.data.series!.order - b.data.series!.order ||
+        a.data.pubDate.getTime() - b.data.pubDate.getTime() ||
+        a.id.localeCompare(b.id),
+    );
+    const first = members[0]!;
+    let maxUpdated = first.data.pubDate.getTime();
+    const items: SeriesItem[] = [];
+    for (const m of members) {
+      const t = m.data.pubDate.getTime();
+      if (t > maxUpdated) maxUpdated = t;
+      items.push({ id: m.id, title: m.data.title, order: m.data.series!.order });
+    }
+    summaries.push({
+      id,
+      title: first.data.title,
+      description: first.data.description,
+      firstId: first.id,
+      items,
+      updated: new Date(maxUpdated),
+    });
+  }
+  return summaries.sort(
+    (a, b) => b.updated.getTime() - a.updated.getTime() || a.id.localeCompare(b.id),
+  );
 }
 
 /**

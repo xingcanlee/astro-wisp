@@ -53,6 +53,11 @@ export const wispConfigSchema = z.object({
     .prefault({}),
   mermaid: z.object({ strict: z.boolean().default(false) }).prefault({}),
   rss: z.object({ fullText: z.boolean().default(true) }).prefault({}),
+  fonts: z
+    .object({
+      cjkDisplay: z.enum(['swap', 'fallback', 'optional']).default('swap'),
+    })
+    .prefault({}),
   taxonomy: z.object({ slugMap: z.record(z.string(), z.string()).default({}) }).prefault({}),
   /**
    * 主题注入的路由。设为 false 后可以在 src/pages/ 中自己实现同一路径（Astro 不允许路由冲突）。
@@ -88,6 +93,7 @@ export interface WispRuntime extends WispRuntimeConfig {
   root: string;
   siteUrl: string;
   base: string;
+  hasExcalifont: boolean;
 }
 export type WispConfigInput = DeepPartial<z.input<typeof wispConfigSchema>>;
 

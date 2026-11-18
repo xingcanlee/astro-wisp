@@ -115,6 +115,10 @@ const zh = /^zh\b/i.test(lang);
       }
       .is-next {
         grid-column: 1;
+        text-align: start;
+      }
+      .is-next .label {
+        justify-content: flex-start;
       }
       .is-prev + .is-next {
         border-top: 1px solid var(--wisp-border);

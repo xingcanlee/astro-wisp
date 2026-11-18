@@ -1,8 +1,9 @@
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { FONT_VARS, fontsourceSubset, wispFonts } from './fonts';
+import { FONT_VARS, fontsourceSubset, paletteUsesExcalifont, wispFonts } from './fonts';
 import { genTokens } from './tokens/generate';
+import { mergePalette, palette } from './tokens/palette';
 
 describe('fonts（Astro Fonts API）', () => {
   it('注册 Inter / JetBrains Mono / Excalifont，变量与令牌一致', () => {
@@ -41,5 +42,15 @@ describe('fonts（Astro Fonts API）', () => {
     );
     expect(css).toContain('--wisp-font-mono: var(--font-wisp-mono, "JetBrains Mono Variable")');
     expect(css).toContain('--wisp-font-hand: var(--font-wisp-hand, Excalifont)');
+  });
+
+  it('支持按调色板手写字体栈决定是否注册 Excalifont', () => {
+    expect(paletteUsesExcalifont(palette)).toBe(true);
+    const noHand = mergePalette({ font: { hand: ['Inter Variable', 'sans-serif'] } });
+    expect(paletteUsesExcalifont(noHand)).toBe(false);
+    expect(wispFonts({ includeExcalifont: false }).map((f) => f.name)).toEqual([
+      'Inter Variable',
+      'JetBrains Mono Variable',
+    ]);
   });
 });

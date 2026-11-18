@@ -35,10 +35,30 @@ describe('wide figure layout', () => {
     expect(css).toMatch(/\.wisp-figure > img\s*\{[\s\S]*?border: 1px solid var\(--wisp-border\);/);
     expect(css).not.toContain(".wisp-figure > img:not([src$='.svg' i])");
   });
-  it('lifts max-width:100% on narrow overflow tables so sticky col-1 and data columns keep readable bounds', () => {
+  it('lifts max-width:100% unconditionally on narrow tables so sticky col-1 and data columns keep readable bounds', () => {
     expect(proseCss).toContain('@media (max-width: 40rem)');
-    expect(proseCss).toMatch(
-      /\.prose \.wisp-table\[data-wisp-overflow\] > table\s*\{[\s\S]*?max-width: none;/,
+    expect(proseCss).toMatch(/\.prose \.wisp-table > table\s*\{[\s\S]*?max-width: none;/);
+    expect(proseCss).not.toMatch(/\.prose \.wisp-table\[data-wisp-overflow\] > table/);
+  });
+  it('wraps narrow table cells unconditionally without gating on [data-wisp-overflow]', () => {
+    const start = proseCss.indexOf('@media (max-width: 40rem)');
+    const end = proseCss.indexOf('.prose blockquote {', start);
+    const narrowTableBlock = proseCss.slice(start, end);
+    expect(narrowTableBlock).toMatch(
+      /\.prose \.wisp-table :is\(th, td\):first-child:not\(\[colspan\]\)\s*\{/,
+    );
+    expect(narrowTableBlock).toMatch(
+      /\.prose \.wisp-table :is\(th, td\):not\(:first-child\):not\(\[colspan\]\)\s*\{/,
+    );
+    expect(narrowTableBlock).toMatch(
+      /\.prose \.wisp-table td\[data-wisp-prose\]:not\(:first-child\)\s*\{/,
+    );
+    expect(narrowTableBlock).not.toMatch(/\.wisp-table\[data-wisp-overflow\]\s+:is\(th, td\)/);
+    expect(narrowTableBlock).not.toMatch(/\.wisp-table\[data-wisp-overflow\]\s+td/);
+  });
+  it('uses --wisp-side token for wide figures when only TOC is present', () => {
+    expect(css).toMatch(
+      /\.wisp-has-toc:not\(\.wisp-has-series\) \.wisp-wide\s*\{[\s\S]*?var\(--wisp-side, 14rem\)/,
     );
   });
 });

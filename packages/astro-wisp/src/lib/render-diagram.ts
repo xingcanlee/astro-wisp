@@ -53,6 +53,8 @@ export interface DiagramEnv {
   root?: string;
   /** manifest 路径（测试用） */
   manifestPath?: string;
+  /** 站点或文章语言（默认 'zh-CN'） */
+  lang?: string;
 }
 
 export interface RenderedDiagram {
@@ -376,15 +378,18 @@ function resolveSource(ref: DiagramRef, root: string): { abs: string; page?: str
   return { abs, page: ref.page !== undefined ? String(ref.page) : page };
 }
 
-function placeholder(rel: string, problem: string): string {
-  return (
-    `<div class="wisp-diagram-missing" role="note">` +
-    `<strong>图表未就绪</strong><span>${escText(rel)}：${escText(problem)}</span>` +
-    `<span>运行 <code>pnpm diagram build</code> 生成 .wisp.svg 并更新 manifest。</span></div>`
-  );
+function placeholder(rel: string, problem: string, zh: boolean): string {
+  return zh
+    ? `<div class="wisp-diagram-missing" role="note">` +
+        `<strong>图表未就绪</strong><span>${escText(rel)}：${escText(problem)}</span>` +
+        `<span>运行 <code>pnpm diagram build</code> 生成 .wisp.svg 并更新 manifest。</span></div>`
+    : `<div class="wisp-diagram-missing" role="note">` +
+        `<strong>Diagram not ready</strong><span>${escText(rel)}: ${escText(problem)}</span>` +
+        `<span>Run <code>pnpm diagram build</code> to generate .wisp.svg and update the manifest.</span></div>`;
 }
 
-export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram {
+export function renderDiagram(ref: DiagramRef, env: DiagramEnv, lang = 'zh-CN'): RenderedDiagram {
+  const zh = /^zh\b/i.test(env.lang ?? lang);
   const root = env.root ?? REPO_ROOT;
   const manifestPath = env.manifestPath ?? manifestPathFor(root);
   let abs = '';
@@ -418,17 +423,24 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     const href = key !== undefined ? downloadHrefFor(key, env.base) : undefined;
     const file = basename(abs);
     const links: string[] = [];
-    // 动作（桌面端悬浮在图右上角，窄屏与触屏回退在题注下方）：可见文字取短词（「源文件」「draw.io」），完整含义放在 aria-label / title
+    // 动作（桌面端悬浮在图右上角，窄屏与触屏回退在题注下方）：可见文字取短词（「源文件」/「Source」「draw.io」），完整含义放在 aria-label / title
     if (showDl && href) {
+      const dlLabel = zh
+        ? `下载源文件 ${file}（${KIND_NAME[style]}）`
+        : `Download source ${file} (${KIND_NAME[style]})`;
+      const dlTitle = zh ? `下载源文件 ${file}` : `Download source ${file}`;
+      const dlText = zh ? '源文件' : 'Source';
       links.push(
         `<a class="wisp-diagram-dl" href="${escAttr(href)}" download="${escAttr(file)}" type="${escAttr(contentTypeFor(file).split(';')[0]!)}"` +
-          ` aria-label="${escAttr(`下载源文件 ${file}（${KIND_NAME[style]}）`)}" title="${escAttr(`下载源文件 ${file}`)}">${iconSvg('file-down')}源文件</a>`,
+          ` aria-label="${escAttr(dlLabel)}" title="${escAttr(dlTitle)}">${iconSvg('file-down')}${dlText}</a>`,
       );
       const absHref = style === 'clean' ? absoluteUrl(env.siteUrl, href) : undefined;
       if (absHref) {
+        const openLabel = zh ? '在 draw.io 中打开（新窗口）' : 'Open in draw.io (new tab)';
+        const openTitle = zh ? '在 draw.io 中打开' : 'Open in draw.io';
         links.push(
           `<a class="wisp-diagram-open" href="${escAttr(`https://app.diagrams.net/#U${encodeURIComponent(absHref)}`)}"` +
-            ` target="_blank" rel="noopener noreferrer" aria-label="在 draw.io 中打开（新窗口）" title="在 draw.io 中打开">${iconSvg('external-link')}draw.io</a>`,
+            ` target="_blank" rel="noopener noreferrer" aria-label="${escAttr(openLabel)}" title="${escAttr(openTitle)}">${iconSvg('external-link')}draw.io</a>`,
         );
       }
     }
@@ -446,10 +458,11 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
       style === 'clean' && pages[pageIndex] ? ` data-page="${escAttr(pages[pageIndex]!)}"` : '';
     const labelledBy = captionId ? ` aria-labelledby="${escAttr(captionId)}"` : '';
     const figStyle = width ? ` style="--wd-w:${Math.round(width * 100) / 100}px"` : '';
+    const fallbackLabel = zh ? '图表' : 'Diagram';
     const html =
       `<figure class="${cls}" data-style="${style}"${pageAttr}${labelledBy}${figStyle}>` +
       // 窄屏下可横向滚动：容器需可键盘聚焦（WCAG scrollable-region-focusable）
-      `<div class="wisp-diagram-body" tabindex="0" role="group" aria-label="${escAttr(ref.alt?.trim() || '图表')}">${svg}</div>` +
+      `<div class="wisp-diagram-body" tabindex="0" role="group" aria-label="${escAttr(ref.alt?.trim() || fallbackLabel)}">${svg}</div>` +
       figCaption +
       actions +
       `</figure>`;
@@ -462,7 +475,7 @@ export function renderDiagram(ref: DiagramRef, env: DiagramEnv): RenderedDiagram
     if (!env.dev) throw new Error(msg, { cause: err });
     console.warn(msg);
     return {
-      html: placeholder(rel, err.message),
+      html: placeholder(rel, err.message, zh),
       ok: false,
       style,
       source: abs,

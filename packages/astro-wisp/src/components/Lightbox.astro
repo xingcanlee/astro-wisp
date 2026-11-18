@@ -96,6 +96,7 @@ import Icon from 'virtual:wisp/components/Icon';
       clone.removeAttribute('data-wisp-lightbox-trigger');
       clone.removeAttribute('tabindex');
       clone.removeAttribute('aria-haspopup');
+      clone.style.removeProperty('cursor');
       clone.setAttribute('aria-hidden', 'false');
       if (clone instanceof SVGElement) {
         clone.setAttribute('role', 'img');
@@ -121,15 +122,16 @@ import Icon from 'virtual:wisp/components/Icon';
       return source.viewBox?.baseVal?.width || source.getBoundingClientRect().width;
     }
 
-    function open(source) {
+    function open(source, trigger = null) {
       if (dialog.open) dialog.close();
-      activeTrigger = source;
+      activeTrigger = trigger;
       const label = readableLabel(source);
       title.textContent = label;
-      dialog.setAttribute('aria-label', label);
       const clone = cloneForDialog(source);
+      const nw = naturalWidth(source);
+      if (nw > 0) clone.style.setProperty('--wd-w', `${Math.round(nw)}px`);
       if (narrow.matches) {
-        const w = Math.min(naturalWidth(source), innerWidth * 2);
+        const w = Math.min(nw, innerWidth * 2);
         if (w > 0) {
           // 内联 style 会覆盖 SVG 自带的 max-width:100%（Pele 图）
           clone.style.width = `${Math.round(w)}px`;
@@ -147,27 +149,32 @@ import Icon from 'virtual:wisp/components/Icon';
     }
 
     function enhance(source) {
-      if (source.hasAttribute('data-wisp-lightbox-trigger')) return;
-      source.setAttribute('data-wisp-lightbox-trigger', '');
-      source.setAttribute('tabindex', '0');
-      source.setAttribute('role', 'button');
-      source.setAttribute('aria-haspopup', 'dialog');
-      source.setAttribute('aria-label', `${labels.open}${readableLabel(source)}`);
-      source.addEventListener('click', () => open(source));
-      source.addEventListener('keydown', (event) => {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
-        event.preventDefault();
-        open(source);
-      });
+      if (source.dataset.wispLightboxBound) return;
+      source.dataset.wispLightboxBound = '1';
+      source.style.cursor = 'zoom-in';
 
-      // The container is only a structural group once its child media becomes
-      // the keyboard-accessible lightbox trigger; it is no longer scrollable.
-      const mediaContainer = source.closest('.wisp-pele-body, .wisp-diagram-body');
-      if (mediaContainer) {
-        mediaContainer.removeAttribute('tabindex');
-        if (mediaContainer.getAttribute('role') === 'img')
-          mediaContainer.setAttribute('role', 'group');
+      const host = source.closest(
+        '.wisp-diagram-body, .wisp-pele-body, figure.wisp-image, figure.wisp-figure',
+      );
+      let trigger = null;
+      if (host) {
+        if (host.getAttribute('role') === 'img') host.setAttribute('role', 'group');
+        trigger = host.querySelector(':scope > [data-wisp-lightbox-trigger]');
+        if (!trigger) {
+          trigger = document.createElement('button');
+          trigger.type = 'button';
+          trigger.className = 'wisp-lightbox-trigger';
+          trigger.setAttribute('data-wisp-lightbox-trigger', '');
+          trigger.setAttribute('aria-haspopup', 'dialog');
+          trigger.setAttribute('aria-label', `${labels.open}${readableLabel(source)}`);
+          trigger.addEventListener('click', (event) => {
+            event.stopPropagation();
+            open(source, trigger);
+          });
+          host.append(trigger);
+        }
       }
+      source.addEventListener('click', () => open(source, trigger));
     }
 
     for (const source of document.querySelectorAll('.prose img, .prose svg')) {
@@ -176,7 +183,7 @@ import Icon from 'virtual:wisp/components/Icon';
       // 会弹出静态克隆、并与客户端水合打架（role 不一致），必须排除。
       if (
         source.closest(
-          '.wisp-explainer, .wisp-explainer__scroll, a, button, dialog, pre, .wisp-diagram-actions',
+          '.wisp-explainer, .wisp-explainer__scroll, a, button, dialog, pre, .wisp-fig-actions',
         )
       )
         continue;

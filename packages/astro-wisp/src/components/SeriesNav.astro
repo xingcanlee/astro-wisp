@@ -24,15 +24,17 @@ export interface Props {
   currentId: string;
   variant?: 'aside' | 'inline';
   title?: string;
+  lang?: string;
 }
 
 const {
   items,
   currentId,
   variant = 'aside',
-  title = /^zh\b/i.test(config.site.lang) ? '系列文章' : 'Series',
+  lang = config.site.lang,
+  title = /^zh\b/i.test(lang) ? '系列文章' : 'Series',
 } = Astro.props;
-const zh = /^zh\b/i.test(config.site.lang);
+const zh = /^zh\b/i.test(lang);
 const currentIndex = items.findIndex((item) => item.id === currentId);
 const count = currentIndex >= 0 ? `${currentIndex + 1} / ${items.length}` : String(items.length);
 const expandLabel = zh ? '展开系列篇目' : 'Show series contents';
@@ -50,34 +52,36 @@ const split = (t: string) => {
 
 {items.length > 0 &&
   (variant === 'inline' ? (
-    <details class="wisp-series wisp-series-inline">
-      {/* 与宽屏栏顶的标题行同一种写法：系列名 + 「7 / 23」+ chevron（朝下 = 收起着） */}
-      <summary>
-        <span class="wisp-series-name">{title}</span>
-        <span class="wisp-series-sr">{sep}</span>
-        <span class="wisp-series-count">{count}</span>
-        <span class="wisp-series-toggle-ico" aria-hidden="true">
-          <Icon name="chevron-down" />
-        </span>
-      </summary>
-      <ol>
-        {items.map((item) => {
-          const { no, text } = split(item.title);
-          return (
-            <li>
-              <a
-                href={sitePath(import.meta.env.BASE_URL, `/posts/${item.id}/`)}
-                class={no ? undefined : 'wisp-series-unnumbered'}
-                aria-current={item.id === currentId ? 'page' : undefined}
-              >
-                {no && <span class="wisp-series-no">{no}</span>}
-                <span class="wisp-series-text" set:html={formatTitleHtml(text)} />
-              </a>
-            </li>
-          );
-        })}
-      </ol>
-    </details>
+    <nav aria-label={landmark}>
+      <details class="wisp-series wisp-series-inline">
+        {/* 与宽屏栏顶的标题行同一种写法：系列名 + 「7 / 23」+ chevron（朝下 = 收起着） */}
+        <summary>
+          <span class="wisp-series-name">{title}</span>
+          <span class="wisp-series-sr">{sep}</span>
+          <span class="wisp-series-count">{count}</span>
+          <span class="wisp-series-toggle-ico" aria-hidden="true">
+            <Icon name="chevron-down" />
+          </span>
+        </summary>
+        <ol>
+          {items.map((item) => {
+            const { no, text } = split(item.title);
+            return (
+              <li>
+                <a
+                  href={sitePath(import.meta.env.BASE_URL, `/posts/${item.id}/`)}
+                  class={no ? undefined : 'wisp-series-unnumbered'}
+                  aria-current={item.id === currentId ? 'page' : undefined}
+                >
+                  {no && <span class="wisp-series-no">{no}</span>}
+                  <span class="wisp-series-text" set:html={formatTitleHtml(text)} />
+                </a>
+              </li>
+            );
+          })}
+        </ol>
+      </details>
+    </nav>
   ) : (
     <nav class="wisp-series wisp-series-aside" aria-label={landmark}>
       {/* 无 JS：静态标题行；有 JS：同一行换成可切换的按钮（两者同尺寸，互相替换） */}
@@ -335,8 +339,17 @@ const split = (t: string) => {
       inset-inline-start: -0.375rem;
       inset-block: 0.5625rem;
       width: 2px;
-      border-radius: 1px;
       background: var(--wisp-accent);
+    }
+    @media (min-width: 60rem) and (max-width: 79.99rem) {
+      .wisp-series-inline {
+        border-top: 0;
+      }
+      .wisp-series-inline summary {
+        min-height: 2.5rem;
+        color: var(--wisp-fg);
+        font-weight: 600;
+      }
     }
     @media (pointer: coarse), (max-width: 47.99rem) {
       .wisp-series-inline a {

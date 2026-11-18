@@ -17,10 +17,12 @@ import SeriesNav from 'virtual:wisp/components/SeriesNav';
 import type { PrevNextItem } from '../components/PrevNext.astro';
 import type { SeriesItem } from '../components/SeriesNav.astro';
 import katexCssUrl from '../styles/katex.css?url';
-// 公式里最常用的两份 KaTeX 字体（正文 Main 与变量斜体 Math）：hasMath 时预加载，
+// 公式里最常用的 KaTeX 字体（正文 Main、变量斜体 Math、AMS、Size1）：hasMath 时预加载，
 // 换上字体时公式宽度变化引起的重排（CLS）更早发生、通常赶在首次绘制前。与 katex.css 里 url() 是同一个产物。
 import katexMainUrl from 'katex/dist/fonts/KaTeX_Main-Regular.woff2?url';
 import katexMathUrl from 'katex/dist/fonts/KaTeX_Math-Italic.woff2?url';
+import katexAmsUrl from 'katex/dist/fonts/KaTeX_AMS-Regular.woff2?url';
+import katexSize1Url from 'katex/dist/fonts/KaTeX_Size1-Regular.woff2?url';
 import diagramCssUrl from '../styles/diagram-figure.css?url';
 import { Font } from 'astro:assets';
 import { sitePath } from '../utils/paths';
@@ -109,11 +111,13 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
     {hasMath && config.features.math && <link rel="stylesheet" href={katexCssUrl} />}
     {hasMath &&
       config.features.math &&
-      [katexMainUrl, katexMathUrl].map((href) => (
+      [katexMainUrl, katexMathUrl, katexAmsUrl, katexSize1Url].map((href) => (
         <link rel="preload" as="font" type="font/woff2" href={href} crossorigin />
       ))}
     {(hasDiagram || hasHandDiagram) && <link rel="stylesheet" href={diagramCssUrl} />}
-    {hasHandDiagram && <Font cssVariable="--font-wisp-hand" preload={[{ subset: 'latin' }]} />}
+    {hasHandDiagram && config.hasExcalifont && (
+      <Font cssVariable="--font-wisp-hand" preload={[{ subset: 'latin' }]} />
+    )}
   </Fragment>
 
   <ReadingProgress />
@@ -132,6 +136,7 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
           currentId={post.id}
           variant="inline"
           title={seriesName || seriesTitle}
+          lang={lang}
         />
       </div>
     )}
@@ -139,7 +144,12 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
     {showSeries && (
       <div class="wisp-post-series-aside">
         <div class="wisp-post-series-aside-inner">
-          <SeriesNav items={series} currentId={post.id} title={seriesName || seriesTitle} />
+          <SeriesNav
+            items={series}
+            currentId={post.id}
+            title={seriesName || seriesTitle}
+            lang={lang}
+          />
         </div>
       </div>
     )}
@@ -147,7 +157,7 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
     {showToc && (
       <div class="wisp-post-aside">
         <div class="wisp-post-aside-inner">
-          <Toc headings={tocHeadings} variant="aside" title={tocTitle} />
+          <Toc headings={tocHeadings} variant="aside" title={tocTitle} lang={lang} />
         </div>
       </div>
     )}
@@ -173,7 +183,7 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
 
       {showToc && (
         <div class="wisp-post-toc-inline">
-          <Toc headings={tocHeadings} variant="inline" title={tocTitle} />
+          <Toc headings={tocHeadings} variant="inline" title={tocTitle} lang={lang} />
         </div>
       )}
 
@@ -307,6 +317,10 @@ const seriesInit = `try{document.documentElement.dataset.series=localStorage.get
     .wisp-post-aside-inner :global([data-rail-scroll][data-fade]),
     .wisp-post-series-aside-inner :global([data-rail-scroll][data-fade]) {
       --wisp-fade-bottom: 0rem;
+    }
+    .wisp-post-aside-inner :global([data-rail-scroll][data-fade='']),
+    .wisp-post-series-aside-inner :global([data-rail-scroll][data-fade='']) {
+      mask-image: none;
     }
     .wisp-post-aside-inner :global([data-rail-scroll][data-fade~='top']),
     .wisp-post-series-aside-inner :global([data-rail-scroll][data-fade~='top']) {

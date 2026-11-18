@@ -1,97 +1,132 @@
 /* 自动生成，勿手改。来源：design/palette.json，运行 `pnpm tokens` 重新生成。 */
 
-:root,
-[data-theme="light"] {
-  color-scheme: light;
-  --wisp-bg: #fcfcfb;
-  --wisp-surface: #f4f4f2;
-  --wisp-surface-2: #ebebe7;
-  --wisp-border: #e2e2dd;
-  --wisp-fg: #1d1d1f;
-  --wisp-muted: #5c6067;
-  --wisp-subtle: #8b9098;
-  --wisp-accent: #0f766e;
-  --wisp-accent-fg: #ffffff;
-  --wisp-code-bg: #f6f6f4;
-  --wisp-selection: #ccf0ea;
-  --wisp-hue-blue: #2f5783;
-  --wisp-hue-blue-fill: #e9f2fb;
-  --wisp-hue-amber: #7b5518;
-  --wisp-hue-amber-fill: #fbf2df;
-  --wisp-hue-green: #2c522d;
-  --wisp-hue-green-fill: #e9f5e9;
-  --wisp-hue-rose: #984646;
-  --wisp-hue-rose-fill: #fcedec;
-  --wisp-hue-violet: #4d335c;
-  --wisp-hue-violet-fill: #f5eef9;
-  --wisp-hue-teal: #0f766e;
-  --wisp-hue-teal-fill: #e3f5f3;
-  --wisp-hue-orange: #762f06;
-  --wisp-hue-orange-fill: #fceee4;
-  --wisp-hue-slate: #464e57;
-  --wisp-hue-slate-fill: #eaedf2;
-}
+@layer theme {
+  :root,
+  [data-theme="light"] {
+    color-scheme: light;
+    --wisp-bg: #fcfcfb;
+    --wisp-surface: #f4f4f2;
+    --wisp-surface-2: #ebebe7;
+    --wisp-border: #e2e2dd;
+    --wisp-fg: #1d1d1f;
+    --wisp-muted: #5c6067;
+    --wisp-subtle: #8b9098;
+    --wisp-accent: #0f766e;
+    --wisp-accent-fg: #ffffff;
+    --wisp-code-bg: #f6f6f4;
+    --wisp-selection: #ccf0ea;
+    --wisp-hue-blue: #2f5783;
+    --wisp-hue-blue-fill: #e9f2fb;
+    --wisp-hue-amber: #7b5518;
+    --wisp-hue-amber-fill: #fbf2df;
+    --wisp-hue-green: #2c522d;
+    --wisp-hue-green-fill: #e9f5e9;
+    --wisp-hue-rose: #984646;
+    --wisp-hue-rose-fill: #fcedec;
+    --wisp-hue-violet: #4d335c;
+    --wisp-hue-violet-fill: #f5eef9;
+    --wisp-hue-teal: #0f766e;
+    --wisp-hue-teal-fill: #e3f5f3;
+    --wisp-hue-orange: #762f06;
+    --wisp-hue-orange-fill: #fceee4;
+    --wisp-hue-slate: #464e57;
+    --wisp-hue-slate-fill: #eaedf2;
+  }
 
-[data-theme="dark"] {
-  color-scheme: dark;
-  --wisp-bg: #111214;
-  --wisp-surface: #18191c;
-  --wisp-surface-2: #202125;
-  --wisp-border: #2b2d31;
-  --wisp-fg: #e6e6e3;
-  --wisp-muted: #a0a4ab;
-  --wisp-subtle: #6b7078;
-  --wisp-accent: #4fd1c0;
-  --wisp-accent-fg: #0b1f1d;
-  --wisp-code-bg: #16171a;
-  --wisp-selection: #1d3d39;
-  --wisp-hue-blue: #a9cbef;
-  --wisp-hue-blue-fill: #1a2634;
-  --wisp-hue-amber: #f2c681;
-  --wisp-hue-amber-fill: #2e2515;
-  --wisp-hue-green: #84b585;
-  --wisp-hue-green-fill: #1a281c;
-  --wisp-hue-rose: #eda9aa;
-  --wisp-hue-rose-fill: #341f1f;
-  --wisp-hue-violet: #bb9ece;
-  --wisp-hue-violet-fill: #291e2e;
-  --wisp-hue-teal: #7fd3c5;
-  --wisp-hue-teal-fill: #112926;
-  --wisp-hue-orange: #ce8d66;
-  --wisp-hue-orange-fill: #311f15;
-  --wisp-hue-slate: #9da7b3;
-  --wisp-hue-slate-fill: #23272b;
-}
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --wisp-bg: #111214;
+    --wisp-surface: #18191c;
+    --wisp-surface-2: #202125;
+    --wisp-border: #2b2d31;
+    --wisp-fg: #e6e6e3;
+    --wisp-muted: #a0a4ab;
+    --wisp-subtle: #6b7078;
+    --wisp-accent: #4fd1c0;
+    --wisp-accent-fg: #0b1f1d;
+    --wisp-code-bg: #16171a;
+    --wisp-selection: #1d3d39;
+    --wisp-hue-blue: #a9cbef;
+    --wisp-hue-blue-fill: #1a2634;
+    --wisp-hue-amber: #f2c681;
+    --wisp-hue-amber-fill: #2e2515;
+    --wisp-hue-green: #84b585;
+    --wisp-hue-green-fill: #1a281c;
+    --wisp-hue-rose: #eda9aa;
+    --wisp-hue-rose-fill: #341f1f;
+    --wisp-hue-violet: #bb9ece;
+    --wisp-hue-violet-fill: #291e2e;
+    --wisp-hue-teal: #7fd3c5;
+    --wisp-hue-teal-fill: #112926;
+    --wisp-hue-orange: #ce8d66;
+    --wisp-hue-orange-fill: #311f15;
+    --wisp-hue-slate: #9da7b3;
+    --wisp-hue-slate-fill: #23272b;
+  }
 
-/* 语义色只写一次，自动随 hue 切换 */
-:root {
-  --wisp-sem-q: var(--wisp-hue-blue);
-  --wisp-sem-q-fill: var(--wisp-hue-blue-fill);
-  --wisp-sem-k: var(--wisp-hue-amber);
-  --wisp-sem-k-fill: var(--wisp-hue-amber-fill);
-  --wisp-sem-v: var(--wisp-hue-green);
-  --wisp-sem-v-fill: var(--wisp-hue-green-fill);
-  --wisp-sem-weight: var(--wisp-hue-violet);
-  --wisp-sem-weight-fill: var(--wisp-hue-violet-fill);
-  --wisp-sem-activation: var(--wisp-hue-teal);
-  --wisp-sem-activation-fill: var(--wisp-hue-teal-fill);
-  --wisp-sem-grad: var(--wisp-hue-rose);
-  --wisp-sem-grad-fill: var(--wisp-hue-rose-fill);
-  --wisp-sem-bias: var(--wisp-hue-orange);
-  --wisp-sem-bias-fill: var(--wisp-hue-orange-fill);
-  --wisp-sem-mask: var(--wisp-hue-slate);
-  --wisp-sem-mask-fill: var(--wisp-hue-slate-fill);
-  --wisp-sem-highlight: var(--wisp-hue-amber);
-  --wisp-sem-highlight-fill: var(--wisp-hue-amber-fill);
-  --wisp-sem-visited: var(--wisp-hue-slate);
-  --wisp-sem-visited-fill: var(--wisp-hue-slate-fill);
-  --wisp-sem-active: var(--wisp-hue-blue);
-  --wisp-sem-active-fill: var(--wisp-hue-blue-fill);
-  --wisp-sem-done: var(--wisp-hue-green);
-  --wisp-sem-done-fill: var(--wisp-hue-green-fill);
-  --wisp-sem-error: var(--wisp-hue-rose);
-  --wisp-sem-error-fill: var(--wisp-hue-rose-fill);
-  --wisp-font-sans: var(--font-wisp-sans, "Inter Variable"), "Noto Sans SC Variable", -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC", MiSans, "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
-  --wisp-font-mono: var(--font-wisp-mono, "JetBrains Mono Variable"), ui-monospace, SFMono-Regular, Menlo, Consolas, "Noto Sans SC Variable", "PingFang SC", monospace;
-  --wisp-font-hand: var(--font-wisp-hand, Excalifont), Virgil, "Noto Sans SC Variable", "PingFang SC", sans-serif;
+  @media print {
+    [data-theme="dark"] {
+      color-scheme: light;
+      --wisp-bg: #fcfcfb;
+      --wisp-surface: #f4f4f2;
+      --wisp-surface-2: #ebebe7;
+      --wisp-border: #e2e2dd;
+      --wisp-fg: #1d1d1f;
+      --wisp-muted: #5c6067;
+      --wisp-subtle: #8b9098;
+      --wisp-accent: #0f766e;
+      --wisp-accent-fg: #ffffff;
+      --wisp-code-bg: #f6f6f4;
+      --wisp-selection: #ccf0ea;
+      --wisp-hue-blue: #2f5783;
+      --wisp-hue-blue-fill: #e9f2fb;
+      --wisp-hue-amber: #7b5518;
+      --wisp-hue-amber-fill: #fbf2df;
+      --wisp-hue-green: #2c522d;
+      --wisp-hue-green-fill: #e9f5e9;
+      --wisp-hue-rose: #984646;
+      --wisp-hue-rose-fill: #fcedec;
+      --wisp-hue-violet: #4d335c;
+      --wisp-hue-violet-fill: #f5eef9;
+      --wisp-hue-teal: #0f766e;
+      --wisp-hue-teal-fill: #e3f5f3;
+      --wisp-hue-orange: #762f06;
+      --wisp-hue-orange-fill: #fceee4;
+      --wisp-hue-slate: #464e57;
+      --wisp-hue-slate-fill: #eaedf2;
+    }
+  }
+
+  /* 语义色只写一次，自动随 hue 切换 */
+  :root {
+    --wisp-sem-q: var(--wisp-hue-blue);
+    --wisp-sem-q-fill: var(--wisp-hue-blue-fill);
+    --wisp-sem-k: var(--wisp-hue-amber);
+    --wisp-sem-k-fill: var(--wisp-hue-amber-fill);
+    --wisp-sem-v: var(--wisp-hue-green);
+    --wisp-sem-v-fill: var(--wisp-hue-green-fill);
+    --wisp-sem-weight: var(--wisp-hue-violet);
+    --wisp-sem-weight-fill: var(--wisp-hue-violet-fill);
+    --wisp-sem-activation: var(--wisp-hue-teal);
+    --wisp-sem-activation-fill: var(--wisp-hue-teal-fill);
+    --wisp-sem-grad: var(--wisp-hue-rose);
+    --wisp-sem-grad-fill: var(--wisp-hue-rose-fill);
+    --wisp-sem-bias: var(--wisp-hue-orange);
+    --wisp-sem-bias-fill: var(--wisp-hue-orange-fill);
+    --wisp-sem-mask: var(--wisp-hue-slate);
+    --wisp-sem-mask-fill: var(--wisp-hue-slate-fill);
+    --wisp-sem-highlight: var(--wisp-hue-amber);
+    --wisp-sem-highlight-fill: var(--wisp-hue-amber-fill);
+    --wisp-sem-visited: var(--wisp-hue-slate);
+    --wisp-sem-visited-fill: var(--wisp-hue-slate-fill);
+    --wisp-sem-active: var(--wisp-hue-blue);
+    --wisp-sem-active-fill: var(--wisp-hue-blue-fill);
+    --wisp-sem-done: var(--wisp-hue-green);
+    --wisp-sem-done-fill: var(--wisp-hue-green-fill);
+    --wisp-sem-error: var(--wisp-hue-rose);
+    --wisp-sem-error-fill: var(--wisp-hue-rose-fill);
+    --wisp-font-sans: var(--font-wisp-sans, "Inter Variable"), "Noto Sans SC Variable", "Wisp CJK Fallback", -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC", MiSans, "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    --wisp-font-mono: var(--font-wisp-mono, "JetBrains Mono Variable"), ui-monospace, SFMono-Regular, Menlo, Consolas, "Noto Sans SC Variable", "PingFang SC", "Microsoft YaHei", monospace;
+    --wisp-font-hand: var(--font-wisp-hand, Excalifont), Virgil, "Noto Sans SC Variable", "PingFang SC", sans-serif;
+  }
 }

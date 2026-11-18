@@ -49,4 +49,17 @@ describe('defineWispConfig', () => {
       /codeFold\.previewLines/,
     );
   });
+  it('fonts.cjkDisplay 默认 swap，支持 swap / fallback / optional', () => {
+    expect(defineWispConfig().fonts).toEqual({ cjkDisplay: 'swap' });
+    expect(defineWispConfig({ fonts: {} }).fonts).toEqual({ cjkDisplay: 'swap' });
+    expect(defineWispConfig({ fonts: { cjkDisplay: 'optional' } }).fonts.cjkDisplay).toBe(
+      'optional',
+    );
+    expect(defineWispConfig({ fonts: { cjkDisplay: 'fallback' } }).fonts.cjkDisplay).toBe(
+      'fallback',
+    );
+    expect(() => defineWispConfig({ fonts: { cjkDisplay: 'block' as never } })).toThrow(
+      /fonts\.cjkDisplay/,
+    );
+  });
 });

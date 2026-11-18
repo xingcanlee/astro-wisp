@@ -11,6 +11,8 @@ const { Content, remarkPluginFrontmatter } = await render(entry);
   title={entry.data.title}
   description={entry.data.description}
   hasMath={Boolean(remarkPluginFrontmatter.hasMath)}
+  hasDiagram={Boolean(remarkPluginFrontmatter.hasDiagram)}
+  hasHandDiagram={Boolean(remarkPluginFrontmatter.hasHandDiagram)}
 >
   <Content />
 </Page>

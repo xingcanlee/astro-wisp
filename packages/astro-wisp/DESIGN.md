@@ -53,7 +53,7 @@ typography:
     fontWeight: 600
     lineHeight: 1.35
   body:
-    fontFamily: 'Inter Variable, Noto Sans SC Variable, PingFang SC, HarmonyOS Sans SC, MiSans, Microsoft YaHei, sans-serif'
+    fontFamily: 'Inter Variable, Noto Sans SC Variable, Wisp CJK Fallback, PingFang SC, HarmonyOS Sans SC, MiSans, Microsoft YaHei, sans-serif'
     fontSize: '1rem'
     fontWeight: 400
     lineHeight: 1.8
@@ -226,11 +226,11 @@ components:
 
 ## Typography
 
-**正文与标题：** Inter Variable（西文、数字）+ Noto Sans SC Variable（汉字、全角标点），系统中文字体作回落。
+**正文与标题：** Inter Variable（西文、数字）+ Noto Sans SC Variable（汉字、全角标点），回落字体栈使用与 `Noto Sans SC Variable` 垂直度量对齐的本地 `@font-face` **`Wisp CJK Fallback`**（`ascent-override: 116%; descent-override: 28.8%; line-gap-override: 0%`，依次映射本地 PingFang SC / HarmonyOS Sans SC / MiSans / Microsoft YaHei），避免加载前后行高跳变。
 **代码：** JetBrains Mono Variable，关闭编程连字（读者要看到真实字符）。
-**手绘图：** Excalifont，仅在含手绘图的文章加载。
+**手绘图：** Excalifont，仅在含手绘图且开启 `hasExcalifont` 的页面加载。
 
-全部自托管（Astro Fonts API + Fontsource），`font-display: swap`；只预加载 Inter 拉丁分片，中文按 unicode-range 分片按需下载。Inter 统一开启 `"cv11", "ss01"`。
+全部自托管（Astro Fonts API + Fontsource）；预加载 Inter 拉丁 400 与 JetBrains Mono 拉丁 400；思源黑体受 **`fonts.cjkDisplay`** 控制，默认 **`swap`**（按 `unicode-range` 分片加载且配合 `Wisp CJK Fallback` 度量对齐消除换字时的行高跳变；亦可设为 `fallback` 或 `optional`）。Inter 统一开启 `"cv11", "ss01"`。
 
 ### Hierarchy
 
@@ -279,7 +279,7 @@ components:
 | 首页目录           | 每个系列一行：左列部分标题（≥60rem 时吸顶），右列篇目（≥80rem 时分两栏）                                                                                                                                               |
 | 区块间距           | 首页区块 5rem；正文 h2 上方 2.5em、下方 0.75em（上大下小）；正文里的块（代码、表格、公式、图、要点块、讲解组件）与前后段落统一 1.75em（`--wisp-block-gap`，按正文字号算，约 30px）                                     |
 
-**滚动条**：全站分四层统一治理，滑块采用半透明前景色（`color-mix(in srgb, var(--wisp-fg) 26%, transparent)`，悬停 `46%`），在纸白、代码底、着色块与灯箱上都能自然压暗或提亮，轨道透明、999px 圆角、无步进三角箭头（▲/▼/◄/►）：① 页面主滚动条（`html`）：桌面端 10px 命中区 + 2px 透明内衬 = 6px 悬浮圆角滑块（按住加宽到 8px），消除 Windows 原生悬空三角箭头；② 导航轨道（侧栏 `[data-rail-scroll]`、页眉 `.wisp-nav ul`）：隐藏滚动条轨道，仅靠边缘 `mask-image` 渐隐提示可滚；③ 全部内部滚动容器（`:where(body *)` 零特异性覆盖代码、表格、公式、Mermaid、讲解舞台、Lightbox、文首折叠系列与目录列表、长注释预览 `.wisp-cite-pop` 及任意自定义滚动区）：桌面端 8px 命中区 + 2px 透明内衬 = 4px 悬浮圆角滑块，平时通过 `--wisp-sb: transparent` 完全隐身，指针移入、焦点进入或鼠标拖拽时切换自定义属性立即重绘显现（指向滑块本体时展宽至 6px）；④ Firefox 与触屏设备回退标准 `scrollbar-width` / `scrollbar-color`。所有内部滚动容器均带 `overscroll-behavior` 阻断滚动穿透与触控板误触浏览器前进/后退；非代码的超宽容器与灯箱大图支持鼠标按住 1D/2D 拖拽平移。横向可滚动的代码、表格、公式、图表、讲解舞台仅在确实溢出时成为 Tab 停靠点并附「…，可横向滚动」名称（随窗宽增删，不叠加）；无 JS 时以标记里的 `tabindex=0 data-wisp-tab` 作回落。
+**滚动条**：全站分四层统一治理，滑块采用半透明前景色（`color-mix(in srgb, var(--wisp-fg) 26%, transparent)`，悬停 `46%`），在纸白、代码底、着色块与灯箱上都能自然压暗或提亮，轨道透明、999px 圆角、无步进三角箭头（▲/▼/◄/►）：① 页面主滚动条（`html`）：桌面端 10px 命中区 + 2px 透明内衬 = 6px 悬浮圆角滑块（按住加宽到 8px），消除 Windows 原生悬空三角箭头；② 导航轨道（侧栏 `[data-rail-scroll]`、页眉 `.wisp-nav ul`）：隐藏滚动条轨道，仅靠边缘 `mask-image` 渐隐提示可滚；③ 全部内部滚动容器（以零特异性 `:where(...)` 精准匹配代码、表格、公式、Mermaid、图表、讲解舞台、Lightbox、文首折叠系列与目录列表、长注释预览 `.wisp-cite-pop` 及 `[data-wisp-scroll]` / `[data-wisp-vscroll]`）：桌面端 8px 命中区 + 2px 透明内衬 = 4px 悬浮圆角滑块，平时通过 `--wisp-sb: transparent` 完全隐身，指针移入、焦点进入或鼠标拖拽时切换自定义属性立即重绘显现（指向滑块本体时展宽至 6px）；④ Firefox 与触屏设备回退标准 `scrollbar-width` / `scrollbar-color`。所有内部滚动容器均带 `overscroll-behavior` 阻断滚动穿透与触控板误触浏览器前进/后退；非代码的超宽容器与灯箱大图支持鼠标按住 1D/2D 拖拽平移。横向可滚动的代码、表格、公式、图表、讲解舞台仅在确实溢出时成为 Tab 停靠点并附「…，可横向滚动」名称（随窗宽增删，不叠加）；无 JS 时以标记里的 `tabindex=0 data-wisp-tab` 作回落。
 
 间距以 4px 为单位：4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 80 / 96。断点用 Tailwind 默认（sm 640 / md 768 / lg 1024 / xl 1280）加上布局专用的 60rem / 80rem。
 
@@ -354,7 +354,7 @@ Markdown 引用块 = 手册里的「要点」：`surface` 浅底 + 1px `rule` �
 - **Markdown 图片**：`![alt](./x.webp '图 05-3：…')` 这种段落里只有一张、带标题的图片由 `rehype-figure` 排成 figure，title 变成题注并从 img 上去掉（不再有重复的悬停提示）；不带标题的图片保持原样。Astro 的图片优化不受影响。Mermaid 题注写在围栏 meta 里：` ```mermaid caption="图 3：…" `。
 - **配图描边**：figure 里的配图（位图与独立 `.svg` 论文图）统一加 1px `rule` 描边定出边缘（两种主题都加；白底配图在浅色与深色页上都有清晰边界），不加滤镜、不反色。
 
-图按容器缩放，但不放大超过自然宽度；窄屏（`≤40rem`）非宽内容图表向两侧轻度外扩 `0.5rem` 以争取额外画布宽度（题注仍贴正文左缘）。点击用 Lightbox 看原尺寸：宽屏按视口缩放显示；窄于 40rem 时按自然宽度（最多 2 倍视口宽）放在可平移的区域里，打开时滚到中间，关闭按钮固定在右上角。**图上和题注旁不加缩放比例之类的标记**：图应该按正文栏宽度来画（自然宽度 640–700px），而不是画宽了再提示读者放大。draw.io 标签里的公式（`math="1"`）按行内排版。Mermaid 最小缩放 75%，放不下在图内横向滚动。
+图按容器缩放，但不放大超过自然宽度；窄屏（`≤40rem`）非宽内容图表向两侧轻度外扩 `0.5rem` 以争取额外画布宽度（题注仍贴正文左缘）。`.wisp-diagram-body` 与 Mermaid 一样受可读最小宽度下限保护（`min(var(--wd-w), max(100%, min(31rem, calc(var(--wd-w) * 0.72))))`），窄屏放不下时在图内横向滚动（`overflow-x: auto`，支持拖拽平移与键盘焦点）而非压缩到字不可辨。既可直接点击图体、也可通过图角独立的原生 `<button data-wisp-lightbox-trigger>`（桌面悬停或聚焦显现，触屏常显）打开 Lightbox 看原尺寸：宽屏按视口缩放显示；窄于 40rem 时按自然宽度（最多 2 倍视口宽）放在可平移的区域里，打开时滚到中间，关闭按钮固定在右上角。**图上和题注旁不加缩放比例之类的标记**：图应该按正文栏宽度来画（自然宽度 640–700px），而不是画宽了再提示读者放大。draw.io 标签里的公式（`math="1"`）按行内排版。Mermaid 最小缩放 75%，放不下在图内横向滚动。
 
 ### Explainer（交互讲解）
 

@@ -13,6 +13,7 @@ import type { MarkdownHeading } from 'astro';
 import katex from 'katex';
 import Icon from 'virtual:wisp/components/Icon';
 import config from 'virtual:wisp/config';
+import { parseInlineMath, plainInlineMath } from '../explainers/core/math';
 import { escapeHtml, formatTitleHtml } from '../utils/title';
 
 export interface Props {
@@ -22,14 +23,17 @@ export interface Props {
   variant?: 'aside' | 'inline';
   /** 标题文字，默认“目录” */
   title?: string;
+  /** 文章语言 */
+  lang?: string;
 }
 
 const {
   headings,
   variant = 'aside',
-  title = /^zh\b/i.test(config.site.lang) ? '目录' : 'Contents',
+  lang = config.site.lang,
+  title = /^zh\b/i.test(lang) ? '目录' : 'Contents',
 } = Astro.props;
-const zh = /^zh\b/i.test(config.site.lang);
+const zh = /^zh\b/i.test(lang);
 const collapseLabel = zh ? `收起${title}` : `Hide ${title.toLowerCase()}`;
 const expandLabel = zh ? `展开${title}` : `Show ${title.toLowerCase()}`;
 const minDepth = Math.min(...headings.map((h) => h.depth));
@@ -68,42 +72,47 @@ const no = (slug: string) => (numberOn ? numbers.get(slug) : undefined);
 // 否则侧边栏/折叠目录里显示原始 $...$ 源码。非公式段做 HTML 转义后经 set:html 输出。
 function renderHeadingText(text: string): string {
   if (!config.features.math || !text.includes('$')) return formatTitleHtml(text);
-  return text
-    .split(/(\$[^$]+\$)/g)
+  return parseInlineMath(text)
     .map((seg) => {
-      if (seg.length > 2 && seg.startsWith('$') && seg.endsWith('$')) {
+      if (seg.type === 'math') {
         try {
-          return katex.renderToString(seg.slice(1, -1), { throwOnError: false });
+          return katex.renderToString(seg.value, { throwOnError: false });
         } catch {
-          return escapeHtml(seg);
+          return escapeHtml(seg.value);
         }
       }
-      return formatTitleHtml(seg);
+      return formatTitleHtml(seg.value);
     })
     .join('');
 }
+const subToggleLabel = (text: string) => {
+  const clean = plainInlineMath(text);
+  return zh ? `展开/收起「${clean}」小节` : `Toggle ${clean} subsections`;
+};
 ---
 
 {headings.length > 0 &&
   (variant === 'inline' ? (
-    <details class="wisp-toc wisp-toc-inline">
-      <summary>
-        <span class="wisp-toc-summary-label">{title}</span>
-        <span class="wisp-toc-head-ico" aria-hidden="true">
-          <Icon name="chevron-down" />
-        </span>
-      </summary>
-      <ol>
-        {list.map((h) => (
-          <li data-level={h.level}>
-            <a href={`#${h.slug}`} data-toc-link={h.slug}>
-              {no(h.slug) && <span class="wisp-toc-no">{no(h.slug)}</span>}
-              <span set:html={renderHeadingText(h.text)} />
-            </a>
-          </li>
-        ))}
-      </ol>
-    </details>
+    <nav aria-label={title}>
+      <details class="wisp-toc wisp-toc-inline">
+        <summary>
+          <span class="wisp-toc-summary-label">{title}</span>
+          <span class="wisp-toc-head-ico" aria-hidden="true">
+            <Icon name="chevron-down" />
+          </span>
+        </summary>
+        <ol>
+          {list.map((h) => (
+            <li data-level={h.level}>
+              <a href={`#${h.slug}`} data-toc-link={h.slug}>
+                {no(h.slug) && <span class="wisp-toc-no">{no(h.slug)}</span>}
+                <span set:html={renderHeadingText(h.text)} />
+              </a>
+            </li>
+          ))}
+        </ol>
+      </details>
+    </nav>
   ) : (
     <nav class="wisp-toc wisp-toc-aside" aria-label={title}>
       {/* 无 JS：静态标题行；有 JS：同一行换成可切换的按钮（与系列栏的标题行同尺寸、同一种 chevron） */}
@@ -149,7 +158,7 @@ function renderHeadingText(text: string): string {
                     aria-controls={`wisp-toc-sub-${i}`}
                   >
                     <Icon name="chevron-right" class="wisp-toc-chev" />
-                    <span class="sr-only">{head.text}</span>
+                    <span class="sr-only">{subToggleLabel(head.text)}</span>
                   </button>
                 </div>
                 <ol id={`wisp-toc-sub-${i}`}>
@@ -535,7 +544,7 @@ function renderHeadingText(text: string): string {
           tick = true;
           requestAnimationFrame(() => {
             tick = false;
-            update();
+            if (!locked && atBottom()) set(heads[heads.length - 1]!.id);
           });
         }
       },

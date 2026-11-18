@@ -112,6 +112,7 @@ const icons = [
           const f = el('button', 'wisp-fold');
           const set = (open) => {
             box.toggleAttribute('data-folded', !open);
+            box.toggleAttribute('data-wisp-open', open);
             f.setAttribute('aria-expanded', open);
             const zh = document.documentElement.lang.startsWith('zh');
             f.innerHTML =

@@ -8,6 +8,7 @@ import { sitePath } from '../utils/paths';
 import { formatTitleHtml } from '../utils/title';
 
 const posts = await getPosts();
+const zh = /^zh\b/i.test(config.site.lang);
 const groups = groupByYear(posts);
 const seriesName = new Map(
   summarizeSeries(posts).map((s) => [s.id, s.title.split(/[：:]/)[0]!.trim()]),
@@ -23,7 +24,13 @@ const short = (d: Date) =>
   `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 ---
 
-<Page title="归档" description={`共 ${posts.length} 篇文章`} prose={false}>
+<Page
+  title={zh ? '归档' : 'Archive'}
+  description={
+    zh ? `共 ${posts.length} 篇文章` : `${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`
+  }
+  prose={false}
+>
   {groups.map(({ year, posts }) => (
     <section class:list={['year', { numbered }]}>
       <h2>

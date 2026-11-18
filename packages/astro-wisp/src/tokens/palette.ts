@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { z } from 'astro/zod';
 import { differenceCiede2000, parse, formatHex } from 'culori';
 
 export type Mode = 'light' | 'dark';
@@ -16,7 +17,136 @@ export interface Palette {
     semantic: Record<string, string>;
   };
   font: { sans: string[]; mono: string[]; hand: string[] };
+  radius: { sm: number; md: number; lg: number; [k: string]: unknown };
   [k: string]: unknown;
+}
+
+const colorValueSchema = z
+  .string()
+  .min(1, '颜色不能为空')
+  .refine((v) => parse(v) !== undefined, '无效颜色值');
+
+const pairSchema = z.object({
+  light: colorValueSchema,
+  dark: colorValueSchema,
+});
+
+const pairOverrideSchema = z.object({
+  light: colorValueSchema.optional(),
+  dark: colorValueSchema.optional(),
+});
+
+const hueSchema = z.object({
+  stroke: pairSchema,
+  fill: pairSchema,
+});
+
+const hueOverrideSchema = z.object({
+  stroke: pairOverrideSchema.optional(),
+  fill: pairOverrideSchema.optional(),
+});
+
+const requiredBaseSchema = z
+  .object({
+    bg: pairSchema,
+    surface: pairSchema,
+    'surface-2': pairSchema,
+    border: pairSchema,
+    fg: pairSchema,
+    muted: pairSchema,
+    subtle: pairSchema,
+    accent: pairSchema,
+    'accent-fg': pairSchema,
+    'code-bg': pairSchema,
+    selection: pairSchema,
+  })
+  .catchall(pairSchema);
+
+const fontStackSchema = z.array(z.string().min(1)).min(1);
+
+export const paletteSchema = z
+  .object({
+    version: z.number().int().positive(),
+    color: z
+      .object({
+        base: requiredBaseSchema,
+        hue: z
+          .record(z.string().min(1), hueSchema)
+          .refine((h) => Object.keys(h).length > 0, '至少需要一种 hue 颜色'),
+        semantic: z.record(z.string().min(1), z.string().min(1)),
+      })
+      .superRefine((color, ctx) => {
+        for (const [sem, hue] of Object.entries(color.semantic)) {
+          if (!(hue in color.hue)) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['semantic', sem],
+              message: `引用了未知 hue "${hue}"`,
+            });
+          }
+        }
+      }),
+    font: z.object({
+      sans: fontStackSchema,
+      mono: fontStackSchema,
+      hand: fontStackSchema,
+    }),
+    radius: z
+      .object({
+        sm: z.number().nonnegative(),
+        md: z.number().nonnegative(),
+        lg: z.number().nonnegative(),
+      })
+      .passthrough(),
+  })
+  .passthrough();
+
+export const paletteOverrideSchema = z
+  .object({
+    version: z.number().int().positive().optional(),
+    color: z
+      .object({
+        base: z.record(z.string().min(1), pairOverrideSchema).optional(),
+        hue: z.record(z.string().min(1), hueOverrideSchema).optional(),
+        semantic: z.record(z.string().min(1), z.string().min(1)).optional(),
+      })
+      .optional(),
+    font: z
+      .object({
+        sans: fontStackSchema.optional(),
+        mono: fontStackSchema.optional(),
+        hand: fontStackSchema.optional(),
+      })
+      .optional(),
+    radius: z
+      .object({
+        sm: z.number().nonnegative().optional(),
+        md: z.number().nonnegative().optional(),
+        lg: z.number().nonnegative().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+function parseWith<T>(schema: z.ZodType<T>, value: unknown, context: string): T {
+  const result = schema.safeParse(value);
+  if (!result.success) {
+    const msg = result.error.issues
+      .map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`)
+      .join('; ');
+    throw new Error(`[astro-wisp] palette ${context}无效：${msg}`);
+  }
+  return result.data;
+}
+
+function parseJson(raw: string, path: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(`[astro-wisp] palette JSON 解析失败 (${path})：${detail}`, { cause: err });
+  }
 }
 
 /** 递归可选：用户覆盖调色板时只写需要改的键。数组整体替换。 */
@@ -62,9 +192,16 @@ export function loadPaletteRaw(path = PALETTE_PATH): string {
   return readFileSync(path, 'utf8');
 }
 
-/** 读取并清洗调色板 JSON（去掉 `$` 注释键）。 */
+/** 读取并清洗调色板 JSON（去掉 `$` 注释键并校验完整结构）。 */
 export function readPalette(path = PALETTE_PATH): Palette {
-  return strip(JSON.parse(loadPaletteRaw(path))) as Palette;
+  const cleaned = strip(parseJson(loadPaletteRaw(path), path));
+  return parseWith(paletteSchema, cleaned, `(${path})`) as Palette;
+}
+
+/** 读取并校验调色板覆盖 JSON（允许只写部分字段）。 */
+export function readPaletteOverride(path: string): PaletteOverride {
+  const cleaned = strip(parseJson(loadPaletteRaw(path), path));
+  return parseWith(paletteOverrideSchema, cleaned, `覆盖文件 (${path})`) as PaletteOverride;
 }
 
 /** 在默认调色板上深度合并覆盖项（对象递归，数组整体替换）。 */
@@ -72,7 +209,12 @@ export function mergePalette(
   override: PaletteOverride | Palette | undefined,
   base: Palette = palette,
 ): Palette {
-  return merge(base, strip(override)) as Palette;
+  const cleanedOverride =
+    override === undefined
+      ? undefined
+      : parseWith(paletteOverrideSchema, strip(override), '覆盖配置');
+  const merged = merge(base, cleanedOverride);
+  return parseWith(paletteSchema, merged, '合并结果') as Palette;
 }
 
 export const palette = readPalette();

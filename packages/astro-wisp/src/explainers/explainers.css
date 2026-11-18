@@ -14,6 +14,10 @@
   .wisp-player {
     --wisp-player-thumb: 12px;
     --wisp-player-btn: 2.5rem;
+    --wisp-cell-heat: 0.44;
+  }
+  [data-theme='dark'] :is(.wisp-explainer, .wisp-player) {
+    --wisp-cell-heat: 0.24;
   }
   .wisp-explainer {
     margin-block: var(--wisp-block-gap, 1.75em);
@@ -139,6 +143,9 @@
     );
     background: var(--wisp-accent);
   }
+  .wisp-player__track[data-at-start]:not(:hover):not(:focus-within) .wisp-player__fill {
+    opacity: 0;
+  }
   .wisp-player__tick {
     position: absolute;
     top: -3px;
@@ -163,6 +170,7 @@
     padding: 0;
     background: transparent;
     cursor: pointer;
+    touch-action: pan-y;
     appearance: none;
   }
   .wisp-player__range:focus-visible {
@@ -331,7 +339,10 @@
       --wisp-player-btn: 2.75rem;
     }
   }
-  @media (hover: none), (pointer: coarse) {
+  @media (hover: none), (pointer: coarse), (any-pointer: coarse) {
+    .wisp-player__track[data-at-start]:not(:hover):not(:focus-within) .wisp-player__fill {
+      opacity: 1;
+    }
     .wisp-player__range {
       top: -18px;
       height: 36px;

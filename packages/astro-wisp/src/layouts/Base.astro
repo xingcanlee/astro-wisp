@@ -6,8 +6,8 @@
  */
 // 第一个引入：声明 cascade layer 顺序
 import '../styles/layers.css';
-// 思源黑体只在 CJK 页面加载；Inter / JetBrains Mono 由 Astro Fonts API 提供（见 src/fonts.ts）
-import notoCssUrl from '@fontsource-variable/noto-sans-sc/index.css?url';
+// 思源黑体只在 CJK 页面按配置加载；Inter / JetBrains Mono 由 Astro Fonts API 提供（见 src/fonts.ts）
+import notoCssUrl from 'virtual:wisp/cjk-font-url';
 import 'virtual:wisp/theme-css';
 import '../styles/global.css';
 // 站点的 customCss：不分层、最后引入，可以覆盖主题样式和令牌
@@ -86,6 +86,7 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
           s === 'dark' || (s !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
         d.dataset.theme = dark ? 'dark' : 'light';
         d.dataset.themePref = s === 'light' || s === 'dark' ? s : 'system';
+        d.dataset.wispJs = '';
       })();
     </script>
     <script is:inline>
@@ -112,9 +113,12 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
       cssVariable="--font-wisp-sans"
       preload={[{ subset: 'latin', weight: 400, style: 'normal' }]}
     />
-    <Font cssVariable="--font-wisp-mono" />
+    <Font
+      cssVariable="--font-wisp-mono"
+      preload={[{ subset: 'latin', weight: 400, style: 'normal' }]}
+    />
     <meta name="generator" content={Astro.generator} />
-    {needsCjkFont && <link rel="stylesheet" href={notoCssUrl} />}
+    {needsCjkFont && notoCssUrl && <link rel="stylesheet" href={notoCssUrl} />}
 
     <meta property="og:site_name" content={config.site.title} />
     <meta property="og:title" content={title ?? config.site.title} />
@@ -156,7 +160,7 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
       (() => {
         const zh = document.documentElement.lang.startsWith('zh');
         const SEL =
-          '.wisp-pre, .prose pre:not(.wisp-pre), .wisp-table, .prose > table, .katex-display, .wisp-explainer__scroll, .wisp-pele-body, [data-wisp-scroll]';
+          '.wisp-pre, .prose pre:not(.wisp-pre), .wisp-table, .prose > table, .katex-display, .wisp-explainer__scroll, .wisp-pele-body, .wisp-diagram-body, [data-wisp-scroll]';
         const FADE_ONLY_SEL = '.wisp-nav ul';
         const V_SEL = '.wisp-series-inline ol, .wisp-toc-inline > ol, [data-wisp-vscroll]';
         const ALL_SCROLL_SEL = `${SEL}, ${FADE_ONLY_SEL}, ${V_SEL}`;
@@ -166,25 +170,25 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
           const x = Math.abs(el.scrollLeft);
           return x <= 1 ? 'end' : x >= max - 1 ? 'start' : 'both';
         };
+        const sideV = (el) => {
+          const max = el.scrollHeight - el.clientHeight;
+          return max <= 2
+            ? ''
+            : [el.scrollTop > 4 && 'top', el.scrollTop < max - 4 && 'bottom']
+                .filter(Boolean)
+                .join(' ');
+        };
+        const applyAttr = (el, name, v) => {
+          if ((el.getAttribute(name) || '') === v) return;
+          if (v) el.setAttribute(name, v);
+          else el.removeAttribute(name);
+        };
         const mark = (el) => {
           const v = side(el);
-          if ((el.getAttribute('data-wisp-overflow') || '') === v) return v;
-          if (v) el.setAttribute('data-wisp-overflow', v);
-          else el.removeAttribute('data-wisp-overflow');
+          applyAttr(el, 'data-wisp-overflow', v);
           return v;
         };
-        const markV = (el) => {
-          const max = el.scrollHeight - el.clientHeight;
-          const v =
-            max <= 2
-              ? ''
-              : [el.scrollTop > 4 && 'top', el.scrollTop < max - 4 && 'bottom']
-                  .filter(Boolean)
-                  .join(' ');
-          if ((el.getAttribute('data-wisp-vfade') || '') === v) return;
-          if (v) el.setAttribute('data-wisp-vfade', v);
-          else el.removeAttribute('data-wisp-vfade');
-        };
+        const markV = (el) => applyAttr(el, 'data-wisp-vfade', sideV(el));
         const label = (el, overflow) => {
           // 键盘：只有溢出的容器是 Tab 停靠点。主题写的 tabindex 带 data-wisp-tab（无 JS 回落），
           // 没有 tabindex 的容器也归脚本管；站点自己写的 tabindex（没有 data-wisp-tab）保持不动
@@ -220,7 +224,8 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
                   ? zh
                     ? '公式'
                     : 'Formula'
-                  : el.classList.contains('wisp-pele-body')
+                  : el.classList.contains('wisp-pele-body') ||
+                      el.classList.contains('wisp-diagram-body')
                     ? zh
                       ? '图表'
                       : 'Diagram'
@@ -252,9 +257,19 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
             b.removeAttribute('data-wisp-measure');
             b.toggleAttribute('data-wisp-wide', wide[i]);
           });
-          document.querySelectorAll(SEL).forEach((el) => label(el, mark(el) !== ''));
-          document.querySelectorAll(FADE_ONLY_SEL).forEach((el) => mark(el));
-          document.querySelectorAll(V_SEL).forEach((el) => markV(el));
+          // 批量读 → 批量写，避免交替读写触发布局抖动
+          const scrollEls = [...document.querySelectorAll(SEL)];
+          const fadeEls = [...document.querySelectorAll(FADE_ONLY_SEL)];
+          const vEls = [...document.querySelectorAll(V_SEL)];
+          const scrollSides = scrollEls.map((el) => side(el));
+          const fadeSides = fadeEls.map((el) => side(el));
+          const vSides = vEls.map((el) => sideV(el));
+          scrollEls.forEach((el, i) => {
+            applyAttr(el, 'data-wisp-overflow', scrollSides[i]);
+            label(el, scrollSides[i] !== '');
+          });
+          fadeEls.forEach((el, i) => applyAttr(el, 'data-wisp-overflow', fadeSides[i]));
+          vEls.forEach((el, i) => applyAttr(el, 'data-wisp-vfade', vSides[i]));
         };
         let queued = false;
         const schedule = () => {
@@ -291,7 +306,7 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
         );
         // 超宽非代码容器（表格、宽 Mermaid、块级公式、讲解舞台）与灯箱大图：支持鼠标按住拖拽平移（1D/2D 自适应，不影响选词与代码框选）
         const DRAG_SEL =
-          '.wisp-table[data-wisp-overflow], .prose > table[data-wisp-overflow], .wisp-pele-body[data-wisp-overflow], .katex-display[data-wisp-overflow], .wisp-explainer__scroll[data-wisp-overflow], [data-wisp-scroll][data-wisp-overflow], .wisp-lightbox-media';
+          '.wisp-table[data-wisp-overflow], .prose > table[data-wisp-overflow], .wisp-pele-body[data-wisp-overflow], .wisp-diagram-body[data-wisp-overflow], .katex-display[data-wisp-overflow], .wisp-explainer__scroll[data-wisp-overflow], [data-wisp-scroll][data-wisp-overflow], .wisp-lightbox-media';
         document.addEventListener('pointerdown', (e) => {
           if (
             e.pointerType !== 'mouse' ||
@@ -304,7 +319,9 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
             return;
           const target = e.target;
           if (!(target instanceof Element)) return;
-          if (target.closest('a, button, input, select, textarea, summary, label')) return;
+          if (target.closest('a, button, input, select, textarea, summary, label, code, kbd, samp'))
+            return;
+          if ((getSelection()?.toString().length ?? 0) > 0) return;
           const box = target.closest(DRAG_SEL);
           if (!(box instanceof HTMLElement)) return;
           const canX = box.scrollWidth > box.clientWidth + 1;
@@ -337,28 +354,31 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
             if (canY) box.scrollTop = startTop - dy;
           };
           const onEnd = (ev) => {
-            if (ev.pointerId !== pid) return;
+            if (ev && ev.type !== 'blur' && ev.pointerId !== pid) return;
             removeEventListener('pointermove', onMove);
             removeEventListener('pointerup', onEnd);
             removeEventListener('pointercancel', onEnd);
+            removeEventListener('blur', onEnd);
             if (!active) return;
+            active = false;
             box.removeAttribute('data-wisp-dragging');
             try {
               if (box.hasPointerCapture(pid)) box.releasePointerCapture(pid);
             } catch {}
-            // 刚完成拖拽平移时吞掉紧随其后的合成 click，避免松手误触发图表灯箱
-            addEventListener(
-              'click',
-              (ce) => {
+            if (ev?.type === 'pointerup') {
+              // 刚完成拖拽平移时吞掉紧随其后的合成 click，避免松手误触发图表灯箱
+              const swallow = (ce) => {
                 ce.stopPropagation();
                 ce.preventDefault();
-              },
-              { capture: true, once: true },
-            );
+              };
+              addEventListener('click', swallow, { capture: true, once: true });
+              setTimeout(() => removeEventListener('click', swallow, true), 0);
+            }
           };
           addEventListener('pointermove', onMove, { passive: false });
           addEventListener('pointerup', onEnd);
           addEventListener('pointercancel', onEnd);
+          addEventListener('blur', onEnd);
         });
       })();
     </script>

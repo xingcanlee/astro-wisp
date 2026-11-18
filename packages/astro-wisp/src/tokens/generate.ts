@@ -9,13 +9,43 @@ import { hueNamesOf, palette as defaultPalette, type Mode, type Palette } from '
 export const HEADER =
   '/* 自动生成，勿手改。来源：design/palette.json，运行 `pnpm tokens` 重新生成。 */\n';
 
-const q = (f: string) => (/[\s]/.test(f) ? `"${f}"` : f);
+const CSS_GENERIC_FAMILIES = new Set([
+  'sans-serif',
+  'serif',
+  'monospace',
+  'ui-monospace',
+  'system-ui',
+  'cursive',
+  'fantasy',
+  'emoji',
+  'math',
+  'fangsong',
+]);
+const SAFE_FONT_IDENT_RE = /^[A-Za-z_-][A-Za-z0-9_-]*$/;
+
+export const quoteFontFamily = (f: string): string =>
+  CSS_GENERIC_FAMILIES.has(f) || SAFE_FONT_IDENT_RE.test(f)
+    ? f
+    : `"${f.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+
 /** 由 Fonts API 提供的字体改为 `var(--font-wisp-*, 原族名)`（Fonts API 的族名带哈希）。 */
 const stack = (fs: string[]) =>
-  fs.map((f) => (FONT_STACK_VARS[f] ? `var(${FONT_STACK_VARS[f]}, ${q(f)})` : q(f))).join(', ');
+  fs
+    .map((f) =>
+      FONT_STACK_VARS[f] ? `var(${FONT_STACK_VARS[f]}, ${quoteFontFamily(f)})` : quoteFontFamily(f),
+    )
+    .join(', ');
 
 /** Pele 的面积图 / 饼图填充：描边色混入背景，避免调色板重调后变成深色墨块。 */
 export const PELE_FILL_STROKE_PERCENT = { light: 58, dark: 40 } as const;
+
+function indentLines(text: string, spaces = 2): string {
+  const pad = ' '.repeat(spaces);
+  return text
+    .split('\n')
+    .map((line) => (line ? `${pad}${line}` : line))
+    .join('\n');
+}
 
 function modeVars(p: Palette, mode: Mode): string {
   const lines: string[] = [];
@@ -35,16 +65,23 @@ export function genTokens(p: Palette = defaultPalette): string {
         `  --wisp-sem-${k}: var(--wisp-hue-${h});\n  --wisp-sem-${k}-fill: var(--wisp-hue-${h}-fill);`,
     )
     .join('\n');
-  return `${HEADER}
-:root,
+  const lightVars = modeVars(p, 'light');
+  const body = `:root,
 [data-theme="light"] {
   color-scheme: light;
-${modeVars(p, 'light')}
+${lightVars}
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 ${modeVars(p, 'dark')}
+}
+
+@media print {
+  [data-theme="dark"] {
+    color-scheme: light;
+${indentLines(lightVars, 2)}
+  }
 }
 
 /* 语义色只写一次，自动随 hue 切换 */
@@ -53,6 +90,10 @@ ${sem}
   --wisp-font-sans: ${stack(font.sans)};
   --wisp-font-mono: ${stack(font.mono)};
   --wisp-font-hand: ${stack(font.hand)};
+}`;
+  return `${HEADER}
+@layer theme {
+${indentLines(body, 2)}
 }
 `;
 }
@@ -65,12 +106,18 @@ export function genPele(p: Palette = defaultPalette): string {
     'md' in radiusValue &&
     typeof radiusValue.md === 'number'
       ? radiusValue.md
-      : 8;
+      : 4;
   const hues = hueNamesOf(p);
   const series = hues
     .map(
       (h, i) =>
         `  --pele-series-${i + 1}: var(--wisp-hue-${h});\n` +
+        `  --pele-series-${i + 1}-fill: color-mix(in srgb, var(--wisp-hue-${h}) ${PELE_FILL_STROKE_PERCENT.light}%, var(--wisp-bg));`,
+    )
+    .join('\n');
+  const lightSeriesFills = hues
+    .map(
+      (h, i) =>
         `  --pele-series-${i + 1}-fill: color-mix(in srgb, var(--wisp-hue-${h}) ${PELE_FILL_STROKE_PERCENT.light}%, var(--wisp-bg));`,
     )
     .join('\n');
@@ -91,8 +138,7 @@ export function genPele(p: Palette = defaultPalette): string {
         `}`,
     )
     .join('\n');
-  return `${HEADER}
-.pele {
+  const body = `.pele {
   --pele-bg: transparent;
   --pele-fg: var(--wisp-fg);
   --pele-muted: var(--wisp-muted);
@@ -110,6 +156,12 @@ ${series}
 ${darkSeries}
 }
 
+@media print {
+  [data-theme="dark"] .pele {
+${indentLines(lightSeriesFills, 2)}
+  }
+}
+
 ${fills}
 
 .pele-pie .pele-slices,
@@ -120,6 +172,10 @@ ${fills}
 
 .pele-pie .pele-slice-labels {
   fill: var(--wisp-fg);
+}`;
+  return `${HEADER}
+@layer utilities {
+${indentLines(body, 2)}
 }
 `;
 }
@@ -128,8 +184,7 @@ export function genDiagram(p: Palette = defaultPalette): string {
   const hues = hueNamesOf(p)
     .map((h) => `  --wd-${h}: var(--wisp-hue-${h});\n  --wd-${h}-fill: var(--wisp-hue-${h}-fill);`)
     .join('\n');
-  return `${HEADER}
-[data-theme] .wisp-d {
+  const body = `[data-theme] .wisp-d {
   --wd-bg: var(--wisp-bg);
   --wd-fg: var(--wisp-fg);
   --wd-muted: var(--wisp-muted);
@@ -138,6 +193,10 @@ export function genDiagram(p: Palette = defaultPalette): string {
 ${hues}
   --wd-font-sans: var(--wisp-font-sans);
   --wd-font-hand: var(--wisp-font-hand);
+}`;
+  return `${HEADER}
+@layer utilities {
+${indentLines(body, 2)}
 }
 `;
 }

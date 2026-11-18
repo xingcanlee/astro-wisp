@@ -1,22 +1,31 @@
 ---
 import Page from 'virtual:wisp/components/Page';
+import config from 'virtual:wisp/config';
 import { getTags } from '../../utils/taxonomy';
 import { sitePath } from '../../utils/paths';
 
 const terms = await getTags();
+const zh = /^zh\b/i.test(config.site.lang);
 ---
 
-<Page title="标签" description={`共 ${terms.length} 个标签`} prose={false}>
+<Page
+  title={zh ? '标签' : 'Tags'}
+  description={
+    zh ? `共 ${terms.length} 个标签` : `${terms.length} ${terms.length === 1 ? 'tag' : 'tags'}`
+  }
+  prose={false}
+>
   {terms.length === 0 ? (
-    <p class="empty">还没有标签。</p>
+    <p class="empty">{zh ? '还没有标签。' : 'No tags yet.'}</p>
   ) : (
     <ul class="terms">
       {terms.map((t) => (
         <li>
           <a href={sitePath(import.meta.env.BASE_URL, `/tags/${t.slug}/`)}>#{t.name}</a>
-          <span class="n" aria-label={`${t.count} 篇`}>
+          <span class="n" aria-hidden="true">
             {t.count}
           </span>
+          <span class="wisp-sr-only"> ({t.count})</span>
         </li>
       ))}
     </ul>

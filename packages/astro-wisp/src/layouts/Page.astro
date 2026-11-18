@@ -6,6 +6,8 @@
 import Base from 'virtual:wisp/components/Base';
 import config from 'virtual:wisp/config';
 import katexCssUrl from '../styles/katex.css?url';
+import diagramCssUrl from '../styles/diagram-figure.css?url';
+import { Font } from 'astro:assets';
 
 export interface Props {
   title: string;
@@ -15,14 +17,29 @@ export interface Props {
   prose?: boolean;
   /** remarkPluginFrontmatter.hasMath */
   hasMath?: boolean;
+  /** remarkPluginFrontmatter.hasDiagram / hasHandDiagram（remark-diagram 写入） */
+  hasDiagram?: boolean;
+  hasHandDiagram?: boolean;
 }
 
-const { title, description, lang, prose = true, hasMath = false } = Astro.props;
+const {
+  title,
+  description,
+  lang,
+  prose = true,
+  hasMath = false,
+  hasDiagram = false,
+  hasHandDiagram = false,
+} = Astro.props;
 ---
 
 <Base title={title} description={description} lang={lang}>
   <Fragment slot="head">
     {hasMath && config.features.math && <link rel="stylesheet" href={katexCssUrl} />}
+    {(hasDiagram || hasHandDiagram) && <link rel="stylesheet" href={diagramCssUrl} />}
+    {hasHandDiagram && config.hasExcalifont && (
+      <Font cssVariable="--font-wisp-hand" preload={[{ subset: 'latin' }]} />
+    )}
   </Fragment>
   <div class="wisp-container wisp-page">
     <header class="wisp-page-header">
@@ -57,9 +74,9 @@ const { title, description, lang, prose = true, hasMath = false } = Astro.props;
     }
     .wisp-page-header h1 {
       margin: 0;
-      font-size: clamp(1.75rem, 1.2rem + 2vw, 2.375rem);
+      font-size: clamp(1.75rem, 1.25rem + 1.8vw, 2.25rem);
       font-weight: 700;
-      line-height: 1.25;
+      line-height: 1.3;
     }
     .wisp-page-header p {
       margin: 0.5rem 0 0;

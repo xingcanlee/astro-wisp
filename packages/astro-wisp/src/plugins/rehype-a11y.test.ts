@@ -4,11 +4,11 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeA11y from './rehype-a11y';
 
-async function render(md: string): Promise<string> {
+async function render(md: string, lang?: string): Promise<string> {
   const p = await createMarkdownProcessor({
     syntaxHighlight: false,
     remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeKatex, rehypeA11y],
+    rehypePlugins: [rehypeKatex, lang ? [rehypeA11y, { lang }] : rehypeA11y],
   });
   return (await p.render(md)).code;
 }
@@ -74,5 +74,28 @@ describe('rehype-a11y', () => {
     expect(katexSegment).toContain('class="katex"');
     expect(katexSegment).not.toContain('<wbr>');
     expect(html).toContain('<p>正文 <code>BatchExecutionDescriptor</code> 不拆。</p>');
+  });
+
+  it('非中文站点块级公式使用 Formula，行内公式紧跟标点标 data-wisp-kinsoku', async () => {
+    const enHtml = await render('$$\nx=1\n$$', 'en');
+    expect(enHtml).toContain('aria-label="Formula"');
+
+    const kinsoku = await render('由 $x$，可得 $y$。以及 $z$ 后文。');
+    expect(kinsoku).toMatch(/class="katex" data-wisp-kinsoku="">[\s\S]*?，可得/);
+    expect(kinsoku).toMatch(/class="katex" data-wisp-kinsoku="">[\s\S]*?。以及/);
+    expect(kinsoku).toContain('以及 <span class="katex"><span class="katex-mathml">');
+  });
+
+  it('中文正文中紧邻汉字的英文/数字链接标 data-cjk-start / data-cjk-end（排除脚注链接）', async () => {
+    const html = await render(
+      '参考[FlashAttention](https://example.com)论文，以及 [Space](https://example.com) 和[纯中文](https://example.com)说明[^1]。\n\n[^1]: note',
+    );
+    expect(html).toContain(
+      '<a href="https://example.com" data-cjk-start="" data-cjk-end="">FlashAttention</a>',
+    );
+    expect(html).toContain('<a href="https://example.com">Space</a>');
+    expect(html).toContain('<a href="https://example.com">纯中文</a>');
+    expect(html).not.toMatch(/data-footnote-ref[^>]*data-cjk-/);
+    expect(html).not.toMatch(/data-footnote-backref[^>]*data-cjk-/);
   });
 });

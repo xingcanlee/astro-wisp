@@ -37,13 +37,10 @@ const zh = /^zh\b/i.test(config.site.lang);
       background: transparent;
       color: var(--wisp-muted);
       cursor: pointer;
-      transition:
-        color 150ms,
-        background-color 150ms;
+      transition: color 150ms;
     }
     .wisp-theme-toggle:hover {
       color: var(--wisp-fg);
-      background-color: var(--wisp-surface);
     }
     .wisp-theme-toggle:active :global(svg) {
       transform: scale(0.9);
@@ -74,7 +71,7 @@ const zh = /^zh\b/i.test(config.site.lang);
 
 <script>
   import { lang } from 'virtual:wisp/locale';
-  const zh = /^zh\b/i.test(lang);
+  const zh = /^zh\b/i.test(document.documentElement.lang || lang);
   const d = document.documentElement;
   const mq = matchMedia('(prefers-color-scheme: dark)');
   const names: Record<string, string> = zh

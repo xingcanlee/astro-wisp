@@ -1,11 +1,19 @@
 import type { Element, ElementContent, Root } from 'hast';
+import type { VFile } from 'vfile';
 import { visit } from 'unist-util-visit';
 import { splitSubwordTokens } from '../utils/title';
+
+export interface RehypeA11yOptions {
+  /** 站点语言（config.site.lang）；文章 frontmatter 的 lang 优先 */
+  lang?: string;
+}
 
 /**
  * 补齐 Markdown 产物的无障碍与多语种排版属性：
  * - GFM 任务列表的 checkbox 没有可访问名称 → 用所在列表项的文字作 aria-label
- * - KaTeX 块级公式：role=group + aria-label「公式」
+ * - KaTeX 块级公式：role=group + aria-label「公式」/「Formula」
+ * - KaTeX 行内公式紧接中文闭标点：标 data-wisp-kinsoku 避免标点落到行首
+ * - 中日韩正文中紧邻西文/数字的链接：标 data-cjk-start / data-cjk-end 补齐间距
  * - 表格包一层 div.wisp-table：表格本身保持 display:table 铺满正文栏，列多时由外层横向滚动
  * - 纯西文 `<em>` / `<i>`（含拉丁字母且不含中日韩文字、未显式写 lang）补 `lang="en"`：
  *   读屏按英语发音（WCAG 3.1.2），中文页里的英文论文名与术语保持真斜体而不打中文着重号
@@ -18,9 +26,15 @@ import { splitSubwordTokens } from '../utils/title';
 const CJK_SCRIPT_RE =
   /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Bopomofo}]/u;
 const LATIN_LETTER_RE = /\p{Script=Latin}/u;
+const KINSOKU_FOLLOW_RE = /^[，,。.、；;：:！!？?）》」』】〉…]/;
 
-export default function rehypeA11y() {
-  return (tree: Root) => {
+export default function rehypeA11y(options: RehypeA11yOptions = {}) {
+  return (tree: Root, file?: VFile) => {
+    const fm = (file?.data as { astro?: { frontmatter?: { lang?: unknown } } } | undefined)?.astro
+      ?.frontmatter;
+    const lang = typeof fm?.lang === 'string' && fm.lang ? fm.lang : (options.lang ?? 'zh-CN');
+    const zh = /^zh\b/i.test(lang);
+
     visit(tree, 'element', (node: Element, index, parent) => {
       if (/^h[1-6]$/.test(node.tagName)) splitHeadingSubwords(node);
       if (node.tagName === 'table') splitCellCode(node);
@@ -39,10 +53,18 @@ export default function rehypeA11y() {
         node.properties.tabIndex = 0;
         node.properties.dataWispTab = '';
         node.properties.role = 'group';
-        node.properties['ariaLabel'] = '公式';
+        node.properties['ariaLabel'] = zh ? '公式' : 'Formula';
         return 'skip';
       }
-      if (classes.includes('katex')) return 'skip';
+      if (classes.includes('katex')) {
+        if (parent && index !== undefined) {
+          const next = parent.children[index + 1];
+          if (next?.type === 'text' && KINSOKU_FOLLOW_RE.test(next.value)) {
+            node.properties.dataWispKinsoku = '';
+          }
+        }
+        return 'skip';
+      }
 
       if (node.tagName === 'li' && classes.includes('task-list-item')) {
         const input =
@@ -60,6 +82,34 @@ export default function rehypeA11y() {
         const text = textOf(node).trim();
         if (LATIN_LETTER_RE.test(text) && !CJK_SCRIPT_RE.test(text)) {
           node.properties.lang = 'en';
+        }
+      }
+
+      if (
+        node.tagName === 'a' &&
+        parent &&
+        index !== undefined &&
+        node.properties?.dataFootnoteRef == null &&
+        node.properties?.dataFootnoteBackref == null
+      ) {
+        const text = textOf(node).trim();
+        if (text) {
+          const prev = parent.children[index - 1];
+          const next = parent.children[index + 1];
+          if (
+            /^[A-Za-z0-9]/.test(text) &&
+            prev?.type === 'text' &&
+            /[\p{Script=Han}]$/u.test(prev.value)
+          ) {
+            node.properties.dataCjkStart = '';
+          }
+          if (
+            /[A-Za-z0-9]$/.test(text) &&
+            next?.type === 'text' &&
+            /^[\p{Script=Han}]/u.test(next.value)
+          ) {
+            node.properties.dataCjkEnd = '';
+          }
         }
       }
     });

@@ -43,11 +43,30 @@ interface Props {
 const { post, prev, next, series } = Astro.props;
 const { Content, headings, remarkPluginFrontmatter } = await render(post);
 // render() 的 headings[].text 取自 rehype-katex 渲染后的 hast，行内公式会被搅乱（如 $w$ → "www"）。
-// 用 remark-heading-text 在渲染前收集的原始文本按序号覆盖，供 Toc 构建时自行用 KaTeX 渲染。
+// 用 remark-heading-text 在渲染前收集的原始文本覆盖，供 Toc 构建时自行用 KaTeX 渲染；
+// 优先按 depth 顺序匹配 tocHeadingEntries，避免 MDX 中的 JSX 标题错位后续标题。
+const tocEntries = remarkPluginFrontmatter.tocHeadingEntries as
+  Array<{ depth: number; text: string; slug?: string }> | undefined;
 const tocTexts = remarkPluginFrontmatter.tocHeadingTexts as string[] | undefined;
-const headingsFixed = tocTexts
-  ? headings.map((h, i) => ({ ...h, text: tocTexts[i] ?? h.text }))
-  : headings;
+let headingsFixed = headings;
+if (tocEntries?.length) {
+  let cursor = 0;
+  headingsFixed = headings.map((h) => {
+    const bySlug = tocEntries.find((e, idx) => idx >= cursor && e.slug && e.slug === h.slug);
+    if (bySlug) {
+      cursor = tocEntries.indexOf(bySlug, cursor) + 1;
+      return { ...h, text: bySlug.text };
+    }
+    const byDepth = tocEntries.findIndex((e, idx) => idx >= cursor && e.depth === h.depth);
+    if (byDepth !== -1) {
+      cursor = byDepth + 1;
+      return { ...h, text: tocEntries[byDepth]!.text };
+    }
+    return h;
+  });
+} else if (tocTexts) {
+  headingsFixed = headings.map((h, i) => ({ ...h, text: tocTexts[i] ?? h.text }));
+}
 ---
 
 <Post

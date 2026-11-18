@@ -3,15 +3,24 @@ import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkMath from 'remark-math';
 import { VFile } from 'vfile';
-import remarkHeadingText from './remark-heading-text';
+import remarkHeadingText, { type TocHeadingEntry } from './remark-heading-text';
 
-async function textsOf(md: string): Promise<string[]> {
+async function runHeading(md: string) {
   const processor = unified().use(remarkParse).use(remarkMath).use(remarkHeadingText);
   const file = new VFile(md);
   const tree = processor.parse(file);
   await processor.run(tree, file);
-  return (file.data as { astro?: { frontmatter?: { tocHeadingTexts?: string[] } } }).astro
-    ?.frontmatter?.tocHeadingTexts as string[];
+  return (
+    file.data as {
+      astro?: {
+        frontmatter?: { tocHeadingTexts?: string[]; tocHeadingEntries?: TocHeadingEntry[] };
+      };
+    }
+  ).astro?.frontmatter;
+}
+
+async function textsOf(md: string): Promise<string[]> {
+  return (await runHeading(md))?.tocHeadingTexts as string[];
 }
 
 describe('remarkHeadingText 插件', () => {
@@ -31,6 +40,16 @@ describe('remarkHeadingText 插件', () => {
 
   it('块级公式与段落不影响结果', async () => {
     expect(await textsOf('## 标题\n\n$$\nx=1\n$$\n\n段落 $y$')).toEqual(['标题']);
+  });
+
+  it('tocHeadingEntries 同时记录 depth、text 与含公式标题的 slug', async () => {
+    const fm = await runHeading('# 一\n\n## 普通标题\n\n### 从 $q$ 到 $\\mathcal{H}^{res}$');
+    expect(fm?.tocHeadingEntries).toEqual([
+      { depth: 1, text: '一' },
+      { depth: 2, text: '普通标题' },
+      { depth: 3, text: '从 $q$ 到 $\\mathcal{H}^{res}$', slug: '从-q-到-hres' },
+    ]);
+    expect(fm?.tocHeadingTexts).toEqual(['一', '普通标题', '从 $q$ 到 $\\mathcal{H}^{res}$']);
   });
 });
 

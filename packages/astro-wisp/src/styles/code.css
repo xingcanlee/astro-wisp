@@ -85,6 +85,12 @@
   user-select: none;
   -webkit-user-select: none;
 }
+.wisp-pre.wisp-ln:has(> code > .line:nth-child(100)) .line::before {
+  width: 3ch;
+}
+.wisp-pre.wisp-ln:has(> code > .line:nth-child(1000)) .line::before {
+  width: 4ch;
+}
 
 /* diff 行 */
 .wisp-pre .line.diff {
@@ -118,6 +124,12 @@
   }
   & .wisp-pre.wisp-ln {
     --wisp-ln-w: calc(2ch + 1rem);
+  }
+  & .wisp-pre.wisp-ln:has(> code > .line:nth-child(100)) {
+    --wisp-ln-w: calc(3ch + 1rem);
+  }
+  & .wisp-pre.wisp-ln:has(> code > .line:nth-child(1000)) {
+    --wisp-ln-w: calc(4ch + 1rem);
   }
   & .wisp-pre .line {
     display: inline-block;
@@ -226,8 +238,9 @@
   }
 }
 
-/* 长代码折叠：无 JS 时完整显示；脚本给外层加 data-folded 后才限制高度 */
-.wisp-code[data-folded] .wisp-pre {
+/* 长代码折叠：无 JS 时完整显示；脚本或首帧前 html[data-wisp-js] 限制高度（避免流式 HTML 未折叠闪烁） */
+:is(.wisp-code[data-folded], html[data-wisp-js] .wisp-code[data-fold]:not([data-wisp-open]))
+  .wisp-pre {
   /* 上内边距 + N 行 + 半行余量，让最后一行之后露出渐变（上内边距与 .wisp-pre 一致） */
   max-height: calc(0.75rem + var(--fold, 12) * 1.7 * var(--wisp-code-size) + 0.5rem);
   overflow-y: hidden;
@@ -276,7 +289,18 @@
   }
 }
 @media print {
-  .wisp-code[data-folded] .wisp-pre {
+  [data-theme='dark'] .shiki,
+  [data-theme='dark'] .shiki span {
+    color: var(--shiki-light);
+    background-color: var(--shiki-light-bg);
+  }
+  [data-theme='dark'] .wisp-pre,
+  [data-theme='dark'] .wisp-pre span,
+  [data-theme='dark'] .wisp-pre .tok-low {
+    color: var(--shiki-light);
+  }
+  :is(.wisp-code[data-folded], html[data-wisp-js] .wisp-code[data-fold]:not([data-wisp-open]))
+    .wisp-pre {
     max-height: none;
     overflow-y: visible;
   }

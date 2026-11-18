@@ -68,6 +68,7 @@
     font-synthesis-weight: none;
     line-height: 1.8;
     letter-spacing: 0;
+    overflow-wrap: break-word;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -99,6 +100,10 @@
     border-radius: 2px;
   }
 
+  h1[tabindex='-1']:focus {
+    outline: none;
+  }
+
   a {
     color: inherit;
     text-decoration: none;
@@ -119,11 +124,20 @@
     text-spacing-trim: trim-start;
     line-break: strict;
     word-break: normal;
+  }
+  html:lang(zh) .prose :is(p, li, blockquote, dd) {
     overflow-wrap: anywhere;
     hanging-punctuation: first allow-end;
   }
-  html:not(:lang(zh)) body {
-    overflow-wrap: break-word;
+  code,
+  kbd,
+  samp,
+  pre,
+  .katex,
+  svg {
+    text-autospace: no-autospace;
+    text-spacing-trim: space-all;
+    hanging-punctuation: none;
   }
 
   /* 动效只有颜色/透明度过渡，150ms；切换主题时不加全局 transition */
@@ -132,7 +146,9 @@
     *::before,
     *::after {
       transition-duration: 0s !important;
+      transition-delay: 0s !important;
       animation-duration: 0s !important;
+      animation-delay: 0s !important;
       animation-iteration-count: 1 !important;
       scroll-behavior: auto !important;
     }
@@ -143,18 +159,29 @@
  * 版式尺寸：正文栏宽、侧栏宽、栏间距，以及由它们算出的整站外框宽度。
  * 页头、页脚、文章三栏网格、首页都用同一个外框（.wisp-shell），左右边线全站对齐。
  */
-:root {
-  --wisp-measure: 42rem;
-  --wisp-side: 14rem;
-  --wisp-gutter: 4rem;
-  --wisp-shell: calc(var(--wisp-measure) + 2 * var(--wisp-side) + 2 * var(--wisp-gutter));
-  --wisp-pad: 20px;
-  --wisp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --wisp-header-h: 56px;
-}
-@media (min-width: 48rem) {
+@layer theme {
+  @font-face {
+    font-family: 'Wisp CJK Fallback';
+    src:
+      local('PingFang SC'), local('HarmonyOS Sans SC'), local('MiSans'),
+      local('Microsoft YaHei UI'), local('Microsoft YaHei');
+    ascent-override: 116%;
+    descent-override: 28.8%;
+    line-gap-override: 0%;
+  }
   :root {
-    --wisp-pad: 32px;
+    --wisp-measure: 42rem;
+    --wisp-side: 14rem;
+    --wisp-gutter: 4rem;
+    --wisp-shell: calc(var(--wisp-measure) + 2 * var(--wisp-side) + 2 * var(--wisp-gutter));
+    --wisp-pad: 20px;
+    --wisp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+    --wisp-header-h: 56px;
+  }
+  @media (min-width: 48rem) {
+    :root {
+      --wisp-pad: 32px;
+    }
   }
 }
 
@@ -269,7 +296,7 @@
    * 轨道透明、999px 圆角、无步进三角箭头（▲/▼/◄/►）。
    * - 页面主滚动条（html）：桌面端 10px 命中区 + 2px 透明内衬 = 6px 悬浮圆角滑块（按住加宽到 8px），消除 Windows 原生悬空三角箭头；
    * - 导航轨道（[data-rail-scroll]、.wisp-nav ul）：各自隐藏滚动条，仅靠渐隐遮罩提示可滚；
-   * - 全部内部滚动容器（:where(body *)，0 特异性，无需枚举类名）：桌面端 8px 命中区 + 2px 透明内衬 = 4px 悬浮圆角滑块，
+   * - 全部内部滚动容器（0 特异性，精准匹配内部滚动容器以避免全站通配选择器开销）：桌面端 8px 命中区 + 2px 透明内衬 = 4px 悬浮圆角滑块，
    *   平时通过自定义属性 --wisp-sb: transparent 完全隐身，指针移入、焦点进入或鼠标拖拽时切换 --wisp-sb 立即重绘显现
    *   （避开 Blink 对容器 :hover::-webkit-scrollbar-thumb 不触发重绘的引擎缺陷），指向滑块本体时柔和展宽至 6px；
    * - Firefox 与触屏设备回退标准 scrollbar-width / scrollbar-color（Chromium 下严禁给 html 设 scrollbar-color，否则会废弃 ::-webkit-scrollbar）。
@@ -282,7 +309,22 @@
     html {
       scrollbar-color: var(--wisp-scroll-thumb) transparent;
     }
-    :where(body *) {
+    :where(
+      .wisp-pre,
+      .prose pre,
+      .wisp-table,
+      .prose > table,
+      .katex-display,
+      .wisp-pele-body,
+      .wisp-diagram-body,
+      .wisp-explainer__scroll,
+      .wisp-lightbox-media,
+      .wisp-cite-pop,
+      .wisp-series-inline ol,
+      .wisp-toc-inline > ol,
+      [data-wisp-scroll],
+      [data-wisp-vscroll]
+    ) {
       scrollbar-width: thin;
       scrollbar-color: var(--wisp-scroll-thumb) transparent;
     }
@@ -320,14 +362,59 @@
         border-width: 1px;
         background-color: var(--wisp-scroll-thumb-hover);
       }
-      :where(body *) {
+      :where(
+        .wisp-pre,
+        .prose pre,
+        .wisp-table,
+        .prose > table,
+        .katex-display,
+        .wisp-pele-body,
+        .wisp-diagram-body,
+        .wisp-explainer__scroll,
+        .wisp-lightbox-media,
+        .wisp-cite-pop,
+        .wisp-series-inline ol,
+        .wisp-toc-inline > ol,
+        [data-wisp-scroll],
+        [data-wisp-vscroll]
+      ) {
         --wisp-sb: transparent;
       }
-      :where(body *):where(:hover, :focus-within),
+      :where(
+        .wisp-pre,
+        .prose pre,
+        .wisp-table,
+        .prose > table,
+        .katex-display,
+        .wisp-pele-body,
+        .wisp-diagram-body,
+        .wisp-explainer__scroll,
+        .wisp-lightbox-media,
+        .wisp-cite-pop,
+        .wisp-series-inline ol,
+        .wisp-toc-inline > ol,
+        [data-wisp-scroll],
+        [data-wisp-vscroll]
+      ):where(:hover, :focus-within),
       [data-wisp-dragging] {
         --wisp-sb: var(--wisp-scroll-thumb);
       }
-      :where(body *)::-webkit-scrollbar {
+      :where(
+        .wisp-pre,
+        .prose pre,
+        .wisp-table,
+        .prose > table,
+        .katex-display,
+        .wisp-pele-body,
+        .wisp-diagram-body,
+        .wisp-explainer__scroll,
+        .wisp-lightbox-media,
+        .wisp-cite-pop,
+        .wisp-series-inline ol,
+        .wisp-toc-inline > ol,
+        [data-wisp-scroll],
+        [data-wisp-vscroll]
+      )::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
@@ -336,11 +423,41 @@
       html {
         scrollbar-color: var(--wisp-scroll-thumb) transparent;
       }
-      :where(body *) {
+      :where(
+        .wisp-pre,
+        .prose pre,
+        .wisp-table,
+        .prose > table,
+        .katex-display,
+        .wisp-pele-body,
+        .wisp-diagram-body,
+        .wisp-explainer__scroll,
+        .wisp-lightbox-media,
+        .wisp-cite-pop,
+        .wisp-series-inline ol,
+        .wisp-toc-inline > ol,
+        [data-wisp-scroll],
+        [data-wisp-vscroll]
+      ) {
         scrollbar-width: thin;
         scrollbar-color: transparent transparent;
       }
-      :where(body *):where(:hover, :focus-within),
+      :where(
+        .wisp-pre,
+        .prose pre,
+        .wisp-table,
+        .prose > table,
+        .katex-display,
+        .wisp-pele-body,
+        .wisp-diagram-body,
+        .wisp-explainer__scroll,
+        .wisp-lightbox-media,
+        .wisp-cite-pop,
+        .wisp-series-inline ol,
+        .wisp-toc-inline > ol,
+        [data-wisp-scroll],
+        [data-wisp-vscroll]
+      ):where(:hover, :focus-within),
       [data-wisp-dragging] {
         scrollbar-color: var(--wisp-scroll-thumb) transparent;
       }
@@ -371,7 +488,8 @@
   [data-wisp-overflow='both'] {
     --wisp-fade-end: var(--wisp-fade-size);
   }
-  [data-wisp-overflow]:focus-visible {
+  [data-wisp-overflow]:focus-visible,
+  [data-wisp-overflow]:has(:focus-visible) {
     mask-image: none;
   }
   [data-wisp-vfade] {
@@ -396,5 +514,21 @@
     cursor: grabbing !important;
     user-select: none;
     -webkit-user-select: none;
+  }
+
+  @media print {
+    .wisp-header,
+    .wisp-footer,
+    .wisp-progress,
+    .wisp-post-aside,
+    .wisp-post-series-aside,
+    .wisp-post-series-inline,
+    .wisp-post-toc-inline,
+    .wisp-prevnext {
+      display: none !important;
+    }
+    [data-wisp-overflow] {
+      mask-image: none !important;
+    }
   }
 }

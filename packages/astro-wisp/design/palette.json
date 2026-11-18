@@ -75,6 +75,7 @@
     "sans": [
       "Inter Variable",
       "Noto Sans SC Variable",
+      "Wisp CJK Fallback",
       "-apple-system",
       "BlinkMacSystemFont",
       "PingFang SC",
@@ -92,6 +93,7 @@
       "Consolas",
       "Noto Sans SC Variable",
       "PingFang SC",
+      "Microsoft YaHei",
       "monospace"
     ],
     "hand": ["Excalifont", "Virgil", "Noto Sans SC Variable", "PingFang SC", "sans-serif"],

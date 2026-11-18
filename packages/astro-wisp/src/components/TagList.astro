@@ -57,10 +57,15 @@ const linkBase = sitePath(import.meta.env.BASE_URL, base);
     .wisp-tags a:hover {
       color: var(--wisp-accent);
     }
-    /* 触屏及窄屏：32px 高的命中区之间至少留 8px */
+    /* 触屏及窄屏：收紧换行行距，同时保持 ≥ 28px+ 触控命中区 */
     @media (pointer: coarse), (max-width: 47.99rem) {
       .wisp-tags {
-        row-gap: 0.5rem;
+        row-gap: 0.25rem;
+      }
+      .wisp-tags a {
+        min-height: 1.75rem;
+        padding-block: 0.25rem;
+        margin-block: -0.125rem;
       }
     }
   }

@@ -98,12 +98,39 @@ export function splitSubwordTokens(raw: string): string[] {
   return out;
 }
 
+const CJK_ORPHAN_RE =
+  /(\p{Script=Han})(?:<wbr>)?(\p{Script=Han}[\u3002\uff0c\uff1b\uff1a\uff01\uff1f\u3001\u2026\u201d\u2019\u300b\u300d\u300f\u3011\u3009\uff09\u3015\u3017]*)$/u;
+
+const segmenterCache = new Map<string, Intl.Segmenter>();
+
+function getSegmenter(lang: string): Intl.Segmenter {
+  let segmenter = segmenterCache.get(lang);
+  if (!segmenter) {
+    segmenter = new Intl.Segmenter(lang, { granularity: 'word' });
+    segmenterCache.set(lang, segmenter);
+  }
+  return segmenter;
+}
+
+/**
+ * Prevents a single trailing Hanzi character (plus optional closing CJK punctuation)
+ * from wrapping alone onto the final line by stripping a preceding `<wbr>` and
+ * joining the last two adjacent Hanzi with `\u2060` (WORD JOINER).
+ */
+export function preventCjkOrphan(html: string): string {
+  return html.replace(CJK_ORPHAN_RE, '$1\u2060$2');
+}
+
+function formatSegmentHtml(text: string): string {
+  return splitSubwordTokens(text).map(escapeHtml).join('<wbr>');
+}
+
 /**
  * Escapes HTML and injects `<wbr>` at safe subword boundaries (for lists,
  * cards, prev/next links, TOC headings, and non-zh titles).
  */
 export function formatTitleHtml(text: string): string {
-  return splitSubwordTokens(text).map(escapeHtml).join('<wbr>');
+  return preventCjkOrphan(formatSegmentHtml(text));
 }
 
 export function segmentTitleWords(
@@ -114,12 +141,12 @@ export function segmentTitleWords(
   if (!zh || typeof Intl.Segmenter !== 'function') {
     return { html: formatTitleHtml(titleText), segmented: false };
   }
-  const segmenter = new Intl.Segmenter(lang, { granularity: 'word' });
+  const segmenter = getSegmenter(lang!);
   const parts = [...segmenter.segment(titleText)].map((x) => x.segment).filter(Boolean);
   if (parts.length === 0) {
     return { html: '', segmented: true };
   }
-  let html = formatTitleHtml(parts[0]!);
+  let html = formatSegmentHtml(parts[0]!);
   for (let i = 1; i < parts.length; i += 1) {
     const prev = parts[i - 1]!;
     const next = parts[i]!;
@@ -128,7 +155,7 @@ export function segmentTitleWords(
     if (!afterDoubleSlash && !NO_BREAK_AFTER.test(prev) && !NO_BREAK_BEFORE.test(next)) {
       html += '<wbr>';
     }
-    html += formatTitleHtml(next);
+    html += formatSegmentHtml(next);
   }
-  return { html, segmented: true };
+  return { html: preventCjkOrphan(html), segmented: true };
 }

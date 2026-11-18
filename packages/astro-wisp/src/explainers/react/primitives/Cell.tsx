@@ -57,7 +57,10 @@ export default function Cell({
           width={size}
           height={size}
           rx={4}
-          style={{ fill: toneStroke(tone), fillOpacity: 0.04 + 0.4 * heat }}
+          style={{
+            fill: toneStroke(tone),
+            opacity: `calc(var(--wisp-cell-heat, 0.44) * ${((0.04 + 0.4 * Math.max(0, Math.min(1, heat))) / 0.44).toFixed(4)})`,
+          }}
         />
       )}
       <motion.rect

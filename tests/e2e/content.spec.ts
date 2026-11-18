@@ -35,7 +35,7 @@ test('复制按钮复制的文本不含行号', async ({ page, context }) => {
   await pre.hover();
   await btn.click();
   await expect(btn).toHaveAttribute('data-done', '');
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  const copied = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n');
   const expected = await pre.locator('code').evaluate((c) => c.textContent ?? '');
   expect(copied.length).toBeGreaterThan(0);
   expect(copied).toBe(expected);

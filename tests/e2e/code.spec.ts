@@ -125,7 +125,7 @@ test('折叠态下复制得到完整代码', async ({ page }) => {
   await expect(box).toHaveAttribute('data-folded', '');
   await box.hover();
   await box.locator('.wisp-copy').click();
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  const copied = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n');
   const expected = await box.locator('code').evaluate((c) => c.textContent ?? '');
   expect(copied.split('\n').length).toBeGreaterThanOrEqual(40);
   expect(copied).toBe(expected);
@@ -222,6 +222,6 @@ test('切换自动换行：整页生效、记住选择、刷新后首帧即换�
   // 复制仍得到原始的一行
   await box.hover();
   await box.locator('.wisp-copy').click();
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  const copied = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n');
   expect(copied.split('\n').filter(Boolean)).toHaveLength(1);
 });

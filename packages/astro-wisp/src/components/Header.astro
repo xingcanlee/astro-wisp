@@ -195,7 +195,8 @@ const posLabel = zh ? `${running?.position}（系列篇目）` : `${running?.pos
      */
     .wisp-running-toggle {
       display: none;
-      padding: 0;
+      padding: 0.5rem 0;
+      margin-block: -0.5rem;
       border: 0;
       border-radius: 3px;
       background: none;
@@ -284,7 +285,7 @@ const posLabel = zh ? `${running?.position}（系列篇目）` : `${running?.pos
       height: 0.5rem;
       border-radius: 2px;
       background: var(--wisp-fg);
-      box-shadow: 0 0 0 2px var(--wisp-bg);
+      outline: 2px solid var(--wisp-bg);
     }
     .wisp-brand:hover .wisp-brand-mark {
       transform: rotate(-8deg);

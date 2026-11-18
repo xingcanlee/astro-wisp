@@ -6,7 +6,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
-import type { Step } from '../core/timeline';
+import { clampIndex, stepAt, type Step } from '../core/timeline';
 import { labelsFor, type PlayerLabels } from './labels';
 import { SPEEDS, usePlayer, type PlayerApi } from './usePlayer';
 import PlayerIcon from './PlayerIcon';
@@ -34,6 +34,9 @@ export const MAX_TICKS = 24;
 
 const isButton = (t: EventTarget) => t instanceof HTMLElement && t.tagName === 'BUTTON';
 const isRange = (t: EventTarget) => t instanceof HTMLInputElement && t.type === 'range';
+const isScrollBox = (t: EventTarget) =>
+  t instanceof HTMLElement &&
+  (t.classList.contains('wisp-explainer__scroll') || t.hasAttribute('data-wisp-overflow'));
 
 /**
  * 给会变化的短文字（步数、倍速）预留宽度：最宽的那一段通过 `data-reserve` 由 ::before 叠在同一个网格格子里
@@ -75,7 +78,7 @@ const CaptionGhosts = memo(function CaptionGhosts({ steps }: { steps: Step<unkno
  * 舞台高度棘轮：记录当前宽度下见过的最大高度并设为 min-height，个别帧变矮时卡片不跳；宽度变化时重新计。
  * 直接写 style，不触发 React 渲染，也不做动画。
  */
-function useStageRatchet(deps: unknown) {
+function useStageRatchet(stepCount: number) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -85,13 +88,18 @@ function useStageRatchet(deps: unknown) {
     const ro = new ResizeObserver((entries) => {
       const box = entries[0].borderBoxSize?.[0];
       const w = box ? box.inlineSize : el.offsetWidth;
+      const h = box ? box.blockSize : el.offsetHeight;
+      if (width === -1) {
+        width = w;
+        max = h;
+        return;
+      }
       if (w !== width) {
         width = w;
         el.style.minHeight = '';
         max = el.getBoundingClientRect().height;
         return;
       }
-      const h = box ? box.blockSize : el.offsetHeight;
       if (h > max + 0.5) {
         max = h;
         el.style.minHeight = `${max}px`;
@@ -102,7 +110,7 @@ function useStageRatchet(deps: unknown) {
       ro.disconnect();
       el.style.minHeight = '';
     };
-  }, [deps]);
+  }, [stepCount]);
   return ref;
 }
 
@@ -110,49 +118,72 @@ function useStageRatchet(deps: unknown) {
  * 通用分步播放器：舞台 / 进度刻度 / 说明 / 控制条，键盘与 aria-live。
  * 任何 `Step<S>[]` 都可以交给它，画面由 children 渲染。说明里的 `$…$` 按行内公式排版。
  */
-export default function Player<S>({
+export default function Player<S>(props: PlayerProps<S>) {
+  if (props.player) return <PlayerBody {...props} player={props.player} />;
+  return <PlayerWithState {...props} />;
+}
+
+function PlayerWithState<S>(props: PlayerProps<S>) {
+  const player = usePlayer(props.steps.length);
+  return <PlayerBody {...props} player={player} />;
+}
+
+function PlayerBody<S>({
   steps,
   label,
   children,
   lang,
   labels,
-  player,
+  player: p,
   count = true,
-}: PlayerProps<S>) {
-  const own = usePlayer(steps.length);
-  const p = player ?? own;
+}: Omit<PlayerProps<S>, 'player'> & { player: PlayerApi }) {
   const t = labelsFor(lang, labels);
   const n = steps.length;
-  const step = steps[p.index];
-  const atFirst = p.index <= 0;
-  const atLast = p.index >= n - 1;
+  const index = clampIndex(p.index, n);
+  const step = stepAt(steps, index);
+  const atFirst = index <= 0;
+  const atLast = index >= n - 1;
   const replay = !p.playing && atLast;
   const playLabel = p.playing ? t.pause : replay ? t.replay : t.play;
-  const stageRef = useStageRatchet(steps);
-  const progress = n > 1 ? p.index / (n - 1) : 1;
+  const stageRef = useStageRatchet(steps.length);
+  const progress = n > 1 ? index / (n - 1) : 1;
   const speedText = `${p.speed}×`;
+
+  useEffect(() => {
+    const scrollEl = stageRef.current?.querySelector<HTMLElement>('.wisp-explainer__scroll');
+    if (!scrollEl || scrollEl.scrollWidth <= scrollEl.clientWidth + 4) return;
+    const focusEl = scrollEl.querySelector<SVGGraphicsElement>('[data-focus-target]');
+    if (!focusEl) return;
+    const sr = scrollEl.getBoundingClientRect();
+    const fr = focusEl.getBoundingClientRect();
+    const targetLeft = scrollEl.scrollLeft + (fr.left + fr.width / 2) - (sr.left + sr.width / 2);
+    scrollEl.scrollTo({
+      left: Math.max(0, Math.min(scrollEl.scrollWidth - scrollEl.clientWidth, targetLeft)),
+      behavior: p.reducedMotion ? 'auto' : 'smooth',
+    });
+  }, [index, p.reducedMotion, stageRef]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     switch (e.key) {
       case ' ':
-        if (isButton(e.target) || isRange(e.target)) return; // 交给按钮自身
+        if (isButton(e.target) || isRange(e.target) || isScrollBox(e.target)) return; // 交给按钮或滚动容器自身
         p.toggle();
         break;
       case 'ArrowRight':
-        if (isRange(e.target)) return;
+        if (isRange(e.target) || isScrollBox(e.target)) return;
         p.next();
         break;
       case 'ArrowLeft':
-        if (isRange(e.target)) return;
+        if (isRange(e.target) || isScrollBox(e.target)) return;
         p.prev();
         break;
       case 'Home':
-        if (isRange(e.target)) return;
+        if (isButton(e.target) || isRange(e.target) || isScrollBox(e.target)) return;
         p.first();
         break;
       case 'End':
-        if (isRange(e.target)) return;
+        if (isButton(e.target) || isRange(e.target) || isScrollBox(e.target)) return;
         p.last();
         break;
       default:
@@ -164,13 +195,14 @@ export default function Player<S>({
   return (
     <div className="wisp-player" role="group" aria-label={label} tabIndex={0} onKeyDown={onKeyDown}>
       <div className="wisp-player__stage" ref={stageRef}>
-        {children(step, p.index)}
+        {children(step, index)}
       </div>
 
       <div
         className="wisp-player__track"
         style={{ '--wisp-progress': progress } as CSSProperties}
         data-ticks={n > 1 && n <= MAX_TICKS ? '' : undefined}
+        data-at-start={atFirst ? '' : undefined}
       >
         <div className="wisp-player__rail" aria-hidden="true">
           <span className="wisp-player__fill" />
@@ -180,7 +212,7 @@ export default function Player<S>({
               <span
                 key={i}
                 className="wisp-player__tick"
-                data-done={i <= p.index ? '' : undefined}
+                data-done={i <= index ? '' : undefined}
                 style={{ '--wisp-at': i / (n - 1) } as CSSProperties}
               />
             ))}
@@ -191,16 +223,20 @@ export default function Player<S>({
           min={0}
           max={n - 1}
           step={1}
-          value={p.index}
+          value={index}
           aria-label={t.progress}
-          aria-valuetext={t.stepOf(p.index + 1, n)}
+          aria-valuetext={t.stepOf(index + 1, n)}
           title={`${t.progress} (${t.keys.first} / ${t.keys.last})`}
           onChange={(e) => p.seek(Number(e.target.value))}
         />
       </div>
 
       <div className="wisp-player__captions">
-        <div className="wisp-player__caption" aria-live="polite" aria-atomic="true">
+        <div
+          className="wisp-player__caption"
+          aria-live={p.playing ? 'off' : 'polite'}
+          aria-atomic="true"
+        >
           <RichText text={step.caption} />
         </div>
         <CaptionGhosts steps={steps} />
@@ -239,7 +275,7 @@ export default function Player<S>({
         </div>
 
         <div className="wisp-player__aside">
-          {count && <StepCount index={p.index} total={n} />}
+          {count && <StepCount index={index} total={n} />}
           <button
             type="button"
             className="wisp-player__speed"
