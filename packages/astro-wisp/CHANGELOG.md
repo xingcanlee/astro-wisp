@@ -2,6 +2,23 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.5.6 (2026-11-18)
+
+### 新增
+
+- **中文字体加载策略**：新增 `fonts.cjkDisplay` 配置（`'swap' | 'fallback' | 'optional'`，默认 `'swap'`），通过 `virtual:wisp/cjk-font-url` 控制思源黑体分片的 `font-display`。
+- **度量对齐回退字体**：内置本地 `@font-face` `Wisp CJK Fallback`（`ascent-override: 116%; descent-override: 28.8%; line-gap-override: 0%`），并在等宽字体栈补入 `Microsoft YaHei`，消除字体切换前后的行高跳变与中文代码注释回退中易宋体的问题。
+
+### 变更
+
+- **字体与样式性能**：预加载 `JetBrains Mono`、`KaTeX_AMS-Regular` 与 `KaTeX_Size1-Regular`；按调色板手写字体栈与页面实际手绘图按需注册并预加载 `Excalifont`；交互讲解组件 `RichText` 复用 SSR DOM 的 `data-tex` 公式缓存，免除客户端重复下载 `katex.js` 与重复引入 KaTeX 样式；流式加载长代码块在首帧即保持折叠高度。
+- **级联层与打印样式**：令牌、Pele 与图表样式纳入 `@layer theme` / `@layer utilities` 并补齐 `@media print` 浅色令牌重置与页面外框隐藏规则；百行/千行代码块自动扩展行号列宽。
+
+### 修复
+
+- **中文排版细节**：标题末尾汉字注入 `\u2060` 防止目录、系列栏与归档页出现单字成行；行内公式后紧接中文闭标点时补充 `data-wisp-kinsoku` 防行首落单；正文紧邻汉字的非脚注链接补充 `data-cjk-start` / `data-cjk-end` 间距。
+- **移动端表格与交互无障碍**：解除窄屏表格单元格换行及 `> table` 宽度与 `[data-wisp-overflow]` 的耦合，消除字体加载时机引发的布局振荡与宽度双稳态；`Lightbox` 放大入口改为原生 `<button>` + CSS `mask` 图标并支持键盘唤醒与焦点还原；返回顶部按钮自动避让底部讲解器控制栏；修复带 `base` 子路径站点 `rss.xml` 链接重复拼接前缀的问题。
+
 ## 0.5.5 (2026-11-18)
 
 ### 变更
