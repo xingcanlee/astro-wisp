@@ -2,6 +2,21 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.6.0 (2026-11-19)
+
+### 破坏性变更
+
+- 主题配色机制从 `<html data-theme>` / `localStorage['wisp-theme']` / 三态按钮彻底迁移为原生 `<meta name="color-scheme" content="light dark">` + CSS `light-dark()` + `localStorage['color-scheme']` 与两态 `aria-pressed` 主题开关，移除历史兼容代码与回退分支。
+
+### 新增与变更
+
+- **原生交互与现代 CSS**：阅读进度条改用纯 CSS Scroll-Driven Animation（`animation-timeline: scroll(root block)`，零 JS）；灯箱改用 `<dialog closedby="any">` + `command="close"` / `commandfor` + `@starting-style`；引用预览改为构建期 `<div popover="hint" role="tooltip">` + `interestfor` + CSS Anchor Positioning（`position-area` / `position-try-fallbacks`）；接入 `<meta name="text-scale" content="scale">`、Speculation Rules 预取、`interpolate-size` 与 `::details-content` 折叠动画、View Transitions、`100dvh` 与 `@media (forced-colors: active)` 适配。
+- **讲解器与主题工具**：`usePlayer` 新增 `pause()`；更新调色板令牌生成（`tokens.css` / `pele.css` / `diagram.css`）与 `DESIGN.md`。
+
+### 无障碍与修复
+
+- 移除首页冗余的 `section[role="region"]` 地标；`rehype-a11y` 自动为表头 `th` 补全 `scope="col" | "row"` 并为 `h2–h6` 补充 `tabindex="-1"`；灯箱隐藏标题改为 `<h2 class="wisp-sr-only">`；完善代码块折叠 `aria-controls` 与焦点管理；同步更新单元测试、E2E 与视觉回归快照。
+
 ## 0.5.6 (2026-11-18)
 
 ### 新增
