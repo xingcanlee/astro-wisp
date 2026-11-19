@@ -570,13 +570,23 @@ const subToggleLabel = (text: string) => {
     requestAnimationFrame(sync);
     addEventListener('scrollend', () => {
       if (locked) {
-        locked = false;
+        requestAnimationFrame(() => {
+          locked = false;
+        });
         clearTimeout(unlock);
         return;
       }
       sync();
     });
-    addEventListener('hashchange', sync);
+    addEventListener('hashchange', () => {
+      if (locked) return;
+      const id = decodeURIComponent(location.hash.slice(1));
+      if (id && heads.some((h) => h.id === id)) {
+        set(id);
+        return;
+      }
+      sync();
+    });
     for (const a of links) {
       a.addEventListener('click', () => {
         const id = a.dataset.tocLink!;

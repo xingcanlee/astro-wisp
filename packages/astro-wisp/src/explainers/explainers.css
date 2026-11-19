@@ -26,8 +26,6 @@
     --wisp-cell-heat: 0.24;
   }
   .wisp-explainer {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 24rem;
     margin-block: var(--wisp-block-gap, 1.75em);
     margin-inline: 0;
     border: 1px solid var(--wisp-border);

@@ -720,8 +720,6 @@
 /* 跳转目标让开吸顶页眉：由 html 的 scroll-padding-top（header-h + 1.5rem，global.css）统一负责，这里不再叠加 scroll-margin。 */
 /* 文末列表：发丝线把它和正文分开（章末的 1px 墨线由下方的上一篇/下一篇负责收口，不重复画） */
 .prose section[data-footnotes] {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 24rem;
   margin-top: 3.5em;
   padding-top: 1.25em;
   border-top: 1px solid var(--wisp-border);
@@ -887,11 +885,7 @@ html:not([data-wisp-cite]) .prose section[data-footnotes] li:target::before {
   overscroll-behavior-x: contain;
 }
 
-/* ---------- 交互组件/图表等宽内容的竖向节奏与屏外渲染跳过 ---------- */
-.prose > :is(.wisp-diagram, .wisp-pele, .wisp-figure:has(> .wisp-diagram-body, > .wisp-pele-body)) {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 18rem;
-}
+/* ---------- 交互组件/图表等宽内容的竖向节奏 ---------- */
 .prose > .wisp-wide,
 .prose > .wisp-figure {
   margin-block: var(--wisp-block-gap);
