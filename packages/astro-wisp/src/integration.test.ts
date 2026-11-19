@@ -152,9 +152,9 @@ describe('astro-wisp 集成', () => {
     const file = join(codegen, 'theme.css');
     expect(load('virtual:wisp/theme-css')).toBe(`import ${JSON.stringify(file)};`);
     const css = readFileSync(file, 'utf8');
-    expect(css).toContain('--wisp-accent: #eeeeee;');
+    expect(css).toContain('--wisp-accent: light-dark(#eeeeee, #5ad19a);');
     expect(css).toContain('--pele-accent: var(--wisp-accent);');
-    expect(css).toContain('[data-theme] .wisp-d');
+    expect(css).toContain('.wisp-d {');
     expect(warnings.some((w) => w.includes('accent / bg'))).toBe(true);
   });
 
@@ -184,7 +184,7 @@ describe('astro-wisp 集成', () => {
     expect(notoCss).toContain('font-display:optional');
     expect(notoCss).not.toContain('url(./files/');
     expect(readFileSync(join(opt.codegen, 'theme.css'), 'utf8')).toContain(
-      '--wisp-accent: #0a5c36;',
+      '--wisp-accent: light-dark(#0a5c36, #5ad19a);',
     );
 
     const fb = setup({ fonts: { cjkDisplay: 'fallback' } });

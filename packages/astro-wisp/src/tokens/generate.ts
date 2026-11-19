@@ -1,5 +1,5 @@
 import { FONT_STACK_VARS } from './font-vars';
-import { hueNamesOf, palette as defaultPalette, type Mode, type Palette } from './palette';
+import { hueNamesOf, palette as defaultPalette, type Palette } from './palette';
 
 /**
  * palette → CSS 令牌。纯函数：默认调色板的产物提交在 src/styles/{tokens,pele,diagram}.css
@@ -47,12 +47,14 @@ function indentLines(text: string, spaces = 2): string {
     .join('\n');
 }
 
-function modeVars(p: Palette, mode: Mode): string {
+function lightDarkVars(p: Palette): string {
   const lines: string[] = [];
-  for (const [k, v] of Object.entries(p.color.base)) lines.push(`  --wisp-${k}: ${v[mode]};`);
+  for (const [k, v] of Object.entries(p.color.base)) {
+    lines.push(`  --wisp-${k}: light-dark(${v.light}, ${v.dark});`);
+  }
   for (const [k, v] of Object.entries(p.color.hue)) {
-    lines.push(`  --wisp-hue-${k}: ${v.stroke[mode]};`);
-    lines.push(`  --wisp-hue-${k}-fill: ${v.fill[mode]};`);
+    lines.push(`  --wisp-hue-${k}: light-dark(${v.stroke.light}, ${v.stroke.dark});`);
+    lines.push(`  --wisp-hue-${k}-fill: light-dark(${v.fill.light}, ${v.fill.dark});`);
   }
   return lines.join('\n');
 }
@@ -65,31 +67,29 @@ export function genTokens(p: Palette = defaultPalette): string {
         `  --wisp-sem-${k}: var(--wisp-hue-${h});\n  --wisp-sem-${k}-fill: var(--wisp-hue-${h}-fill);`,
     )
     .join('\n');
-  const lightVars = modeVars(p, 'light');
-  const body = `:root,
-[data-theme="light"] {
-  color-scheme: light;
-${lightVars}
-}
-
-[data-theme="dark"] {
-  color-scheme: dark;
-${modeVars(p, 'dark')}
-}
-
-@media print {
-  [data-theme="dark"] {
-    color-scheme: light;
-${indentLines(lightVars, 2)}
-  }
-}
-
-/* 语义色只写一次，自动随 hue 切换 */
-:root {
+  const body = `:root {
+  color-scheme: light dark;
+  accent-color: var(--wisp-accent);
+${lightDarkVars(p)}
 ${sem}
   --wisp-font-sans: ${stack(font.sans)};
   --wisp-font-mono: ${stack(font.mono)};
   --wisp-font-hand: ${stack(font.hand)};
+}
+
+:root:has(> head > meta[name="color-scheme"][content="dark"]) {
+  color-scheme: dark;
+}
+
+:root:has(> head > meta[name="color-scheme"][content="light"]) {
+  color-scheme: light;
+}
+
+@media print {
+  :root,
+  :root:has(> head > meta[name="color-scheme"][content]) {
+    color-scheme: light;
+  }
 }`;
   return `${HEADER}
 @layer theme {
@@ -112,19 +112,7 @@ export function genPele(p: Palette = defaultPalette): string {
     .map(
       (h, i) =>
         `  --pele-series-${i + 1}: var(--wisp-hue-${h});\n` +
-        `  --pele-series-${i + 1}-fill: color-mix(in srgb, var(--wisp-hue-${h}) ${PELE_FILL_STROKE_PERCENT.light}%, var(--wisp-bg));`,
-    )
-    .join('\n');
-  const lightSeriesFills = hues
-    .map(
-      (h, i) =>
-        `  --pele-series-${i + 1}-fill: color-mix(in srgb, var(--wisp-hue-${h}) ${PELE_FILL_STROKE_PERCENT.light}%, var(--wisp-bg));`,
-    )
-    .join('\n');
-  const darkSeries = hues
-    .map(
-      (h, i) =>
-        `  --pele-series-${i + 1}-fill: color-mix(in srgb, var(--wisp-hue-${h}) ${PELE_FILL_STROKE_PERCENT.dark}%, var(--wisp-bg));`,
+        `  --pele-series-${i + 1}-fill: light-dark(color-mix(in srgb, var(--wisp-hue-${h}) ${PELE_FILL_STROKE_PERCENT.light}%, var(--wisp-bg)), color-mix(in srgb, var(--wisp-hue-${h}) ${PELE_FILL_STROKE_PERCENT.dark}%, var(--wisp-bg)));`,
     )
     .join('\n');
   const fills = hues
@@ -152,16 +140,6 @@ export function genPele(p: Palette = defaultPalette): string {
 ${series}
 }
 
-[data-theme="dark"] .pele {
-${darkSeries}
-}
-
-@media print {
-  [data-theme="dark"] .pele {
-${indentLines(lightSeriesFills, 2)}
-  }
-}
-
 ${fills}
 
 .pele-pie .pele-slices,
@@ -184,7 +162,7 @@ export function genDiagram(p: Palette = defaultPalette): string {
   const hues = hueNamesOf(p)
     .map((h) => `  --wd-${h}: var(--wisp-hue-${h});\n  --wd-${h}-fill: var(--wisp-hue-${h}-fill);`)
     .join('\n');
-  const body = `[data-theme] .wisp-d {
+  const body = `.wisp-d {
   --wd-bg: var(--wisp-bg);
   --wd-fg: var(--wisp-fg);
   --wd-muted: var(--wisp-muted);

@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 
 test('Mermaid：6 个 .wisp-pele，各含 SVG', async ({ page }) => {
   await expect(page.locator('.wisp-pele')).toHaveCount(6);
-  await expect(page.locator('.wisp-pele svg')).toHaveCount(6);
+  await expect(page.locator('.wisp-pele svg.pele')).toHaveCount(6);
 });
 
 test('KaTeX 公式存在', async ({ page }) => {
@@ -41,7 +41,7 @@ test('复制按钮复制的文本不含行号', async ({ page, context }) => {
   expect(copied).toBe(expected);
   // 每行都不应以行号开头
   for (const l of copied.split('\n')) expect(l).not.toMatch(/^\s*\d+\s*$/);
-  await expect(btn.locator('xpath=following-sibling::span[@role="status"]')).toHaveText('已复制');
+  await expect(btn.locator('xpath=following-sibling::span[@role="status"]')).toHaveText(/已复制/);
 });
 
 test('剪贴板不可用时给出复制失败反馈', async ({ page }) => {
@@ -54,12 +54,12 @@ test('剪贴板不可用时给出复制失败反馈', async ({ page }) => {
         },
       },
     });
-    (document as Document & { execCommand?: () => boolean }).execCommand = () => false;
   });
   const pre = page.locator('pre.wisp-ln').first();
   const btn = pre.locator('xpath=..').locator('.wisp-copy');
   await btn.click();
-  await expect(btn.locator('xpath=following-sibling::span[@role="status"]')).toHaveText('复制失败');
+  await expect(btn).toHaveAttribute('data-failed', '');
+  await expect(btn.locator('xpath=following-sibling::span[@role="status"]')).toHaveText(/复制失败/);
 });
 
 test('移动端交互入口有足够的触控高度', async ({ page }) => {
@@ -142,7 +142,15 @@ test('图表和 Mermaid SVG 可用键盘打开 lightbox，并恢复焦点', asyn
 
   await trigger.click();
   await expect(dialog).toHaveAttribute('open', '');
-  await dialog.click({ position: { x: 4, y: 4 } });
+  await expect(dialog).toHaveAttribute('closedby', 'any');
+  // 滚轮不穿透到底层页面
+  const yBefore = await page.evaluate(() => scrollY);
+  await page.mouse.move(10, 10);
+  await page.mouse.wheel(0, 400);
+  await page.waitForTimeout(100);
+  expect(await page.evaluate(() => scrollY)).toBe(yBefore);
+  // 点背景 ::backdrop 原生 light-dismiss 关闭
+  await page.mouse.click(4, 4);
   await expect(dialog).not.toHaveAttribute('open', '');
 });
 

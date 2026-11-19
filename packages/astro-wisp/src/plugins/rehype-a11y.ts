@@ -36,8 +36,16 @@ export default function rehypeA11y(options: RehypeA11yOptions = {}) {
     const zh = /^zh\b/i.test(lang);
 
     visit(tree, 'element', (node: Element, index, parent) => {
-      if (/^h[1-6]$/.test(node.tagName)) splitHeadingSubwords(node);
-      if (node.tagName === 'table') splitCellCode(node);
+      if (/^h[1-6]$/.test(node.tagName)) {
+        splitHeadingSubwords(node);
+        if (node.tagName !== 'h1' && node.properties.tabIndex === undefined) {
+          node.properties.tabIndex = -1;
+        }
+      }
+      if (node.tagName === 'table') {
+        splitCellCode(node);
+        addTableScopes(node);
+      }
       if (node.tagName === 'table' && parent && index !== undefined && !isTableWrap(parent)) {
         parent.children[index] = {
           type: 'element',
@@ -150,6 +158,37 @@ function splitCellCode(table: Element) {
     });
     return 'skip';
   });
+}
+
+function addTableScopes(table: Element) {
+  let hasThead = false;
+  for (const section of table.children) {
+    if (section.type !== 'element') continue;
+    if (section.tagName === 'thead') hasThead = true;
+  }
+  for (const section of table.children) {
+    if (section.type !== 'element') continue;
+    const rows =
+      section.tagName === 'tr'
+        ? [section]
+        : section.children.filter((c): c is Element => c.type === 'element' && c.tagName === 'tr');
+    rows.forEach((tr, rowIdx) => {
+      const ths = tr.children.filter(
+        (c): c is Element => c.type === 'element' && c.tagName === 'th',
+      );
+      if (!ths.length) return;
+      const isColRow =
+        section.tagName === 'thead' ||
+        (!hasThead &&
+          rowIdx === 0 &&
+          tr.children.every((c) => c.type !== 'element' || c.tagName === 'th'));
+      for (const th of ths) {
+        if (th.properties.scope === undefined) {
+          th.properties.scope = isColRow ? 'col' : 'row';
+        }
+      }
+    });
+  }
 }
 
 function cellVisualWidth(text: string): number {

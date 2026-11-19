@@ -20,35 +20,23 @@ const addClass = (node: Element, name: string) => {
 
 /**
  * GFM 脚注 → 引用（作者语法不变：`正文[^key]` + `[^key]: 出处`）。
- * - 文内标记：sup 加 .wisp-cite，链接加可读的 aria-label（「参考 3」/「Reference 3」）；
- *   紧挨着的引用另加 .wisp-cite--joined（后面紧跟引用）/ .wisp-cite--cont（紧跟在引用后面），样式合并成 [1, 2]
- * - 文末列表：section 加 .wisp-notes；remark-gfm 的读屏专用标题（sr-only "Footnotes"）改成按语言的可见标题
- *   （「参考与注释」/「References」），它不是正文的直接子元素，不参与 h2 编号；Post 布局也把它排除在目录外
- * - 回链：「↩」字符换成 Lucide arrow-up 图标（构建期内联 SVG），按语言写 aria-label；
- *   同一条被引用多次时只保留唯一一枚回链（去掉 `1…N` 数字尾巴），由 Citations 组件在点击跳转时动态把该回链指回来源处
+ * - 文内标记：sup 加 .wisp-cite，链接加可读 aria-label（「参考 3」/「Reference 3」）、
+ *   原生 interestfor="wisp-cite-pop-..."（鼠标悬停 / 键盘聚焦原生延迟显示预览），
+ *   与 aria-describedby="wisp-cite-pop-..." 指向对应注释预览（替换 remark-gfm 默认的 footnote-label）；
+ *   紧挨着的引用另加 .wisp-cite--joined / .wisp-cite--cont，样式合并成 [1, 2]
+ * - 文末列表：section 加 .wisp-notes；可见标题（「参考与注释」/「References」）；
+ *   每条注释生成独立的 `<div popover="hint" role="tooltip" class="wisp-cite-pop">` 预览卡片
+ * - 回链：「↩」字符换成 Lucide arrow-up 图标（构建期内联 SVG），带序号区隔的 aria-label
+ *   （「返回正文：参考 N」/「Back to text: reference N」）；多次引用保留唯一一枚回链，由 Citations 动态回指
  */
 export default function rehypeCitations(options: RehypeCitationsOptions = {}) {
   return (tree: Root, file: VFile) => {
     const fm = (file.data as { astro?: { frontmatter?: { lang?: unknown } } }).astro?.frontmatter;
     const lang = typeof fm?.lang === 'string' && fm.lang ? fm.lang : (options.lang ?? 'zh-CN');
     const zh = /^zh\b/i.test(lang);
+    const popByHref = new Map<string, string>();
 
-    visit(tree, 'element', (node, index, parent) => {
-      if (node.tagName === 'sup' && isCite(node)) {
-        const a = node.children[0] as Element;
-        const n = textOf(a).trim();
-        a.properties.ariaLabel = zh ? `参考 ${n}` : `Reference ${n}`;
-        addClass(node, 'wisp-cite');
-        // 紧挨着的引用（中间没有任何文字，空白也不算）合并成 [1, 2]：前一个画逗号，后一个不画左括号。
-        // CSS 的相邻选择器会跳过中间的文字，所以在这里按真实的兄弟节点判断。
-        const next = parent && index !== undefined ? parent.children[index + 1] : undefined;
-        if (next && next.type === 'element' && next.tagName === 'sup' && isCite(next)) {
-          addClass(node, 'wisp-cite--joined');
-          addClass(next, 'wisp-cite');
-          addClass(next, 'wisp-cite--cont');
-        }
-        return;
-      }
+    visit(tree, 'element', (node) => {
       if (node.tagName !== 'section' || node.properties?.dataFootnotes === undefined) return;
       addClass(node, 'wisp-notes');
       node.properties.ariaLabelledBy = ['footnote-label'];
@@ -60,8 +48,11 @@ export default function rehypeCitations(options: RehypeCitationsOptions = {}) {
         label.properties.id ??= 'footnote-label';
         label.children = [{ type: 'text', value: zh ? '参考与注释' : 'References' }];
       }
+      const popovers: Element[] = [];
+      let fnIndex = 0;
       visit(node, 'element', (li) => {
         if (li.tagName !== 'li') return;
+        fnIndex += 1;
         let kept = false;
         visit(li, 'element', (el) => {
           for (let i = 0; i < el.children.length; i++) {
@@ -75,7 +66,9 @@ export default function rehypeCitations(options: RehypeCitationsOptions = {}) {
             if (!kept) {
               kept = true;
               child.properties.className = ['wisp-backref'];
-              child.properties.ariaLabel = zh ? '返回正文' : 'Back to text';
+              child.properties.ariaLabel = zh
+                ? `返回正文：参考 ${fnIndex}`
+                : `Back to text: reference ${fnIndex}`;
               child.children = [iconHast('arrow-up')];
             } else {
               const prev = i > 0 ? el.children[i - 1] : undefined;
@@ -89,11 +82,86 @@ export default function rehypeCitations(options: RehypeCitationsOptions = {}) {
             }
           }
         });
+        const liId = typeof li.properties?.id === 'string' ? li.properties.id : '';
+        if (liId) {
+          const popId = `wisp-cite-pop-${liId}`;
+          popByHref.set(`#${liId}`, popId);
+          popovers.push({
+            type: 'element',
+            tagName: 'div',
+            properties: {
+              id: popId,
+              popover: 'hint',
+              role: 'tooltip',
+              className: ['wisp-cite-pop'],
+            },
+            children: cloneForPopover(li.children),
+          });
+        }
         return 'skip';
       });
+      if (popovers.length) node.children.push(...popovers);
       return 'skip';
     });
+
+    visit(tree, 'element', (node, index, parent) => {
+      if (node.tagName === 'sup' && isCite(node)) {
+        const a = node.children[0] as Element;
+        const n = textOf(a).trim();
+        a.properties.ariaLabel = zh ? `参考 ${n}` : `Reference ${n}`;
+        const rawHref = typeof a.properties?.href === 'string' ? a.properties.href : '';
+        let decodedHref = rawHref;
+        try {
+          decodedHref = decodeURIComponent(rawHref);
+        } catch {}
+        const popId = popByHref.get(rawHref) ?? popByHref.get(decodedHref);
+        if (popId) {
+          a.properties.interestfor = popId;
+          a.properties.ariaDescribedBy = [popId];
+        }
+        addClass(node, 'wisp-cite');
+        // 紧挨着的引用（中间没有任何文字，空白也不算）合并成 [1, 2]：前一个画逗号，后一个不画左括号。
+        // CSS 的相邻选择器会跳过中间的文字，所以在这里按真实的兄弟节点判断。
+        const next = parent && index !== undefined ? parent.children[index + 1] : undefined;
+        if (next && next.type === 'element' && next.tagName === 'sup' && isCite(next)) {
+          addClass(node, 'wisp-cite--joined');
+          addClass(next, 'wisp-cite');
+          addClass(next, 'wisp-cite--cont');
+        }
+      }
+    });
   };
+}
+
+function cloneForPopover(nodes: ElementContent[]): ElementContent[] {
+  const out: ElementContent[] = [];
+  for (const node of nodes) {
+    if (node.type === 'text') {
+      out.push({ type: 'text', value: node.value });
+      continue;
+    }
+    if (node.type !== 'element') continue;
+    if (node.properties?.dataFootnoteBackref !== undefined) continue;
+    const props: Element['properties'] = { ...node.properties };
+    delete props.id;
+    if (node.tagName === 'a' || node.tagName === 'button' || props.tabIndex !== undefined) {
+      props.tabIndex = -1;
+    }
+    const children = cloneForPopover(node.children);
+    if (
+      node.tagName === 'p' &&
+      children.every((c) => c.type === 'text' && /^[ \t\r\n]*$/.test(c.value))
+    ) {
+      continue;
+    }
+    out.push({
+      type: 'element',
+      tagName: node.tagName,
+      properties: props,
+      children,
+    });
+  }
+  return out;
 }
 
 function isCite(node: Element): boolean {

@@ -74,10 +74,10 @@ describe('Explainer 服务端渲染', () => {
     expect(html).toMatch(/class="wisp-player__ghosts" aria-hidden="true" inert=""/);
     expect(html).toContain('W^{Q} x');
   });
-  it('没有第一步 / 最后一步按钮；第一步时上一步禁用且轨道标出 data-at-start', () => {
+  it('没有第一步 / 最后一步按钮；第一步时上一步 aria-disabled 且轨道标出 data-at-start', () => {
     expect(html).not.toContain('aria-label="第一步"');
     expect(html).not.toContain('aria-label="最后一步"');
-    expect(html).toMatch(/aria-label="上一步"[^>]*disabled/);
+    expect(html).toMatch(/aria-label="上一步"[^>]*aria-disabled="true"/);
     expect(html).toContain('class="wisp-player__track"');
     expect(html).toContain('data-at-start=""');
     expect(html).toContain('aria-label="播放速度：1 倍，按下切换"');
@@ -111,6 +111,7 @@ describe('stepAt 与步骤收缩边界保护', () => {
       last: () => {},
       seek: () => {},
       toggle: () => {},
+      pause: () => {},
       setSpeed: () => {},
       cycleSpeed: () => {},
     };

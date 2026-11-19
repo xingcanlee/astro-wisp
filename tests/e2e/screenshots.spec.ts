@@ -11,7 +11,7 @@ const OUT = 'docs/screenshots';
 async function open(page: Page, path: string, theme: 'light' | 'dark', width = 1280, height = 900) {
   await page.setViewportSize({ width, height });
   await page.emulateMedia({ colorScheme: theme });
-  await page.addInitScript((t) => localStorage.setItem('wisp-theme', t), theme);
+  await page.addInitScript((t) => localStorage.setItem('color-scheme', t), theme);
   await page.goto(path);
   await page.evaluate(() => document.fonts.ready);
   // 触发 client:visible 岛屿

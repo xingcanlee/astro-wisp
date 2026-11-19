@@ -296,6 +296,26 @@ const split = (t: string) => {
       margin: 0 0 1.5rem;
       border-block: 1px solid var(--wisp-border);
     }
+    .wisp-series-inline::details-content {
+      interpolate-size: allow-keywords;
+      overflow: clip;
+      contain: layout;
+    }
+    .wisp-series-inline:not([open])::details-content {
+      block-size: 0;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .wisp-series-inline::details-content {
+        transition:
+          block-size 200ms var(--wisp-ease),
+          content-visibility 200ms allow-discrete;
+      }
+      .wisp-series-inline[open]::details-content {
+        @starting-style {
+          block-size: 0;
+        }
+      }
+    }
     .wisp-series-inline summary {
       display: flex;
       align-items: center;

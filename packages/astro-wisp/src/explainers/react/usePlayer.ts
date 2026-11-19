@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { clampIndex } from '../core/timeline';
 
 export const SPEEDS = [0.5, 1, 2] as const;
@@ -23,6 +23,7 @@ export interface PlayerApi {
   last: () => void;
   seek: (i: number) => void;
   toggle: () => void;
+  pause: () => void;
   setSpeed: (s: Speed) => void;
   /** 切到下一档倍速（见 nextSpeed） */
   cycleSpeed: () => void;
@@ -61,7 +62,7 @@ export function usePlayer(length: number): PlayerApi {
     return () => clearTimeout(t);
   }, [playing, index, speed, length, lastIndex]);
 
-  const pause = () => setPlaying(false);
+  const pause = useCallback(() => setPlaying(false), []);
 
   return {
     index,
@@ -93,6 +94,7 @@ export function usePlayer(length: number): PlayerApi {
       if (index >= lastIndex) setIndex(0);
       setPlaying(true);
     },
+    pause,
     setSpeed,
     cycleSpeed: () => setSpeed(nextSpeed),
   };

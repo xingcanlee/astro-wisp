@@ -8,11 +8,10 @@
 import { test, expect, type Page } from '@playwright/test';
 
 type FirstFrame = {
-  theme: string | undefined;
-  pref: string | undefined;
+  meta: string | null;
+  colorScheme: string;
   bg: string;
   bodyBg: string | null;
-  token: string;
 };
 
 declare global {
@@ -24,18 +23,18 @@ declare global {
 const BASE = ''; // 相对 baseURL
 const PATHS = ['/', '/posts/kitchen-sink/'];
 
-/** 在首帧记录主题与背景色；禁用缓存，保证每次都是冷加载。 */
+/** 在首帧记录 <meta name="color-scheme"> 与背景色；禁用缓存，保证每次都是冷加载。 */
 async function firstFrame(page: Page, path: string) {
   await page.route('**/*', (route) => route.continue()); // 拦截所有请求 = 禁用 HTTP 缓存
   await page.addInitScript(() => {
     requestAnimationFrame(() => {
       const html = document.documentElement;
+      const meta = document.head.querySelector('meta[name="color-scheme"]');
       window.__wispFirstFrame = {
-        theme: html.dataset.theme,
-        pref: html.dataset.themePref,
+        meta: meta?.getAttribute('content') ?? null,
+        colorScheme: getComputedStyle(html).colorScheme,
         bg: getComputedStyle(html).backgroundColor,
         bodyBg: document.body ? getComputedStyle(document.body).backgroundColor : null,
-        token: getComputedStyle(html).getPropertyValue('--wisp-bg').trim(),
       };
     });
   });
@@ -56,91 +55,101 @@ function luminance(css: string): number {
   return 0.2126 * lin(r!) + 0.7152 * lin(g!) + 0.0722 * lin(b!);
 }
 
-function hexToRgb(hex: string) {
-  const n = parseInt(hex.replace('#', ''), 16);
-  return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
-}
-
 for (const path of PATHS) {
   test.describe(`首帧主题 ${path}`, () => {
     test('localStorage=dark → 首帧即暗色', async ({ page }) => {
       await page.emulateMedia({ colorScheme: 'light' });
-      await page.addInitScript(() => localStorage.setItem('wisp-theme', 'dark'));
+      await page.addInitScript(() => localStorage.setItem('color-scheme', 'dark'));
       const f = await firstFrame(page, path);
-      expect(f.theme).toBe('dark');
-      expect(f.pref).toBe('dark');
-      expect(f.bg).toBe(hexToRgb(f.token));
+      expect(f.meta).toBe('dark');
+      expect(f.colorScheme).toBe('dark');
       expect(luminance(f.bg)).toBeLessThan(0.05);
     });
 
     test('system + prefers-color-scheme: dark → 首帧即暗色', async ({ page }) => {
       await page.emulateMedia({ colorScheme: 'dark' });
       const f = await firstFrame(page, path);
-      expect(f.theme).toBe('dark');
-      expect(f.pref).toBe('system');
-      expect(f.bg).toBe(hexToRgb(f.token));
+      expect(f.meta).toBe('light dark');
       expect(luminance(f.bg)).toBeLessThan(0.05);
     });
 
     test('localStorage=light 覆盖系统暗色 → 首帧即亮色', async ({ page }) => {
       await page.emulateMedia({ colorScheme: 'dark' });
-      await page.addInitScript(() => localStorage.setItem('wisp-theme', 'light'));
+      await page.addInitScript(() => localStorage.setItem('color-scheme', 'light'));
       const f = await firstFrame(page, path);
-      expect(f.theme).toBe('light');
+      expect(f.meta).toBe('light');
+      expect(f.colorScheme).toBe('light');
       expect(luminance(f.bg)).toBeGreaterThan(0.8);
     });
 
     test('system + prefers-color-scheme: light → 首帧即亮色', async ({ page }) => {
       await page.emulateMedia({ colorScheme: 'light' });
       const f = await firstFrame(page, path);
-      expect(f.theme).toBe('light');
-      expect(f.pref).toBe('system');
+      expect(f.meta).toBe('light dark');
       expect(luminance(f.bg)).toBeGreaterThan(0.8);
     });
   });
 }
 
-test('主题按钮在 light → dark → system 间循环并持久化', async ({ page }) => {
+test('双态主题按钮在明暗间切换，切回系统一致时清除覆盖并跟随系统变化', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('seeded')) {
-      localStorage.setItem('wisp-theme', 'light');
+      localStorage.setItem('color-scheme', 'light');
       sessionStorage.setItem('seeded', '1');
     }
   });
   await page.goto(BASE + '/');
   const btn = page.locator('[data-wisp-theme-toggle]');
-  const html = page.locator('html');
-  // 每种偏好只显示自己的那一个图标（sun / moon / sun-moon），不叠角标
+  const meta = page.locator('head meta[name="color-scheme"]');
+  const bgLum = async () =>
+    luminance(
+      await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor),
+    );
   const shown = () =>
     btn.evaluate((b) =>
       [...b.querySelectorAll('svg')]
         .filter((i) => getComputedStyle(i).display !== 'none')
         .map((i) => i.getAttribute('class')),
     );
-  await expect(btn).toHaveAttribute('aria-label', /浅色/);
-  await expect(html).toHaveAttribute('data-theme', 'light');
+
+  await expect(meta).toHaveAttribute('content', 'light');
+  await expect(btn).toHaveAttribute('aria-pressed', 'false');
   expect(await shown()).toEqual(['wisp-icon i-light']);
+  expect(await bgLum()).toBeGreaterThan(0.8);
 
+  // 点击切到暗色（与暗色系统一致）→ 删除 localStorage 覆盖并恢复 light dark
   await btn.click();
-  await expect(html).toHaveAttribute('data-theme', 'dark');
-  await expect(html).toHaveAttribute('data-theme-pref', 'dark');
-  await expect(btn).toHaveAttribute('aria-label', /深色/);
+  await expect(meta).toHaveAttribute('content', 'light dark');
+  await expect(btn).toHaveAttribute('aria-pressed', 'true');
   expect(await shown()).toEqual(['wisp-icon i-dark']);
+  expect(await page.evaluate(() => localStorage.getItem('color-scheme'))).toBeNull();
+  expect(await bgLum()).toBeLessThan(0.05);
 
-  await btn.click();
-  await expect(html).toHaveAttribute('data-theme-pref', 'system');
-  expect(await shown()).toEqual(['wisp-icon i-system']);
-  await expect(html).toHaveAttribute('data-theme', 'dark'); // 系统为暗色
+  // 未覆盖时跟随系统切换
   await page.emulateMedia({ colorScheme: 'light' });
-  await expect(html).toHaveAttribute('data-theme', 'light'); // system 模式跟随 matchMedia 变化
+  await expect(btn).toHaveAttribute('aria-pressed', 'false');
+  expect(await shown()).toEqual(['wisp-icon i-light']);
+  expect(await bgLum()).toBeGreaterThan(0.8);
 
+  // 再次点击写入 dark 覆盖，刷新保持暗色
   await btn.click();
-  await expect(html).toHaveAttribute('data-theme-pref', 'light');
-  expect(await page.evaluate(() => localStorage.getItem('wisp-theme'))).toBe('light');
-
+  await expect(meta).toHaveAttribute('content', 'dark');
+  expect(await page.evaluate(() => localStorage.getItem('color-scheme'))).toBe('dark');
   await page.reload();
-  await expect(html).toHaveAttribute('data-theme', 'light');
+  await expect(meta).toHaveAttribute('content', 'dark');
+  expect(await bgLum()).toBeLessThan(0.05);
+});
+
+test('无 JS 时也能通过 light-dark() 与 meta[name=color-scheme] 原生响应系统暗色', async ({
+  browser,
+}) => {
+  const ctx = await browser.newContext({ javaScriptEnabled: false, colorScheme: 'dark' });
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/');
+  const bg = await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
+  expect(luminance(bg)).toBeLessThan(0.05);
+  await ctx.close();
 });
 
 test('键盘：首个 Tab 聚焦“跳到正文”，回车后焦点进入 main', async ({ page }) => {

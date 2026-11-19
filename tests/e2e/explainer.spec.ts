@@ -52,6 +52,35 @@ test('倍速按钮在 0.5× → 1× → 2× 之间循环', async ({ page }) => {
   await expect(speed).toHaveAttribute('aria-label', /0\.5/);
 });
 
+test.describe('boundary focus & offscreen pause', () => {
+  test('末步下一步使用 aria-disabled 并保留焦点；滚出视口后自动暂停播放', async ({ page }) => {
+    await page.goto(URL);
+    const player = page.locator('.wisp-player').first();
+    await player.scrollIntoViewIfNeeded();
+    await expect(player.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
+
+    const next = player.getByRole('button', { name: '下一步' });
+    const prev = player.getByRole('button', { name: '上一步' });
+    await expect(prev).toHaveAttribute('aria-disabled', 'true');
+    await expect(prev).not.toHaveAttribute('disabled');
+
+    const range = player.locator('.wisp-player__range');
+    const lastStep = Number(await range.getAttribute('max'));
+    for (let i = 0; i < lastStep; i++) await next.click();
+    await expect(next).toHaveAttribute('aria-disabled', 'true');
+    await expect(next).not.toHaveAttribute('disabled');
+    await expect(next).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(next).toBeFocused();
+
+    // 重新开始播放后滚离视口 → 自动暂停
+    await player.locator('.wisp-player__play').click();
+    await expect(player.locator('.wisp-player__play')).toHaveAttribute('aria-label', '暂停');
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await expect(player.locator('.wisp-player__play')).toHaveAttribute('aria-label', '播放');
+  });
+});
+
 test.describe('reduced-motion', () => {
   test.use({ reducedMotion: 'reduce' });
   test('保留手动播放，仅关闭过渡动画', async ({ page }) => {

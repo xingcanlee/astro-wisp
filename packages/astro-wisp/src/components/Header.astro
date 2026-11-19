@@ -140,7 +140,8 @@ const posLabel = zh ? `${running?.position}（系列篇目）` : `${running?.pos
       grid-template-columns: auto minmax(0, 1fr) auto;
       align-items: baseline;
       align-content: center;
-      height: var(--wisp-header-h);
+      min-height: var(--wisp-header-h);
+      padding-block: 0.25rem;
     }
     .wisp-header-inner > .wisp-brand {
       grid-column: 1;
@@ -229,10 +230,15 @@ const posLabel = zh ? `${running?.position}（系列篇目）` : `${running?.pos
       overflow: hidden;
       text-overflow: ellipsis;
       opacity: 0;
-      transform: translateY(0.25rem);
-      transition:
-        opacity 200ms var(--wisp-ease),
-        transform 200ms var(--wisp-ease);
+      transition: opacity 200ms var(--wisp-ease);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .wisp-running-title {
+        transform: translateY(0.25rem);
+        transition:
+          opacity 200ms var(--wisp-ease),
+          transform 200ms var(--wisp-ease);
+      }
     }
     /* 章节标题前的「·」随标题一起淡入：标题出现之前，书眉以「7 / 23 篇」收尾 */
     .wisp-running-title-dot {
@@ -243,12 +249,6 @@ const posLabel = zh ? `${running?.position}（系列篇目）` : `${running?.pos
     .wisp-running[data-past-title] .wisp-running-title-dot {
       opacity: 1;
       transform: none;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .wisp-running-title,
-      .wisp-running-title-dot {
-        transition: none;
-      }
     }
     /*
      * 品牌：标记居中，名字参与基线对齐（让整个链接的基线就是名字的基线）。
@@ -287,8 +287,10 @@ const posLabel = zh ? `${running?.position}（系列篇目）` : `${running?.pos
       background: var(--wisp-fg);
       outline: 2px solid var(--wisp-bg);
     }
-    .wisp-brand:hover .wisp-brand-mark {
-      transform: rotate(-8deg);
+    @media (prefers-reduced-motion: no-preference) {
+      .wisp-brand:hover .wisp-brand-mark {
+        transform: rotate(-8deg);
+      }
     }
     .wisp-brand-name {
       align-self: baseline;
@@ -314,9 +316,6 @@ const posLabel = zh ? `${running?.position}（系列篇目）` : `${running?.pos
       list-style: none;
       scrollbar-width: none;
     }
-    .wisp-nav ul::-webkit-scrollbar {
-      display: none;
-    }
     .wisp-nav a {
       display: inline-flex;
       align-items: center;
@@ -330,16 +329,22 @@ const posLabel = zh ? `${running?.position}（系列篇目）` : `${running?.pos
     .wisp-nav a:hover {
       color: var(--wisp-fg);
     }
-    .wisp-nav a:hover .wisp-draw {
-      background-size: 100% 1px;
+    .wisp-nav a:hover .wisp-draw::after {
+      transform: scaleX(1);
     }
     /* 当前页：前景色 + 常显的强调色下划线（与侧栏当前项同一种强调色） */
     .wisp-nav a[aria-current='page'] {
       color: var(--wisp-fg);
     }
-    .wisp-nav a[aria-current='page'] .wisp-draw {
-      background-image: linear-gradient(var(--wisp-accent), var(--wisp-accent));
-      background-size: 100% 1px;
+    .wisp-nav a[aria-current='page'] .wisp-draw::after {
+      background: var(--wisp-accent);
+      transform: scaleX(1);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .wisp-nav a:hover .wisp-draw::after,
+      .wisp-nav a[aria-current='page'] .wisp-draw::after {
+        opacity: 1;
+      }
     }
     @media (max-width: 23.99rem) {
       .wisp-header-inner > .wisp-nav {

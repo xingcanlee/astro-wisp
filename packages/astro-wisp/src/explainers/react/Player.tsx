@@ -145,9 +145,41 @@ function PlayerBody<S>({
   const atLast = index >= n - 1;
   const replay = !p.playing && atLast;
   const playLabel = p.playing ? t.pause : replay ? t.replay : t.play;
+  const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useStageRatchet(steps.length);
   const progress = n > 1 ? index / (n - 1) : 1;
   const speedText = `${p.speed}×`;
+
+  const { playing, pause } = p;
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || !playing) return;
+    const onVis = () => {
+      if (document.hidden) pause();
+    };
+    const onContentVis = (e: Event) => {
+      if ((e as Event & { skipped?: boolean }).skipped) pause();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    const explainer = el.closest('.wisp-explainer') ?? el;
+    explainer.addEventListener('contentvisibilityautostatechange', onContentVis);
+    let io: IntersectionObserver | undefined;
+    if ('IntersectionObserver' in window) {
+      io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => !entry.isIntersecting)) pause();
+        },
+        { threshold: 0.05 },
+      );
+      io.observe(el);
+    }
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      explainer.removeEventListener('contentvisibilityautostatechange', onContentVis);
+      io?.disconnect();
+    };
+  }, [playing, pause]);
 
   useEffect(() => {
     const scrollEl = stageRef.current?.querySelector<HTMLElement>('.wisp-explainer__scroll');
@@ -193,7 +225,14 @@ function PlayerBody<S>({
   };
 
   return (
-    <div className="wisp-player" role="group" aria-label={label} tabIndex={0} onKeyDown={onKeyDown}>
+    <div
+      ref={rootRef}
+      className="wisp-player"
+      role="group"
+      aria-label={label}
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+    >
       <div className="wisp-player__stage" ref={stageRef}>
         {children(step, index)}
       </div>
@@ -248,8 +287,8 @@ function PlayerBody<S>({
             type="button"
             aria-label={t.prev}
             title={`${t.prev} (${t.keys.prev})`}
-            onClick={p.prev}
-            disabled={atFirst}
+            aria-disabled={atFirst || undefined}
+            onClick={() => !atFirst && p.prev()}
           >
             <PlayerIcon name="prev" />
           </button>
@@ -267,8 +306,8 @@ function PlayerBody<S>({
             type="button"
             aria-label={t.next}
             title={`${t.next} (${t.keys.next})`}
-            onClick={p.next}
-            disabled={atLast}
+            aria-disabled={atLast || undefined}
+            onClick={() => !atLast && p.next()}
           >
             <PlayerIcon name="next" />
           </button>

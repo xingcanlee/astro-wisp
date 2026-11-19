@@ -234,22 +234,22 @@ components:
 
 ### Hierarchy
 
-| 角色           | 规格                                                   | 用途                                                                                                                                                                             |
-| -------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| home-title     | clamp(2.5→4rem) / 700 / 1.1                            | 首页扉页站点名，全站唯一的大字                                                                                                                                                   |
-| chapter-number | 1.5em of h1 / 300 / teal / tabular                     | 章首的章节号（标题以「05 」开头时自动拆出）                                                                                                                                      |
-| chapter-title  | clamp(1.75→2.25rem) / 700 / 1.3 / `text-wrap: balance` | 文章标题；中文标题构建期用 `Intl.Segmenter` 在词间插 `<wbr>` 并 `word-break: keep-all`，只在词边界换行                                                                           |
-| h2             | 1.5rem / 700 / 1.3，上方 2.5em 留白，**不画分隔线**    | 章节；CSS 计数器编号 0.8em / 400 / teal / tabular，与标题第一行同基线。≥80rem 悬挂在栏间距里、右对齐到正文左边线外 0.75rem；更窄时在标题前的编号列里，换行后续行悬挂对齐标题起点 |
-| h3             | 1.1875rem / 600                                        | 小节；编号形如 2.1，0.8em / muted / tabular，悬挂与对齐方式同 h2（≥80rem 时 h2、h3 标题都从正文左边线开始）                                                                      |
-| h4             | 1rem / 600 / muted                                     | 段落小标题，不编号                                                                                                                                                               |
-| body           | 1rem（移动 16px，≥768px 17px）/ 400 / 1.8              | 正文，行宽 42rem（≥768px 时 714px，约 42 个汉字；技术文章要给代码、公式和图留宽度，所以取中文舒适区间的上沿）                                                                    |
-| section-title  | 1.25rem / 700                                          | 首页区块标题、归档年份                                                                                                                                                           |
-| lead           | 1.125rem / 1.7                                         | 首页描述                                                                                                                                                                         |
-| ui-large       | 0.9375rem                                              | 按钮、首页篇目、修订记录                                                                                                                                                         |
-| ui             | 0.875rem                                               | 导航、书眉、侧栏标题、题注                                                                                                                                                       |
-| ui-small       | 0.8125rem / 1.5                                        | 侧栏条目、元信息、表头、时间                                                                                                                                                     |
-| label          | 0.75rem                                                | 编号列、语言名                                                                                                                                                                   |
-| code           | 0.8125rem / 1.7                                        | 代码清单                                                                                                                                                                         |
+| 角色           | 规格                                                | 用途                                                                                                                                                                             |
+| -------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| home-title     | clamp(2.5→4rem) / 700 / 1.1                         | 首页扉页站点名，全站唯一的大字                                                                                                                                                   |
+| chapter-number | 1.5em of h1 / 300 / teal / tabular                  | 章首的章节号（标题以「05 」开头时自动拆出）                                                                                                                                      |
+| chapter-title  | clamp(1.75→2.25rem) / 700 / 1.3                     | 文章标题；中文标题构建期用 `Intl.Segmenter` 与长词边界拆出 `<wbr>` 并 `word-break: normal; overflow-wrap: anywhere`，只在自然词边界换行                                          |
+| h2             | 1.5rem / 700 / 1.3，上方 2.5em 留白，**不画分隔线** | 章节；CSS 计数器编号 0.8em / 400 / teal / tabular，与标题第一行同基线。≥80rem 悬挂在栏间距里、右对齐到正文左边线外 0.75rem；更窄时在标题前的编号列里，换行后续行悬挂对齐标题起点 |
+| h3             | 1.1875rem / 600                                     | 小节；编号形如 2.1，0.8em / muted / tabular，悬挂与对齐方式同 h2（≥80rem 时 h2、h3 标题都从正文左边线开始）                                                                      |
+| h4             | 1rem / 600 / muted                                  | 段落小标题，不编号                                                                                                                                                               |
+| body           | 1rem（移动 16px，≥768px 17px）/ 400 / 1.8           | 正文，行宽 42rem（≥768px 时 714px，约 42 个汉字；技术文章要给代码、公式和图留宽度，所以取中文舒适区间的上沿）                                                                    |
+| section-title  | 1.25rem / 700                                       | 首页区块标题、归档年份                                                                                                                                                           |
+| lead           | 1.125rem / 1.7                                      | 首页描述                                                                                                                                                                         |
+| ui-large       | 0.9375rem                                           | 按钮、首页篇目、修订记录                                                                                                                                                         |
+| ui             | 0.875rem                                            | 导航、书眉、侧栏标题、题注                                                                                                                                                       |
+| ui-small       | 0.8125rem / 1.5                                     | 侧栏条目、元信息、表头、时间                                                                                                                                                     |
+| label          | 0.75rem                                             | 编号列、语言名                                                                                                                                                                   |
+| code           | 0.8125rem / 1.7                                     | 代码清单                                                                                                                                                                         |
 
 ### Named Rules
 
@@ -279,7 +279,9 @@ components:
 | 首页目录           | 每个系列一行：左列部分标题（≥60rem 时吸顶），右列篇目（≥80rem 时分两栏）                                                                                                                                               |
 | 区块间距           | 首页区块 5rem；正文 h2 上方 2.5em、下方 0.75em（上大下小）；正文里的块（代码、表格、公式、图、要点块、讲解组件）与前后段落统一 1.75em（`--wisp-block-gap`，按正文字号算，约 30px）                                     |
 
-**滚动条**：全站分四层统一治理，滑块采用半透明前景色（`color-mix(in srgb, var(--wisp-fg) 26%, transparent)`，悬停 `46%`），在纸白、代码底、着色块与灯箱上都能自然压暗或提亮，轨道透明、999px 圆角、无步进三角箭头（▲/▼/◄/►）：① 页面主滚动条（`html`）：桌面端 10px 命中区 + 2px 透明内衬 = 6px 悬浮圆角滑块（按住加宽到 8px），消除 Windows 原生悬空三角箭头；② 导航轨道（侧栏 `[data-rail-scroll]`、页眉 `.wisp-nav ul`）：隐藏滚动条轨道，仅靠边缘 `mask-image` 渐隐提示可滚；③ 全部内部滚动容器（以零特异性 `:where(...)` 精准匹配代码、表格、公式、Mermaid、图表、讲解舞台、Lightbox、文首折叠系列与目录列表、长注释预览 `.wisp-cite-pop` 及 `[data-wisp-scroll]` / `[data-wisp-vscroll]`）：桌面端 8px 命中区 + 2px 透明内衬 = 4px 悬浮圆角滑块，平时通过 `--wisp-sb: transparent` 完全隐身，指针移入、焦点进入或鼠标拖拽时切换自定义属性立即重绘显现（指向滑块本体时展宽至 6px）；④ Firefox 与触屏设备回退标准 `scrollbar-width` / `scrollbar-color`。所有内部滚动容器均带 `overscroll-behavior` 阻断滚动穿透与触控板误触浏览器前进/后退；非代码的超宽容器与灯箱大图支持鼠标按住 1D/2D 拖拽平移。横向可滚动的代码、表格、公式、图表、讲解舞台仅在确实溢出时成为 Tab 停靠点并附「…，可横向滚动」名称（随窗宽增删，不叠加）；无 JS 时以标记里的 `tabindex=0 data-wisp-tab` 作回落。
+**滚动条与渐隐**：主文档与内部滚动区统一采用标准 `scrollbar-color` / `scrollbar-width: thin`（滑块 `color-mix(in srgb, var(--wisp-fg) 52%, transparent)`，悬停 `72%`，满足 ≥3:1 非文本对比度；`prefers-contrast: more` 下进一步提对比度；`forced-colors: active` 回交系统滚动条）；导航轨道（侧栏 `[data-rail-scroll]`、页眉 `.wisp-nav ul`）保留 `scrollbar-width: none` 并配以 `scroll(self inline/block)` + `mask: ... no-clip subtract` 纯 CSS 滚动渐隐；所有内部滚动区使用 `overscroll-behavior` 阻断穿透与手势误触，超宽非代码容器与灯箱大图支持鼠标按住 1D/2D 拖拽平移；横向溢出容器仅在确实溢出时动态获得 `tabindex`、`role="region"` 与「…，可横向滚动」名称。
+
+**自适应与对比度声明**：`<head>` 输出 `<meta name="color-scheme" content="light dark" />`（配全站 `light-dark()` 令牌，无 JS 也原生跟随系统暗色）与 `<meta name="text-scale" content="scale" />`；不在 `html` 写死 `font-size`，仅在 `body`（≥48rem）设 `1.0625rem`，`prefers-reduced-motion: no-preference` 仅门控位移动效而不关闭颜色/透明度反馈。
 
 间距以 4px 为单位：4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 80 / 96。断点用 Tailwind 默认（sm 640 / md 768 / lg 1024 / xl 1280）加上布局专用的 60rem / 80rem。
 
@@ -309,8 +311,8 @@ components:
 - **主按钮**：teal 底、`accent-fg` 字，高 44px，左右 18px，圆角 4px，0.9375rem/500。hover 上移 1px 并向墨色混 12%，按下回落并缩到 0.98。
 - **次按钮**：纸白底、1px rule 描边、墨色字；hover 描边变 muted。
 - 每屏最多一个主按钮。图标按钮（主题切换、复制、Lightbox 关闭）是 44×44 的透明方块，4px 圆角，hover 只改颜色；焦点环仍是 2px 圆角。
-- **主题切换**：三种偏好三个 Lucide 图标——浅色 `sun`、深色 `moon`、跟随系统 `sun-moon`，显示的是当前偏好（不叠角标）；`aria-label` 写明当前偏好和点击后的偏好。
-- **返回顶部**：滚过一屏后淡入的 44×44 浮动按钮（纸白底 + 1px rule 描边、4px 圆角），宽屏右缘对齐外框内容边线，窄屏贴页面边距；页脚进入视口后随页脚上移，永远不盖住页脚内容。
+- **主题切换**：双态按钮直接切换当前明暗（同步 `<meta name="color-scheme">` 与 `aria-pressed`，切回与系统一致时删除 `localStorage('color-scheme')` 恢复 `light dark`），`sun` / `moon` 图标由 `:has(> head > meta[name='color-scheme'])` + `@media (prefers-color-scheme: dark)` 纯 CSS 显隐，首屏零跳变。
+- **返回顶部**：置于文章结尾的 44×44 `position: sticky` 按钮，由 `@container scroll-state(scrollable: top)` 纯 CSS 控制显隐，天然停驻在页脚上方；隐藏或点击后将焦点移交 `h1` / `#main`，不丢焦点到 `body`。
 
 ### Running head（书眉，签名组件）
 
@@ -373,8 +375,8 @@ Markdown 引用块 = 手册里的「要点」：`surface` 浅底 + 1px `rule` �
 作者语法就是 GFM 脚注（`[^key]`），渲染成手册式的引用：
 
 - **文内标记**：真上标，teal、500、表格数字，带方括号 `[1]`（GB/T 7714 顺序编码制的写法，也不会和公式上标混淆）；紧挨着的引用合并成 `[1, 2]`。不加下划线（hover 才有）；点击区约 24px 高，但标记行高为 0，有无引用的行行距完全一致；标记不会单独落到行首。
-- **跳转**：点击平滑滚动到注释（减少动态效果时直接跳），目标短暂标记约 2 秒——`[n]` 编号变 teal、正文变墨色，然后淡回；不闪底色。回链同理，从正文某处点下时唯一回链动态指向该处，返回后对应标记加 2 秒下划线。无 JS 时是普通锚点，`:target` 给同样的标记，回链默认回首次引用处。
-- **预览**：有指针悬停的设备上，悬停或键盘聚焦标记时弹出该条注释（纸白底、1px rule 描边、4px 圆角、无阴影、最宽 22rem、0.8125rem，链接可点）；Esc、失焦、滚动时关闭；触屏不弹出。
+- **点击与状态反馈**：文内引用 / 回链点击平滑滚动（`prefers-reduced-motion: reduce` 直接跳转）并短暂标记 2 秒；注释项 `li` 与 `h2–h6` 目标均带 `tabindex="-1"`，焦点直接到达目标而不掉回 `body`。
+- **预览**：通过构建期生成 `<div popover="hint" role="tooltip">` + `interestfor` + `aria-describedby`（指向具体注释卡片）与 CSS 锚点定位（`position-area` + `position-try-fallbacks`）声明式弹出；`Esc` 或移开即关闭。
 - **文末列表**：标题「参考与注释」/「References」（0.875rem / 600 / 墨色，不参与 h2 编号、不进目录），上方一条 1px rule 与正文分开——章末的 1px ink 收口线仍由下面的上一篇/下一篇负责，不画两条墨线。列表去掉左侧悬空竖轨，采用与文内呼应的 `[n]` 方括号编号列（与标题左对齐，muted 表格数字）+ 悬挂对齐的 0.875rem muted 正文，注文内 `code` 继承柔和字色与 `code-bg` 底色；长 URL 在栏内断行。每条末尾只保留唯一一枚返回正文的 Lucide `arrow-up`（subtle，hover teal），多处引用时不堆砌序号尾巴。
 
 ### Prev / Next（章末）

@@ -11,10 +11,15 @@ async function render(md: string, lang?: string, fmLang?: string) {
 const MD = '正文[^a]，另一处[^b][^a]。\n\n[^a]: 第一条。\n\n[^b]: 第二条。\n';
 
 describe('rehypeCitations', () => {
-  it('文内标记：sup.wisp-cite + 可读的 aria-label', async () => {
+  it('文内标记：sup.wisp-cite + 可读的 aria-label 与 interestfor / aria-describedby', async () => {
     const html = await render(MD);
+    const firstCite = html.match(/<sup class="wisp-cite"><a [^>]+>/)?.[0] ?? '';
+    expect(firstCite).toContain('data-footnote-ref');
+    expect(firstCite).toContain('aria-label="参考 1"');
+    expect(firstCite).toContain('interestfor="wisp-cite-pop-user-content-fn-a"');
+    expect(firstCite).toContain('aria-describedby="wisp-cite-pop-user-content-fn-a"');
     expect(html).toMatch(
-      /<sup class="wisp-cite"><a [^>]*data-footnote-ref[^>]*aria-label="参考 1"/,
+      /<div id="wisp-cite-pop-user-content-fn-a" popover="hint" role="tooltip" class="wisp-cite-pop">\s*<p>第一条。\s*<\/p>\s*<\/div>/,
     );
     expect((html.match(/<sup class="wisp-cite[" ]/g) ?? []).length).toBe(3);
   });
@@ -39,11 +44,12 @@ describe('rehypeCitations', () => {
   it('frontmatter lang 优先于站点语言', async () => {
     expect(await render(MD, 'zh-CN', 'en')).toContain('>References</h2>');
   });
-  it('回链是 Lucide 图标，不再是 ↩ 字符', async () => {
+  it('回链是 Lucide 图标，不再是 ↩ 字符，并带区分序号的 aria-label', async () => {
     const html = await render(MD);
     expect(html).not.toContain('↩');
     expect(html).toMatch(/<a [^>]*class="wisp-backref"[^>]*><svg[^>]*class="wisp-icon"/);
-    expect(html).toContain('aria-label="返回正文"');
+    expect(html).toContain('aria-label="返回正文：参考 1"');
+    expect(html).toContain('aria-label="返回正文：参考 2"');
   });
   it('同一条被引用多次：只保留单枚回链，不堆砌序号尾巴', async () => {
     const html = await render(MD);
@@ -52,7 +58,8 @@ describe('rehypeCitations', () => {
     expect(html).not.toContain('wisp-backref-n');
     expect(html).not.toContain('第 2 处引用');
     const en = await render(MD, 'en');
-    expect((en.match(/aria-label="Back to text"/g) ?? []).length).toBe(2);
+    expect(en).toContain('aria-label="Back to text: reference 1"');
+    expect(en).toContain('aria-label="Back to text: reference 2"');
   });
   it('没有脚注时不改动', async () => {
     const html = await render('普通段落。');

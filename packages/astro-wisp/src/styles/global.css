@@ -18,7 +18,22 @@
 
 @plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+@custom-variant dark {
+  &:where(:root:has(> head > meta[name='color-scheme'][content='dark']) *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(:has(> head > meta[name='color-scheme'][content='light'])) *) {
+      @slot;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
 
 @theme inline {
   --color-bg: var(--wisp-bg);
@@ -39,19 +54,13 @@
   html {
     /* 图表和图片不能把页面撑出水平滚动；代码、表格、公式在自身容器内滚动 */
     overflow-x: clip;
-    /* 移动端 16px，≥ 768px 时 17px */
-    font-size: 100%;
+    container-type: scroll-state;
     background-color: var(--wisp-bg);
     color: var(--wisp-fg);
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    /* 顶栏高 64px：锚点跳转后标题不会被吸顶顶栏遮挡 */
+    /* 顶栏让位：锚点跳转后标题不会被吸顶顶栏遮挡 */
     scroll-padding-top: calc(var(--wisp-header-h) + 1.5rem);
-  }
-  @media (min-width: 48rem) {
-    html {
-      font-size: 106.25%;
-    }
   }
 
   /* 页脚贴底：短页面（404、标签）页脚不悬在半屏；main 撑满剩余高度 */
@@ -73,6 +82,14 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
+  @media (min-width: 48rem) {
+    body {
+      font-size: 1.0625rem;
+    }
+  }
+  html:lang(en) body {
+    font-size-adjust: from-font;
+  }
 
   body > main {
     flex: 1 0 auto;
@@ -87,6 +104,7 @@
   pre {
     font-family: var(--wisp-font-mono);
     font-feature-settings: normal;
+    font-size-adjust: from-font;
   }
 
   ::selection {
@@ -100,7 +118,7 @@
     border-radius: 2px;
   }
 
-  h1[tabindex='-1']:focus {
+  :is(h1, h2, h3, h4, h5, h6)[tabindex='-1']:focus:not(:focus-visible) {
     outline: none;
   }
 
@@ -140,17 +158,9 @@
     hanging-punctuation: none;
   }
 
-  /* 动效只有颜色/透明度过渡，150ms；切换主题时不加全局 transition */
   @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      transition-duration: 0s !important;
-      transition-delay: 0s !important;
-      animation-duration: 0s !important;
-      animation-delay: 0s !important;
-      animation-iteration-count: 1 !important;
-      scroll-behavior: auto !important;
+    html {
+      scroll-behavior: auto;
     }
   }
 }
@@ -176,7 +186,7 @@
     --wisp-shell: calc(var(--wisp-measure) + 2 * var(--wisp-side) + 2 * var(--wisp-gutter));
     --wisp-pad: 20px;
     --wisp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-    --wisp-header-h: 56px;
+    --wisp-header-h: 3.5rem;
   }
   @media (min-width: 48rem) {
     :root {
@@ -200,6 +210,18 @@
     max-width: calc(var(--wisp-measure) + 2 * var(--wisp-pad));
     margin-inline: auto;
     padding-inline: var(--wisp-pad);
+  }
+
+  .wisp-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
 
   /* 正文中的强调色文字链接（非 prose 区域使用） */
@@ -246,10 +268,17 @@
   }
   .wisp-btn:hover {
     border-color: var(--wisp-muted);
-    transform: translateY(-1px);
   }
-  .wisp-btn:active {
-    transform: translateY(0) scale(0.98);
+  @media (prefers-reduced-motion: no-preference) {
+    .wisp-btn:hover {
+      transform: translateY(-1px);
+    }
+    .wisp-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+    .wisp-btn:hover .wisp-icon:last-child {
+      transform: translateX(2px);
+    }
   }
   .wisp-btn--primary {
     border-color: var(--wisp-accent);
@@ -263,23 +292,113 @@
   .wisp-btn .wisp-icon {
     transition: transform 160ms var(--wisp-ease);
   }
-  .wisp-btn:hover .wisp-icon:last-child {
-    transform: translateX(2px);
-  }
 
-  /* 下划线从左往右画出：导航、页脚、卡片内的文字链接 */
+  /* 下划线从左往右画出：合成层 scaleX 过渡，降动效切换为柔和显隐 */
   .wisp-draw {
-    background-image: linear-gradient(currentColor, currentColor);
-    background-position: 0 100%;
-    background-repeat: no-repeat;
-    background-size: 0 1px;
-    transition:
-      background-size 220ms var(--wisp-ease),
-      color 150ms;
+    position: relative;
+    transition: color 150ms;
   }
-  .wisp-draw:hover,
-  .wisp-draw:focus-visible {
-    background-size: 100% 1px;
+  .wisp-draw::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -1px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    pointer-events: none;
+    transition: transform 220ms var(--wisp-ease);
+  }
+  .wisp-draw:dir(rtl)::after {
+    transform-origin: right;
+  }
+  .wisp-draw:hover::after,
+  .wisp-draw:focus-visible::after {
+    transform: scaleX(1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wisp-btn,
+    .wisp-btn .wisp-icon {
+      transition:
+        background-color 160ms,
+        border-color 160ms,
+        color 160ms;
+    }
+    .wisp-draw::after {
+      opacity: 0;
+      transform: scaleX(1);
+      transition: opacity 120ms;
+    }
+    .wisp-draw:hover::after,
+    .wisp-draw:focus-visible::after {
+      opacity: 1;
+    }
+  }
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline: 2px solid Highlight;
+    }
+    .wisp-btn {
+      border-color: ButtonText;
+    }
+    .wisp-btn--primary {
+      background: Highlight;
+      color: HighlightText;
+      border-color: Highlight;
+    }
+    .wisp-draw::after {
+      background: currentColor;
+      forced-color-adjust: none;
+    }
+  }
+}
+
+@property --wisp-fade-start {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --wisp-fade-end {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --wisp-vfade-top {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --wisp-vfade-bottom {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes wisp-reveal-fade-start {
+  to {
+    --wisp-fade-start: var(--wisp-fade-size, 1.5rem);
+  }
+}
+
+@keyframes wisp-hide-fade-end {
+  from {
+    --wisp-fade-end: var(--wisp-fade-size, 1.5rem);
+  }
+}
+
+@keyframes wisp-reveal-vfade-top {
+  to {
+    --wisp-vfade-top: var(--wisp-vfade-top-size, 1.5rem);
+  }
+}
+
+@keyframes wisp-hide-vfade-bottom {
+  from {
+    --wisp-vfade-bottom: var(--wisp-vfade-bottom-size, 1.75rem);
   }
 }
 
@@ -292,222 +411,136 @@
   }
 
   /*
-   * 滚动条：全站一套四层规则。滑块用半透明前景色（而非与纸白混合的实色），在纸白、代码底、着色块与灯箱上都能自然压暗/提亮；
-   * 轨道透明、999px 圆角、无步进三角箭头（▲/▼/◄/►）。
-   * - 页面主滚动条（html）：桌面端 10px 命中区 + 2px 透明内衬 = 6px 悬浮圆角滑块（按住加宽到 8px），消除 Windows 原生悬空三角箭头；
-   * - 导航轨道（[data-rail-scroll]、.wisp-nav ul）：各自隐藏滚动条，仅靠渐隐遮罩提示可滚；
-   * - 全部内部滚动容器（0 特异性，精准匹配内部滚动容器以避免全站通配选择器开销）：桌面端 8px 命中区 + 2px 透明内衬 = 4px 悬浮圆角滑块，
-   *   平时通过自定义属性 --wisp-sb: transparent 完全隐身，指针移入、焦点进入或鼠标拖拽时切换 --wisp-sb 立即重绘显现
-   *   （避开 Blink 对容器 :hover::-webkit-scrollbar-thumb 不触发重绘的引擎缺陷），指向滑块本体时柔和展宽至 6px；
-   * - Firefox 与触屏设备回退标准 scrollbar-width / scrollbar-color（Chromium 下严禁给 html 设 scrollbar-color，否则会废弃 ::-webkit-scrollbar）。
+   * 标准滚动条与高对比支持：滑块 ≥ 3:1 非文本对比度，轨道透明；内部滚动区使用细轨道（thin）。
    */
   :root {
-    --wisp-scroll-thumb: color-mix(in srgb, var(--wisp-fg) 26%, transparent);
-    --wisp-scroll-thumb-hover: color-mix(in srgb, var(--wisp-fg) 46%, transparent);
+    --wisp-scroll-thumb: color-mix(in srgb, var(--wisp-fg) 52%, transparent);
+    --wisp-scroll-thumb-hover: color-mix(in srgb, var(--wisp-fg) 72%, transparent);
+    scrollbar-color: var(--wisp-scroll-thumb) transparent;
   }
-  @media (hover: none) {
-    html {
-      scrollbar-color: var(--wisp-scroll-thumb) transparent;
-    }
-    :where(
-      .wisp-pre,
-      .prose pre,
-      .wisp-table,
-      .prose > table,
-      .katex-display,
-      .wisp-pele-body,
-      .wisp-diagram-body,
-      .wisp-explainer__scroll,
-      .wisp-lightbox-media,
-      .wisp-cite-pop,
-      .wisp-series-inline ol,
-      .wisp-toc-inline > ol,
-      [data-wisp-scroll],
-      [data-wisp-vscroll]
-    ) {
-      scrollbar-width: thin;
-      scrollbar-color: var(--wisp-scroll-thumb) transparent;
+  @media (prefers-contrast: more) {
+    :root {
+      --wisp-border: var(--wisp-muted);
+      --wisp-subtle: var(--wisp-muted);
+      --wisp-muted: var(--wisp-fg);
+      --wisp-scroll-thumb: color-mix(in srgb, var(--wisp-fg) 72%, transparent);
+      --wisp-scroll-thumb-hover: var(--wisp-fg);
     }
   }
-  @media (hover: hover) {
-    @supports selector(::-webkit-scrollbar) {
-      ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-        background: transparent;
-      }
-      ::-webkit-scrollbar-button {
-        display: none;
-        width: 0;
-        height: 0;
-      }
-      ::-webkit-scrollbar-track,
-      ::-webkit-scrollbar-corner {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-track:vertical {
-        margin-block: 4px;
-      }
-      ::-webkit-scrollbar-track:horizontal {
-        margin-inline: 4px;
-      }
-      ::-webkit-scrollbar-thumb {
-        border: 2px solid transparent;
-        border-radius: 999px;
-        background-clip: content-box;
-        background-color: var(--wisp-sb, var(--wisp-scroll-thumb));
-      }
-      ::-webkit-scrollbar-thumb:hover,
-      ::-webkit-scrollbar-thumb:active {
-        border-width: 1px;
-        background-color: var(--wisp-scroll-thumb-hover);
-      }
-      :where(
-        .wisp-pre,
-        .prose pre,
-        .wisp-table,
-        .prose > table,
-        .katex-display,
-        .wisp-pele-body,
-        .wisp-diagram-body,
-        .wisp-explainer__scroll,
-        .wisp-lightbox-media,
-        .wisp-cite-pop,
-        .wisp-series-inline ol,
-        .wisp-toc-inline > ol,
-        [data-wisp-scroll],
-        [data-wisp-vscroll]
-      ) {
-        --wisp-sb: transparent;
-      }
-      :where(
-        .wisp-pre,
-        .prose pre,
-        .wisp-table,
-        .prose > table,
-        .katex-display,
-        .wisp-pele-body,
-        .wisp-diagram-body,
-        .wisp-explainer__scroll,
-        .wisp-lightbox-media,
-        .wisp-cite-pop,
-        .wisp-series-inline ol,
-        .wisp-toc-inline > ol,
-        [data-wisp-scroll],
-        [data-wisp-vscroll]
-      ):where(:hover, :focus-within),
-      [data-wisp-dragging] {
-        --wisp-sb: var(--wisp-scroll-thumb);
-      }
-      :where(
-        .wisp-pre,
-        .prose pre,
-        .wisp-table,
-        .prose > table,
-        .katex-display,
-        .wisp-pele-body,
-        .wisp-diagram-body,
-        .wisp-explainer__scroll,
-        .wisp-lightbox-media,
-        .wisp-cite-pop,
-        .wisp-series-inline ol,
-        .wisp-toc-inline > ol,
-        [data-wisp-scroll],
-        [data-wisp-vscroll]
-      )::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
+  @media (forced-colors: active) {
+    :root {
+      scrollbar-color: auto;
     }
-    @supports not selector(::-webkit-scrollbar) {
-      html {
-        scrollbar-color: var(--wisp-scroll-thumb) transparent;
-      }
-      :where(
-        .wisp-pre,
-        .prose pre,
-        .wisp-table,
-        .prose > table,
-        .katex-display,
-        .wisp-pele-body,
-        .wisp-diagram-body,
-        .wisp-explainer__scroll,
-        .wisp-lightbox-media,
-        .wisp-cite-pop,
-        .wisp-series-inline ol,
-        .wisp-toc-inline > ol,
-        [data-wisp-scroll],
-        [data-wisp-vscroll]
-      ) {
-        scrollbar-width: thin;
-        scrollbar-color: transparent transparent;
-      }
-      :where(
-        .wisp-pre,
-        .prose pre,
-        .wisp-table,
-        .prose > table,
-        .katex-display,
-        .wisp-pele-body,
-        .wisp-diagram-body,
-        .wisp-explainer__scroll,
-        .wisp-lightbox-media,
-        .wisp-cite-pop,
-        .wisp-series-inline ol,
-        .wisp-toc-inline > ol,
-        [data-wisp-scroll],
-        [data-wisp-vscroll]
-      ):where(:hover, :focus-within),
-      [data-wisp-dragging] {
-        scrollbar-color: var(--wisp-scroll-thumb) transparent;
-      }
-    }
+  }
+  :where(
+    .wisp-pre,
+    .prose pre,
+    .wisp-table,
+    .prose > table,
+    .katex-display,
+    .wisp-pele-body,
+    .wisp-diagram-body,
+    .wisp-explainer__scroll,
+    .wisp-lightbox-media,
+    .wisp-cite-pop,
+    .wisp-series-inline ol,
+    .wisp-toc-inline > ol,
+    [data-wisp-scroll],
+    [data-wisp-vscroll]
+  ) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--wisp-scroll-thumb) transparent;
   }
 
   /*
-   * 横向与纵向溢出提示：还有内容的那一侧，内容在渐隐带内柔和过渡到容器底色（mask-image，与底色无关）；
-   * 滚到头时该侧的渐隐消失。不用阴影。
+   * 纯 CSS 滚动 driven 渐隐遮罩：scroll(self inline/block) + no-clip subtract（焦距轮廓不裁切，无 scroll listener / ResizeObserver）。
    */
-  [data-wisp-overflow] {
+  :where(
+    .wisp-pre,
+    .prose pre,
+    .katex-display,
+    .wisp-pele-body,
+    .wisp-diagram-body,
+    .wisp-explainer__scroll,
+    .wisp-nav ul,
+    [data-wisp-scroll]
+  ) {
     --wisp-fade-size: 1.5rem;
-    --wisp-fade-start: 0px;
-    --wisp-fade-end: 0px;
-    mask-image: linear-gradient(
-      to right,
-      transparent,
-      black var(--wisp-fade-start),
-      black calc(100% - var(--wisp-fade-end)),
-      transparent
-    );
+    --wisp-fade-dir: right;
+    --wisp-fade-start-pos: 0;
+    --wisp-fade-end-pos: 100%;
+    mask:
+      linear-gradient(black, black) no-clip subtract,
+      linear-gradient(to var(--wisp-fade-dir), black, transparent) var(--wisp-fade-start-pos) 0 /
+        var(--wisp-fade-start) 100% no-repeat no-clip,
+      linear-gradient(to var(--wisp-fade-dir), transparent, black) var(--wisp-fade-end-pos) 0 /
+        var(--wisp-fade-end) 100% no-repeat no-clip;
+    animation:
+      wisp-reveal-fade-start linear both,
+      wisp-hide-fade-end linear both;
+    animation-timeline: scroll(self inline);
+    animation-range:
+      0 var(--wisp-fade-size),
+      calc(100% - var(--wisp-fade-size)) 100%;
   }
-  [data-wisp-overflow='start'],
-  [data-wisp-overflow='both'] {
-    --wisp-fade-start: var(--wisp-fade-size);
+  :where(
+    .wisp-pre,
+    .prose pre,
+    .katex-display,
+    .wisp-pele-body,
+    .wisp-diagram-body,
+    .wisp-explainer__scroll,
+    .wisp-nav ul,
+    [data-wisp-scroll]
+  ):dir(rtl) {
+    --wisp-fade-dir: left;
+    --wisp-fade-start-pos: 100%;
+    --wisp-fade-end-pos: 0;
   }
-  [data-wisp-overflow='end'],
-  [data-wisp-overflow='both'] {
-    --wisp-fade-end: var(--wisp-fade-size);
+  /* 表格首列吸左：仅右侧渐隐 */
+  :where(.wisp-table, .prose > table) {
+    --wisp-fade-size: 1.5rem;
+    --wisp-fade-dir: right;
+    --wisp-fade-end-pos: 100%;
+    mask:
+      linear-gradient(black, black) no-clip subtract,
+      linear-gradient(to var(--wisp-fade-dir), transparent, black) var(--wisp-fade-end-pos) 0 /
+        var(--wisp-fade-end) 100% no-repeat no-clip;
+    animation: wisp-hide-fade-end linear both;
+    animation-timeline: scroll(self inline);
+    animation-range: calc(100% - var(--wisp-fade-size)) 100%;
   }
-  [data-wisp-overflow]:focus-visible,
-  [data-wisp-overflow]:has(:focus-visible) {
-    mask-image: none;
+  :where(.wisp-table, .prose > table):dir(rtl) {
+    --wisp-fade-dir: left;
+    --wisp-fade-end-pos: 0;
   }
-  [data-wisp-vfade] {
-    --wisp-vfade-top: 0rem;
-    --wisp-vfade-bottom: 0rem;
-    mask-image: linear-gradient(
-      to bottom,
-      transparent,
-      black var(--wisp-vfade-top),
-      black calc(100% - var(--wisp-vfade-bottom)),
-      transparent
-    );
+  :where(
+    [data-wisp-overflow],
+    .wisp-table,
+    .prose > table,
+    .katex-display,
+    .wisp-pele-body,
+    .wisp-diagram-body,
+    .wisp-nav ul
+  ):is(:focus-visible, :has(:focus-visible)) {
+    mask: none;
   }
-  [data-wisp-vfade~='top'] {
-    --wisp-vfade-top: 1.5rem;
-  }
-  [data-wisp-vfade~='bottom'] {
-    --wisp-vfade-bottom: 1.75rem;
+  :where([data-rail-scroll], .wisp-series-inline ol, .wisp-toc-inline > ol, [data-wisp-vscroll]) {
+    --wisp-vfade-top-size: 1.5rem;
+    --wisp-vfade-bottom-size: 1.75rem;
+    mask:
+      linear-gradient(black, black) no-clip subtract,
+      linear-gradient(to bottom, black, transparent) 0 0 / 100% var(--wisp-vfade-top) no-repeat
+        no-clip,
+      linear-gradient(to bottom, transparent, black) 0 100% / 100% var(--wisp-vfade-bottom)
+        no-repeat no-clip;
+    animation:
+      wisp-reveal-vfade-top linear both,
+      wisp-hide-vfade-bottom linear both;
+    animation-timeline: scroll(self block);
+    animation-range:
+      0 var(--wisp-vfade-top-size),
+      calc(100% - var(--wisp-vfade-bottom-size)) 100%;
   }
   [data-wisp-dragging],
   [data-wisp-dragging] * {
@@ -527,8 +560,24 @@
     .wisp-prevnext {
       display: none !important;
     }
-    [data-wisp-overflow] {
-      mask-image: none !important;
+    :where(
+      .wisp-pre,
+      .prose pre,
+      .wisp-table,
+      .prose > table,
+      .katex-display,
+      .wisp-pele-body,
+      .wisp-diagram-body,
+      .wisp-explainer__scroll,
+      .wisp-nav ul,
+      [data-rail-scroll],
+      .wisp-series-inline ol,
+      .wisp-toc-inline > ol,
+      [data-wisp-scroll],
+      [data-wisp-vscroll],
+      [data-wisp-overflow]
+    ) {
+      mask: none !important;
     }
   }
 }

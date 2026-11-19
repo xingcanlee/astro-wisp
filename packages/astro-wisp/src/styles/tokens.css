@@ -1,104 +1,36 @@
 /* 自动生成，勿手改。来源：design/palette.json，运行 `pnpm tokens` 重新生成。 */
 
 @layer theme {
-  :root,
-  [data-theme="light"] {
-    color-scheme: light;
-    --wisp-bg: #fcfcfb;
-    --wisp-surface: #f4f4f2;
-    --wisp-surface-2: #ebebe7;
-    --wisp-border: #e2e2dd;
-    --wisp-fg: #1d1d1f;
-    --wisp-muted: #5c6067;
-    --wisp-subtle: #8b9098;
-    --wisp-accent: #0f766e;
-    --wisp-accent-fg: #ffffff;
-    --wisp-code-bg: #f6f6f4;
-    --wisp-selection: #ccf0ea;
-    --wisp-hue-blue: #2f5783;
-    --wisp-hue-blue-fill: #e9f2fb;
-    --wisp-hue-amber: #7b5518;
-    --wisp-hue-amber-fill: #fbf2df;
-    --wisp-hue-green: #2c522d;
-    --wisp-hue-green-fill: #e9f5e9;
-    --wisp-hue-rose: #984646;
-    --wisp-hue-rose-fill: #fcedec;
-    --wisp-hue-violet: #4d335c;
-    --wisp-hue-violet-fill: #f5eef9;
-    --wisp-hue-teal: #0f766e;
-    --wisp-hue-teal-fill: #e3f5f3;
-    --wisp-hue-orange: #762f06;
-    --wisp-hue-orange-fill: #fceee4;
-    --wisp-hue-slate: #464e57;
-    --wisp-hue-slate-fill: #eaedf2;
-  }
-
-  [data-theme="dark"] {
-    color-scheme: dark;
-    --wisp-bg: #111214;
-    --wisp-surface: #18191c;
-    --wisp-surface-2: #202125;
-    --wisp-border: #2b2d31;
-    --wisp-fg: #e6e6e3;
-    --wisp-muted: #a0a4ab;
-    --wisp-subtle: #6b7078;
-    --wisp-accent: #4fd1c0;
-    --wisp-accent-fg: #0b1f1d;
-    --wisp-code-bg: #16171a;
-    --wisp-selection: #1d3d39;
-    --wisp-hue-blue: #a9cbef;
-    --wisp-hue-blue-fill: #1a2634;
-    --wisp-hue-amber: #f2c681;
-    --wisp-hue-amber-fill: #2e2515;
-    --wisp-hue-green: #84b585;
-    --wisp-hue-green-fill: #1a281c;
-    --wisp-hue-rose: #eda9aa;
-    --wisp-hue-rose-fill: #341f1f;
-    --wisp-hue-violet: #bb9ece;
-    --wisp-hue-violet-fill: #291e2e;
-    --wisp-hue-teal: #7fd3c5;
-    --wisp-hue-teal-fill: #112926;
-    --wisp-hue-orange: #ce8d66;
-    --wisp-hue-orange-fill: #311f15;
-    --wisp-hue-slate: #9da7b3;
-    --wisp-hue-slate-fill: #23272b;
-  }
-
-  @media print {
-    [data-theme="dark"] {
-      color-scheme: light;
-      --wisp-bg: #fcfcfb;
-      --wisp-surface: #f4f4f2;
-      --wisp-surface-2: #ebebe7;
-      --wisp-border: #e2e2dd;
-      --wisp-fg: #1d1d1f;
-      --wisp-muted: #5c6067;
-      --wisp-subtle: #8b9098;
-      --wisp-accent: #0f766e;
-      --wisp-accent-fg: #ffffff;
-      --wisp-code-bg: #f6f6f4;
-      --wisp-selection: #ccf0ea;
-      --wisp-hue-blue: #2f5783;
-      --wisp-hue-blue-fill: #e9f2fb;
-      --wisp-hue-amber: #7b5518;
-      --wisp-hue-amber-fill: #fbf2df;
-      --wisp-hue-green: #2c522d;
-      --wisp-hue-green-fill: #e9f5e9;
-      --wisp-hue-rose: #984646;
-      --wisp-hue-rose-fill: #fcedec;
-      --wisp-hue-violet: #4d335c;
-      --wisp-hue-violet-fill: #f5eef9;
-      --wisp-hue-teal: #0f766e;
-      --wisp-hue-teal-fill: #e3f5f3;
-      --wisp-hue-orange: #762f06;
-      --wisp-hue-orange-fill: #fceee4;
-      --wisp-hue-slate: #464e57;
-      --wisp-hue-slate-fill: #eaedf2;
-    }
-  }
-
-  /* 语义色只写一次，自动随 hue 切换 */
   :root {
+    color-scheme: light dark;
+    accent-color: var(--wisp-accent);
+    --wisp-bg: light-dark(#fcfcfb, #111214);
+    --wisp-surface: light-dark(#f4f4f2, #18191c);
+    --wisp-surface-2: light-dark(#ebebe7, #202125);
+    --wisp-border: light-dark(#e2e2dd, #2b2d31);
+    --wisp-fg: light-dark(#1d1d1f, #e6e6e3);
+    --wisp-muted: light-dark(#5c6067, #a0a4ab);
+    --wisp-subtle: light-dark(#8b9098, #6b7078);
+    --wisp-accent: light-dark(#0f766e, #4fd1c0);
+    --wisp-accent-fg: light-dark(#ffffff, #0b1f1d);
+    --wisp-code-bg: light-dark(#f6f6f4, #16171a);
+    --wisp-selection: light-dark(#ccf0ea, #1d3d39);
+    --wisp-hue-blue: light-dark(#2f5783, #a9cbef);
+    --wisp-hue-blue-fill: light-dark(#e9f2fb, #1a2634);
+    --wisp-hue-amber: light-dark(#7b5518, #f2c681);
+    --wisp-hue-amber-fill: light-dark(#fbf2df, #2e2515);
+    --wisp-hue-green: light-dark(#2c522d, #84b585);
+    --wisp-hue-green-fill: light-dark(#e9f5e9, #1a281c);
+    --wisp-hue-rose: light-dark(#984646, #eda9aa);
+    --wisp-hue-rose-fill: light-dark(#fcedec, #341f1f);
+    --wisp-hue-violet: light-dark(#4d335c, #bb9ece);
+    --wisp-hue-violet-fill: light-dark(#f5eef9, #291e2e);
+    --wisp-hue-teal: light-dark(#0f766e, #7fd3c5);
+    --wisp-hue-teal-fill: light-dark(#e3f5f3, #112926);
+    --wisp-hue-orange: light-dark(#762f06, #ce8d66);
+    --wisp-hue-orange-fill: light-dark(#fceee4, #311f15);
+    --wisp-hue-slate: light-dark(#464e57, #9da7b3);
+    --wisp-hue-slate-fill: light-dark(#eaedf2, #23272b);
     --wisp-sem-q: var(--wisp-hue-blue);
     --wisp-sem-q-fill: var(--wisp-hue-blue-fill);
     --wisp-sem-k: var(--wisp-hue-amber);
@@ -128,5 +60,20 @@
     --wisp-font-sans: var(--font-wisp-sans, "Inter Variable"), "Noto Sans SC Variable", "Wisp CJK Fallback", -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC", MiSans, "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
     --wisp-font-mono: var(--font-wisp-mono, "JetBrains Mono Variable"), ui-monospace, SFMono-Regular, Menlo, Consolas, "Noto Sans SC Variable", "PingFang SC", "Microsoft YaHei", monospace;
     --wisp-font-hand: var(--font-wisp-hand, Excalifont), Virgil, "Noto Sans SC Variable", "PingFang SC", sans-serif;
+  }
+
+  :root:has(> head > meta[name="color-scheme"][content="dark"]) {
+    color-scheme: dark;
+  }
+
+  :root:has(> head > meta[name="color-scheme"][content="light"]) {
+    color-scheme: light;
+  }
+
+  @media print {
+    :root,
+    :root:has(> head > meta[name="color-scheme"][content]) {
+      color-scheme: light;
+    }
   }
 }

@@ -15,9 +15,12 @@ for (const theme of ['light', 'dark'] as const) {
   for (const path of PAGES) {
     test(`axe ${theme} ${decodeURI(path)}`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: theme });
-      await page.addInitScript((t) => localStorage.setItem('wisp-theme', t), theme);
+      await page.addInitScript((t) => localStorage.setItem('color-scheme', t), theme);
       await page.goto(path);
-      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      await expect(page.locator('head meta[name="color-scheme"]')).toHaveAttribute(
+        'content',
+        theme,
+      );
       await page.evaluate(() => document.fonts.ready);
       // 触发 client:visible 的岛屿并等待其渲染
       await page.evaluate(async () => {
@@ -106,26 +109,21 @@ test('横向滚动容器：只有确实溢出的才是 Tab 停靠点，名称在
   await check();
 });
 
-test('全站滚动条：桌面端根视口与内部容器均不设置 scrollbar-color（保障无箭头圆角滑块生效），悬停即时切换 --wisp-sb，溢出表格首列吸左且可拖拽平移', async ({
+test('全站滚动条：采用标准 scrollbar-color（桌面/触屏一致，滑块 ≥ 3:1 对比度），溢出表格首列吸左且可拖拽平移', async ({
   page,
   isMobile,
 }) => {
   await page.goto('/posts/kitchen-sink/');
   await page.evaluate(() => document.fonts.ready);
   const table = page.locator('.wisp-table').first();
-  if (!isMobile) {
-    const rootSc = await page.evaluate(
-      () => getComputedStyle(document.documentElement).scrollbarColor,
-    );
-    const tableSc = await table.evaluate((el) => getComputedStyle(el).scrollbarColor);
-    expect(rootSc).toBe('auto');
-    expect(tableSc).toBe('auto');
-    await page.mouse.move(2, 2);
-    const restSb = await table.evaluate((el) =>
-      getComputedStyle(el).getPropertyValue('--wisp-sb').trim(),
-    );
-    expect(restSb).toBe('transparent');
-  }
+  const rootSc = await page.evaluate(
+    () => getComputedStyle(document.documentElement).scrollbarColor,
+  );
+  const tableSc = await table.evaluate((el) => getComputedStyle(el).scrollbarColor);
+  const tableSw = await table.evaluate((el) => getComputedStyle(el).scrollbarWidth);
+  expect(rootSc).not.toBe('auto');
+  expect(tableSc).not.toBe('auto');
+  expect(tableSw).toBe('thin');
   await table.evaluate((el) => {
     (el as HTMLElement).style.maxWidth = '180px';
     document.dispatchEvent(new Event('wisp:overflow'));
@@ -139,12 +137,6 @@ test('全站滚动条：桌面端根视口与内部容器均不设置 scrollbar-
   if (!isMobile) {
     await table.scrollIntoViewIfNeeded();
     const box = (await table.boundingBox())!;
-    await page.mouse.move(box.x + 80, box.y + 30);
-    const hoverSb = await table.evaluate((el) =>
-      getComputedStyle(el).getPropertyValue('--wisp-sb').trim(),
-    );
-    expect(hoverSb).not.toBe('transparent');
-    expect(hoverSb.length).toBeGreaterThan(0);
     await page.mouse.move(box.x + 140, box.y + 40);
     await page.mouse.down();
     await page.mouse.move(box.x + 40, box.y + 40, { steps: 8 });

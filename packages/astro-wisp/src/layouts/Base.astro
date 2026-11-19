@@ -71,24 +71,40 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
 ---
 
 <!doctype html>
-<html lang={lang} data-theme="light">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="text-scale" content="scale" />
     <script is:inline>
       (() => {
-        let s = 'system';
         try {
-          s = localStorage.getItem('wisp-theme') || 'system';
+          const s = localStorage.getItem('color-scheme');
+          if (s === 'light' || s === 'dark') {
+            document.head.querySelector('meta[name="color-scheme"]')?.setAttribute('content', s);
+          }
         } catch {}
-        const d = document.documentElement;
-        const dark =
-          s === 'dark' || (s !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-        d.dataset.theme = dark ? 'dark' : 'light';
-        d.dataset.themePref = s === 'light' || s === 'dark' ? s : 'system';
-        d.dataset.wispJs = '';
+        document.documentElement.dataset.wispJs = '';
       })();
     </script>
+    <script
+      is:inline
+      type="speculationrules"
+      set:html={JSON.stringify({
+        prefetch: [
+          {
+            where: {
+              and: [
+                { href_matches: '/*' },
+                { not: { selector_matches: '[download], [target="_blank"], [rel~="external"]' } },
+              ],
+            },
+            eagerness: 'conservative',
+          },
+        ],
+      })}
+    />
     <script is:inline>
       // 代码块自动换行的读者偏好（CopyButton 写入）：首帧前生效，避免先滚动后换行的跳动
       try {
@@ -150,10 +166,8 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
     <Citations />
     <script is:inline>
       /*
-       * 横向滚动容器的溢出标记：data-wisp-overflow="start|end|both" 表示哪一侧还有没显示的内容，
-       * CSS 据此在那一侧把内容渐隐（global.css）；滚到头时该侧的渐隐消失。
-       * 同时：只有溢出的容器可以键盘聚焦（tabindex），并带「…，可横向滚动」的名称；不溢出时恢复原名称、
-       * 去掉 tabindex——markup 里的 tabindex=0 + data-wisp-tab 只是无 JS 时的回落（rehype-a11y / shiki.ts）。
+       * 横向滚动容器的溢出标记：data-wisp-overflow="start|end|both" 用于拖拽平移与可访问性焦点管理（tabindex / role="region"）；
+       * 边缘渐隐与纵向滚动渐隐全部由 global.css 内的 scroll(self inline/block) 纯 CSS 驱动。
        * 代码块另记 data-wisp-wide（不换行时会溢出）——「自动换行」按钮只在这些块上出现。
        * 站点自己的横向滚动容器加 data-wisp-scroll 属性即可加入。
        */
@@ -161,22 +175,11 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
         const zh = document.documentElement.lang.startsWith('zh');
         const SEL =
           '.wisp-pre, .prose pre:not(.wisp-pre), .wisp-table, .prose > table, .katex-display, .wisp-explainer__scroll, .wisp-pele-body, .wisp-diagram-body, [data-wisp-scroll]';
-        const FADE_ONLY_SEL = '.wisp-nav ul';
-        const V_SEL = '.wisp-series-inline ol, .wisp-toc-inline > ol, [data-wisp-vscroll]';
-        const ALL_SCROLL_SEL = `${SEL}, ${FADE_ONLY_SEL}, ${V_SEL}`;
         const side = (el) => {
           const max = el.scrollWidth - el.clientWidth;
           if (max <= 1) return '';
           const x = Math.abs(el.scrollLeft);
           return x <= 1 ? 'end' : x >= max - 1 ? 'start' : 'both';
-        };
-        const sideV = (el) => {
-          const max = el.scrollHeight - el.clientHeight;
-          return max <= 2
-            ? ''
-            : [el.scrollTop > 4 && 'top', el.scrollTop < max - 4 && 'bottom']
-                .filter(Boolean)
-                .join(' ');
         };
         const applyAttr = (el, name, v) => {
           if ((el.getAttribute(name) || '') === v) return;
@@ -188,7 +191,6 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
           applyAttr(el, 'data-wisp-overflow', v);
           return v;
         };
-        const markV = (el) => applyAttr(el, 'data-wisp-vfade', sideV(el));
         const label = (el, overflow) => {
           // 键盘：只有溢出的容器是 Tab 停靠点。主题写的 tabindex 带 data-wisp-tab（无 JS 回落），
           // 没有 tabindex 的容器也归脚本管；站点自己写的 tabindex（没有 data-wisp-tab）保持不动
@@ -259,17 +261,11 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
           });
           // 批量读 → 批量写，避免交替读写触发布局抖动
           const scrollEls = [...document.querySelectorAll(SEL)];
-          const fadeEls = [...document.querySelectorAll(FADE_ONLY_SEL)];
-          const vEls = [...document.querySelectorAll(V_SEL)];
           const scrollSides = scrollEls.map((el) => side(el));
-          const fadeSides = fadeEls.map((el) => side(el));
-          const vSides = vEls.map((el) => sideV(el));
           scrollEls.forEach((el, i) => {
             applyAttr(el, 'data-wisp-overflow', scrollSides[i]);
             label(el, scrollSides[i] !== '');
           });
-          fadeEls.forEach((el, i) => applyAttr(el, 'data-wisp-overflow', fadeSides[i]));
-          vEls.forEach((el, i) => applyAttr(el, 'data-wisp-vfade', vSides[i]));
         };
         let queued = false;
         const schedule = () => {
@@ -293,13 +289,12 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
           'scroll',
           (e) => {
             const el = e.target;
-            if (!(el instanceof Element) || !el.matches(ALL_SCROLL_SEL)) return;
+            if (!(el instanceof Element) || !el.matches(SEL)) return;
             if (pending.has(el)) return;
             pending.add(el);
             requestAnimationFrame(() => {
               pending.delete(el);
-              if (el.matches(V_SEL)) markV(el);
-              else mark(el);
+              mark(el);
             });
           },
           { capture: true, passive: true },

@@ -318,6 +318,9 @@ const subToggleLabel = (text: string) => {
     .wisp-toc-aside ol {
       border-inline-start: 1px solid var(--wisp-border);
     }
+    .wisp-toc-aside :global(#wisp-toc-list) {
+      scroll-target-group: auto;
+    }
     .wisp-toc-aside a {
       margin-inline-start: -1px;
       padding: 0.3rem 0.25rem 0.3rem calc(0.875rem - 1px);
@@ -328,8 +331,10 @@ const subToggleLabel = (text: string) => {
         color 150ms,
         border-color 150ms;
     }
-    .wisp-toc-aside a[aria-current='true'] {
+    .wisp-toc-aside a:target-current,
+    .wisp-toc-aside a[aria-current='location'] {
       border-inline-start-color: var(--wisp-accent);
+      color: var(--wisp-fg);
       font-weight: 500;
     }
     /*
@@ -375,6 +380,26 @@ const subToggleLabel = (text: string) => {
     .wisp-toc-inline {
       margin: 0 0 2.5rem;
       border-bottom: 1px solid var(--wisp-border);
+    }
+    .wisp-toc-inline::details-content {
+      interpolate-size: allow-keywords;
+      overflow: clip;
+      contain: layout;
+    }
+    .wisp-toc-inline:not([open])::details-content {
+      block-size: 0;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .wisp-toc-inline::details-content {
+        transition:
+          block-size 200ms var(--wisp-ease),
+          content-visibility 200ms allow-discrete;
+      }
+      .wisp-toc-inline[open]::details-content {
+        @starting-style {
+          block-size: 0;
+        }
+      }
     }
     /* 窄屏折叠目录：标题在左、chevron 在右，与宽屏栏顶标题行同一种写法 */
     .wisp-toc-inline summary {
@@ -484,79 +509,87 @@ const subToggleLabel = (text: string) => {
   // 侧栏目录独立滚动的那一层（标题行在它外面，不随篇目滚动）
   const box = document.querySelector<HTMLElement>('.wisp-toc-aside [data-rail-scroll]');
   let current = '';
+  const revealActive = (a: HTMLElement) => {
+    if (!box || !box.clientHeight) return;
+    const c = box.getBoundingClientRect();
+    const r = a.getBoundingClientRect();
+    if (r.top < c.top + 8) box.scrollTop += r.top - c.top - 8;
+    else if (r.bottom > c.bottom - 8) box.scrollTop += r.bottom - c.bottom + 8;
+  };
   const set = (id: string) => {
     if (id === current) return;
     current = id;
     links.forEach((a) =>
-      a.dataset.tocLink === id
-        ? a.setAttribute('aria-current', 'true')
+      id && a.dataset.tocLink === id
+        ? a.setAttribute('aria-current', 'location')
         : a.removeAttribute('aria-current'),
     );
-    const a = box?.querySelector<HTMLElement>('[aria-current]');
+    if (!id) {
+      groups.forEach((li) => open(li, li.hasAttribute('data-manual')));
+      return;
+    }
+    const a = box?.querySelector<HTMLElement>('[aria-current="location"]');
     if (!a) return;
     const g = a.closest('li[data-group]');
     groups.forEach((li) => open(li, li === g || li.hasAttribute('data-manual')));
     // 只滚动目录容器本身，不影响页面滚动
-    if (!box!.clientHeight) return;
-    const c = box!.getBoundingClientRect();
-    const r = a.getBoundingClientRect();
-    if (r.top < c.top + 8) box!.scrollTop += r.top - c.top - 8;
-    else if (r.bottom > c.bottom - 8) box!.scrollTop += r.bottom - c.bottom + 8;
+    revealActive(a);
   };
-  if (heads.length && 'IntersectionObserver' in window) {
-    const visible = new Set<string>();
-    // 点击目录项后：立即高亮被点的那一项，页面滚动停下之前不让滚动跟踪改掉它
-    // （最后几节到不了视口上部，否则永远不会被高亮，或在平滑滚动途中闪过别的项）
+  if (heads.length) {
+    // 点击目录项后：立即高亮被点的那一项，页面滚动停下之前不让 scrollend 改掉它
     let locked = false;
     let unlock = 0;
     const atBottom = () => innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
-    const update = () => {
-      if (locked) return;
-      // 滚到底：最后一节
-      if (atBottom()) return set(heads[heads.length - 1]!.id);
-      // 视口上部可见的第一个标题；都不可见时取最后一个已滚过的标题
-      let cur = heads.find((h) => visible.has(h.id));
-      if (!cur) cur = heads.filter((h) => h.getBoundingClientRect().top < 0).pop();
-      if (cur) set(cur.id);
+    const threshold = () =>
+      Math.max(
+        (parseFloat(getComputedStyle(root).scrollPaddingTop) || 80) + 40,
+        innerHeight * 0.34,
+      );
+    const activeHeadingId = () => {
+      if (atBottom()) return heads[heads.length - 1]!.id;
+      const limit = threshold();
+      if (heads[0]!.getBoundingClientRect().top > limit) return '';
+      const nativeMatch = box?.querySelector<HTMLAnchorElement>('a:target-current');
+      if (nativeMatch?.dataset.tocLink) {
+        const targetEl = document.getElementById(nativeMatch.dataset.tocLink);
+        if (targetEl && targetEl.getBoundingClientRect().top <= limit) {
+          return nativeMatch.dataset.tocLink;
+        }
+      }
+      const inBand = heads.find((h) => {
+        const top = h.getBoundingClientRect().top;
+        return top >= 0 && top <= limit;
+      });
+      if (inBand) return inBand.id;
+      return heads.filter((h) => h.getBoundingClientRect().top < limit).pop()?.id ?? '';
     };
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) visible.add(e.target.id);
-          else visible.delete(e.target.id);
-        }
-        update();
-      },
-      { rootMargin: '0px 0px -66% 0px' },
-    );
-    heads.forEach((h) => io.observe(h));
-    // 到底不一定触发交叉变化，所以滚动时也判断一次（rAF 节流）
-    let tick = false;
-    addEventListener(
-      'scroll',
-      () => {
-        if (locked) {
-          clearTimeout(unlock);
-          unlock = window.setTimeout(() => (locked = false), 150);
-          return;
-        }
-        if (!tick) {
-          tick = true;
-          requestAnimationFrame(() => {
-            tick = false;
-            if (!locked && atBottom()) set(heads[heads.length - 1]!.id);
-          });
-        }
-      },
-      { passive: true },
-    );
-    for (const a of links)
+    const sync = () => {
+      if (locked) return;
+      set(activeHeadingId());
+    };
+    requestAnimationFrame(sync);
+    addEventListener('scrollend', () => {
+      if (locked) {
+        locked = false;
+        clearTimeout(unlock);
+        return;
+      }
+      sync();
+    });
+    addEventListener('hashchange', sync);
+    for (const a of links) {
       a.addEventListener('click', () => {
-        set(a.dataset.tocLink!);
+        const id = a.dataset.tocLink!;
+        set(id);
         locked = true;
         clearTimeout(unlock);
-        // 已在目标位置（没有滚动发生）时也要解锁
         unlock = window.setTimeout(() => (locked = false), 1000);
+        const target = document.getElementById(id);
+        if (target) {
+          if (!target.hasAttribute('tabindex')) target.tabIndex = -1;
+          target.focus({ preventScroll: true });
+        }
       });
+    }
   }
 </script>

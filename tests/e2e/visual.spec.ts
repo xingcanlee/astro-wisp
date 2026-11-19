@@ -9,7 +9,7 @@ for (const [name, path] of Object.entries(PAGES)) {
       test(`视觉 ${name} ${theme} ${w}`, async ({ page }) => {
         await page.setViewportSize({ width: Number(w), height: h });
         await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
-        await page.addInitScript((t) => localStorage.setItem('wisp-theme', t), theme);
+        await page.addInitScript((t) => localStorage.setItem('color-scheme', t), theme);
         await page.goto(path);
         await page.evaluate(() => document.fonts.ready);
         // 滚动一遍，确保懒加载内容就绪，再回到顶部

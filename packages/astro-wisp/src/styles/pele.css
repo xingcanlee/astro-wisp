@@ -13,45 +13,21 @@
     --pele-font: var(--wisp-font-sans);
     --pele-radius: 4px;
     --pele-series-1: var(--wisp-hue-blue);
-    --pele-series-1-fill: color-mix(in srgb, var(--wisp-hue-blue) 58%, var(--wisp-bg));
+    --pele-series-1-fill: light-dark(color-mix(in srgb, var(--wisp-hue-blue) 58%, var(--wisp-bg)), color-mix(in srgb, var(--wisp-hue-blue) 40%, var(--wisp-bg)));
     --pele-series-2: var(--wisp-hue-amber);
-    --pele-series-2-fill: color-mix(in srgb, var(--wisp-hue-amber) 58%, var(--wisp-bg));
+    --pele-series-2-fill: light-dark(color-mix(in srgb, var(--wisp-hue-amber) 58%, var(--wisp-bg)), color-mix(in srgb, var(--wisp-hue-amber) 40%, var(--wisp-bg)));
     --pele-series-3: var(--wisp-hue-green);
-    --pele-series-3-fill: color-mix(in srgb, var(--wisp-hue-green) 58%, var(--wisp-bg));
+    --pele-series-3-fill: light-dark(color-mix(in srgb, var(--wisp-hue-green) 58%, var(--wisp-bg)), color-mix(in srgb, var(--wisp-hue-green) 40%, var(--wisp-bg)));
     --pele-series-4: var(--wisp-hue-rose);
-    --pele-series-4-fill: color-mix(in srgb, var(--wisp-hue-rose) 58%, var(--wisp-bg));
+    --pele-series-4-fill: light-dark(color-mix(in srgb, var(--wisp-hue-rose) 58%, var(--wisp-bg)), color-mix(in srgb, var(--wisp-hue-rose) 40%, var(--wisp-bg)));
     --pele-series-5: var(--wisp-hue-violet);
-    --pele-series-5-fill: color-mix(in srgb, var(--wisp-hue-violet) 58%, var(--wisp-bg));
+    --pele-series-5-fill: light-dark(color-mix(in srgb, var(--wisp-hue-violet) 58%, var(--wisp-bg)), color-mix(in srgb, var(--wisp-hue-violet) 40%, var(--wisp-bg)));
     --pele-series-6: var(--wisp-hue-teal);
-    --pele-series-6-fill: color-mix(in srgb, var(--wisp-hue-teal) 58%, var(--wisp-bg));
+    --pele-series-6-fill: light-dark(color-mix(in srgb, var(--wisp-hue-teal) 58%, var(--wisp-bg)), color-mix(in srgb, var(--wisp-hue-teal) 40%, var(--wisp-bg)));
     --pele-series-7: var(--wisp-hue-orange);
-    --pele-series-7-fill: color-mix(in srgb, var(--wisp-hue-orange) 58%, var(--wisp-bg));
+    --pele-series-7-fill: light-dark(color-mix(in srgb, var(--wisp-hue-orange) 58%, var(--wisp-bg)), color-mix(in srgb, var(--wisp-hue-orange) 40%, var(--wisp-bg)));
     --pele-series-8: var(--wisp-hue-slate);
-    --pele-series-8-fill: color-mix(in srgb, var(--wisp-hue-slate) 58%, var(--wisp-bg));
-  }
-
-  [data-theme="dark"] .pele {
-    --pele-series-1-fill: color-mix(in srgb, var(--wisp-hue-blue) 40%, var(--wisp-bg));
-    --pele-series-2-fill: color-mix(in srgb, var(--wisp-hue-amber) 40%, var(--wisp-bg));
-    --pele-series-3-fill: color-mix(in srgb, var(--wisp-hue-green) 40%, var(--wisp-bg));
-    --pele-series-4-fill: color-mix(in srgb, var(--wisp-hue-rose) 40%, var(--wisp-bg));
-    --pele-series-5-fill: color-mix(in srgb, var(--wisp-hue-violet) 40%, var(--wisp-bg));
-    --pele-series-6-fill: color-mix(in srgb, var(--wisp-hue-teal) 40%, var(--wisp-bg));
-    --pele-series-7-fill: color-mix(in srgb, var(--wisp-hue-orange) 40%, var(--wisp-bg));
-    --pele-series-8-fill: color-mix(in srgb, var(--wisp-hue-slate) 40%, var(--wisp-bg));
-  }
-
-  @media print {
-    [data-theme="dark"] .pele {
-      --pele-series-1-fill: color-mix(in srgb, var(--wisp-hue-blue) 58%, var(--wisp-bg));
-      --pele-series-2-fill: color-mix(in srgb, var(--wisp-hue-amber) 58%, var(--wisp-bg));
-      --pele-series-3-fill: color-mix(in srgb, var(--wisp-hue-green) 58%, var(--wisp-bg));
-      --pele-series-4-fill: color-mix(in srgb, var(--wisp-hue-rose) 58%, var(--wisp-bg));
-      --pele-series-5-fill: color-mix(in srgb, var(--wisp-hue-violet) 58%, var(--wisp-bg));
-      --pele-series-6-fill: color-mix(in srgb, var(--wisp-hue-teal) 58%, var(--wisp-bg));
-      --pele-series-7-fill: color-mix(in srgb, var(--wisp-hue-orange) 58%, var(--wisp-bg));
-      --pele-series-8-fill: color-mix(in srgb, var(--wisp-hue-slate) 58%, var(--wisp-bg));
-    }
+    --pele-series-8-fill: light-dark(color-mix(in srgb, var(--wisp-hue-slate) 58%, var(--wisp-bg)), color-mix(in srgb, var(--wisp-hue-slate) 40%, var(--wisp-bg)));
   }
 
   .pele-pie .pele-slice:nth-child(1),

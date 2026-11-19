@@ -1,13 +1,22 @@
 ---
 /**
- * 阅读进度条：页面顶部 2px 的 accent 细线，表示 `.wisp-post-body` 的阅读进度。
- * scroll + requestAnimationFrame 节流，用 transform: scaleX 避免重排；无 JS 时不显示。
+ * 阅读进度条：页眉底边 1px accent 细线，使用纯 CSS Scroll-Driven Animation (`animation-timeline: scroll(root block)`)
+ * 与页面垂直滚动位置同步，零 JS；`prefers-reduced-motion: reduce` 下隐藏。
  */
 ---
 
 <div class="wisp-progress" data-reading-progress aria-hidden="true"></div>
 
 <style>
+  @keyframes wisp-reading-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
   /* 主题样式在 components 层：Tailwind 工具类与站点 customCss 总能覆盖 */
   @layer components {
     .wisp-progress {
@@ -20,28 +29,26 @@
       transform: scaleX(0);
       transform-origin: left;
       pointer-events: none;
+      opacity: 0;
     }
     :global([dir='rtl']) .wisp-progress {
       transform-origin: right;
     }
+    @media (prefers-reduced-motion: no-preference) {
+      .wisp-progress {
+        opacity: 1;
+        animation-name: wisp-reading-progress;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: scroll(root block);
+        animation-range: 0% 100%;
+      }
+    }
+    @media (forced-colors: active) {
+      .wisp-progress {
+        background: Highlight;
+        forced-color-adjust: none;
+      }
+    }
   }
 </style>
-
-<script>
-  const bar = document.querySelector<HTMLElement>('[data-reading-progress]');
-  const body = document.querySelector('.wisp-post-body');
-  if (bar && body) {
-    let tick = false;
-    const update = () => {
-      tick = false;
-      const r = body.getBoundingClientRect();
-      const span = r.height - innerHeight;
-      const p = span > 0 ? -r.top / span : r.bottom <= innerHeight ? 1 : 0;
-      bar.style.transform = `scaleX(${Math.min(1, Math.max(0, p))})`;
-    };
-    const onScroll = () => tick || ((tick = true), requestAnimationFrame(update));
-    addEventListener('scroll', onScroll, { passive: true });
-    addEventListener('resize', onScroll);
-    update();
-  }
-</script>

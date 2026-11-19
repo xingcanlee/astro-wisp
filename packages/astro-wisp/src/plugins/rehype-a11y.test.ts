@@ -14,9 +14,11 @@ async function render(md: string, lang?: string): Promise<string> {
 }
 
 describe('rehype-a11y', () => {
-  it('表格包进 div.wisp-table；tabindex 带 data-wisp-tab（无 JS 回落，有 JS 时只有溢出的保留）', async () => {
+  it('表格包进 div.wisp-table；表头单元格带 scope；tabindex 带 data-wisp-tab（无 JS 回落，有 JS 时只有溢出的保留）', async () => {
     const html = await render('| a | b |\n| - | - |\n| 1 | 2 |');
     expect(html).toMatch(/^<div class="wisp-table" tabindex="0" data-wisp-tab="">\s*<table>/);
+    expect(html).toContain('<th scope="col">a</th>');
+    expect(html).toContain('<th scope="col">b</th>');
   });
 
   it('块级公式：role=group、名称「公式」，tabindex 同样交给溢出脚本管理', async () => {
@@ -62,14 +64,16 @@ describe('rehype-a11y', () => {
     expect(html).toContain('<td data-wisp-prose="">55 路由');
   });
 
-  it('标题及标题内行内代码注入 <wbr> 子词断点，且不破坏正文代码与 KaTeX 公式', async () => {
+  it('标题及标题内行内代码注入 <wbr> 子词断点与 tabindex="-1"，且不破坏正文代码与 KaTeX 公式', async () => {
     const html = await render(
       '## `BatchExecutionDescriptor` 与 NVLink/NCCL\n\n### 用 `moe_align_block_size` 优化 $O(N_{\\text{tok}})$ 路径\n\n正文 `BatchExecutionDescriptor` 不拆。',
     );
-    expect(html).toContain(
-      '<code>Batch<wbr>Execution<wbr>Descriptor</code> 与 NVLink/<wbr>NCCL</h2>',
+    expect(html).toMatch(
+      /<h2 tabindex="-1"[^>]*>.*<code>Batch<wbr>Execution<wbr>Descriptor<\/code> 与 NVLink\/<wbr>NCCL<\/h2>/,
     );
-    expect(html).toContain('<code>moe_<wbr>align_<wbr>block_<wbr>size</code>');
+    expect(html).toMatch(
+      /<h3 tabindex="-1"[^>]*>.*<code>moe_<wbr>align_<wbr>block_<wbr>size<\/code>/,
+    );
     const katexSegment = html.match(/<span class="katex">[\s\S]*?<\/span> 路径/)?.[0] ?? '';
     expect(katexSegment).toContain('class="katex"');
     expect(katexSegment).not.toContain('<wbr>');

@@ -44,9 +44,10 @@
   overscroll-behavior-x: contain;
   font-family: var(--wisp-font-mono);
   font-size: var(--wisp-code-size);
+  font-size-adjust: from-font;
   line-height: 1.7;
   tab-size: 2;
-  color: var(--shiki-light);
+  color: light-dark(var(--shiki-light, var(--wisp-fg)), var(--shiki-dark, var(--wisp-fg)));
 }
 .wisp-pre code {
   display: block;
@@ -57,19 +58,16 @@
   counter-reset: line;
 }
 .wisp-pre span {
-  color: var(--shiki-light);
-}
-[data-theme='dark'] .wisp-pre,
-[data-theme='dark'] .wisp-pre span {
-  color: var(--shiki-dark);
+  color: light-dark(var(--shiki-light, var(--wisp-fg)), var(--shiki-dark, var(--wisp-fg)));
 }
 
 /* 对比度修正：被 transformer 标记的低对比度色（注释等）向正文色混合，≥ 4.5:1 */
 .wisp-pre .tok-low {
-  color: color-mix(in srgb, var(--shiki-light) 70%, var(--wisp-fg));
-}
-[data-theme='dark'] .wisp-pre .tok-low {
-  color: color-mix(in srgb, var(--shiki-dark) 70%, var(--wisp-fg));
+  color: color-mix(
+    in srgb,
+    light-dark(var(--shiki-light, var(--wisp-fg)), var(--shiki-dark, var(--wisp-fg))) 70%,
+    var(--wisp-fg)
+  );
 }
 
 /* 行号：伪元素生成，不在 DOM 文本中，不可选中、不会被复制 */
@@ -155,10 +153,12 @@
   position: absolute;
   top: 0;
   left: 1rem;
-  height: var(--wisp-code-bar);
+  min-height: var(--wisp-code-bar);
+  display: inline-flex;
+  align-items: center;
   font-family: var(--wisp-font-mono);
   font-size: 0.75rem;
-  line-height: var(--wisp-code-bar);
+  line-height: 1.4;
   color: var(--wisp-muted);
   pointer-events: none;
   user-select: none;
@@ -172,9 +172,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--wisp-code-bar);
-  height: var(--wisp-code-bar);
-  padding: 0;
+  min-width: var(--wisp-code-bar);
+  min-height: var(--wisp-code-bar);
+  padding: 0 0.25rem;
   border: 0;
   border-radius: 3px;
   background: transparent;
@@ -188,9 +188,11 @@
     color 150ms,
     transform 160ms;
 }
-.wisp-copy:active,
-.wisp-wrap:active {
-  transform: scale(0.9);
+@media (prefers-reduced-motion: no-preference) {
+  .wisp-copy:active,
+  .wisp-wrap:active {
+    transform: scale(0.9);
+  }
 }
 /* 自动换行按钮在复制按钮左边；只在不换行时确实横向溢出的代码块上出现（data-wisp-wide 由 Base 脚本维护） */
 .wisp-code .wisp-wrap {
@@ -223,6 +225,44 @@
 }
 .wisp-copy[data-done] {
   color: var(--wisp-sem-done);
+}
+.wisp-copy[data-failed] {
+  color: var(--wisp-sem-grad);
+  opacity: 1;
+}
+.wisp-copy-status {
+  position: absolute;
+  top: 0.25rem;
+  right: calc(var(--wisp-code-bar) + 0.5rem);
+  display: inline-flex;
+  align-items: center;
+  min-height: calc(var(--wisp-code-bar) - 0.5rem);
+  padding: 0 0.5rem;
+  border: 1px solid var(--wisp-sem-grad);
+  border-radius: 3px;
+  background: var(--wisp-bg);
+  color: var(--wisp-sem-grad);
+  font-family: var(--wisp-font-sans);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.wisp-code[data-wisp-wide] .wisp-copy-status {
+  right: calc(2 * var(--wisp-code-bar) + 0.5rem);
+}
+@media (forced-colors: active) {
+  .wisp-copy,
+  .wisp-wrap,
+  .wisp-fold {
+    color: ButtonText;
+    opacity: 1;
+    forced-color-adjust: auto;
+  }
+  .wisp-copy-status {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
 }
 .wisp-copy:focus-visible,
 .wisp-wrap:focus-visible,
@@ -285,19 +325,24 @@
   .wisp-copy,
   .wisp-wrap,
   .wisp-fold {
-    transition: none;
+    transition:
+      opacity 150ms,
+      color 150ms;
   }
 }
 @media print {
-  [data-theme='dark'] .shiki,
-  [data-theme='dark'] .shiki span {
-    color: var(--shiki-light);
+  .shiki,
+  .shiki span,
+  .wisp-pre,
+  .wisp-pre span {
+    color: var(--shiki-light, var(--wisp-fg));
+  }
+  .shiki,
+  .shiki span {
     background-color: var(--shiki-light-bg);
   }
-  [data-theme='dark'] .wisp-pre,
-  [data-theme='dark'] .wisp-pre span,
-  [data-theme='dark'] .wisp-pre .tok-low {
-    color: var(--shiki-light);
+  .wisp-pre .tok-low {
+    color: color-mix(in srgb, var(--shiki-light, var(--wisp-fg)) 70%, var(--wisp-fg));
   }
   :is(.wisp-code[data-folded], html[data-wisp-js] .wisp-code[data-fold]:not([data-wisp-open]))
     .wisp-pre {

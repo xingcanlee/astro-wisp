@@ -73,28 +73,30 @@ test.describe('desktop toc', () => {
 
     // 滚到末尾：高亮项必须落在目录容器内
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    const cur = page.locator('.wisp-toc-aside [aria-current="true"]');
+    const cur = page.locator('.wisp-toc-aside [aria-current="location"]');
     await expect(cur).toHaveCount(1);
     const inside = await page.evaluate(() => {
       const box = document.querySelector('.wisp-post-aside-inner')!.getBoundingClientRect();
       const r = document
-        .querySelector('.wisp-toc-aside [aria-current="true"]')!
+        .querySelector('.wisp-toc-aside [aria-current="location"]')!
         .getBoundingClientRect();
       return r.top >= box.top - 1 && r.bottom <= box.bottom + 1;
     });
     expect(inside).toBe(true);
   });
 
-  test('点最后一节立即高亮，滚到底时也保持最后一节', async ({ page }) => {
+  test('点最后一节立即高亮并移动焦点，滚到底时也保持最后一节', async ({ page }) => {
     await page.goto(POST);
     const last = page.locator(
       '#wisp-toc-list > li:last-child > a, #wisp-toc-list > li:last-child > .wisp-toc-row > a',
     );
+    const slug = await last.getAttribute('data-toc-link');
     await last.click();
-    await expect(last).toHaveAttribute('aria-current', 'true');
+    await expect(last).toHaveAttribute('aria-current', 'location');
+    await expect(page.locator(`#${slug}`)).toBeFocused();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     await page.waitForTimeout(300);
-    await expect(last).toHaveAttribute('aria-current', 'true');
+    await expect(last).toHaveAttribute('aria-current', 'location');
   });
 
   test('收起后标题行仍显示「目录」，按钮右缘贴外框', async ({ page }) => {

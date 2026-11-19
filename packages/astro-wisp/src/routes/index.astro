@@ -103,12 +103,12 @@ const colophon = zh
     </header>
 
     {series.length > 0 && (
-      <section class="home-contents" aria-labelledby="contents-title">
+      <section class="home-contents">
         <h2 id="contents-title" class="home-h2">
           {zh ? '目录' : 'Contents'}
         </h2>
         {series.map((s, i) => (
-          <section class="part" aria-labelledby={`part-${i}`}>
+          <section class="part">
             <div class="part-head">
               <h3 id={`part-${i}`} class="part-title">
                 <span class="part-no">{i + 1}</span>
@@ -148,7 +148,7 @@ const colophon = zh
     )}
 
     {soloShown.length > 0 && (
-      <section class="home-section" aria-labelledby="solo-title">
+      <section class="home-section">
         <h2 id="solo-title" class="home-h2">
           {series.length > 0 ? (zh ? '其他文章' : 'Other posts') : zh ? '文章' : 'Posts'}
         </h2>
@@ -164,7 +164,7 @@ const colophon = zh
     )}
 
     {recent.length > 0 && (
-      <section class="home-section" aria-labelledby="recent-title">
+      <section class="home-section">
         <h2 id="recent-title" class="home-h2">
           {zh ? '修订记录' : 'Recent changes'}
         </h2>
@@ -224,6 +224,7 @@ const colophon = zh
       font-weight: 700;
       line-height: 1.1;
       letter-spacing: 0;
+      text-wrap: balance;
     }
     .home-lead {
       margin: 1.25rem 0 0;
@@ -256,6 +257,8 @@ const colophon = zh
       line-height: 1.35;
     }
     .home-section {
+      content-visibility: auto;
+      contain-intrinsic-size: auto 20rem;
       margin-top: 3.25rem;
     }
     @media (min-width: 48rem) {
@@ -274,6 +277,10 @@ const colophon = zh
       display: grid;
       gap: 1.25rem 3rem;
       padding-block: 2rem;
+    }
+    .part:nth-of-type(n + 3) {
+      content-visibility: auto;
+      contain-intrinsic-size: auto 20rem;
     }
     .part + .part {
       border-top: 1px solid var(--wisp-border);
@@ -498,7 +505,7 @@ const colophon = zh
         display: none;
       }
       .home-rev-part:not(:empty)::before {
-        content: '· ';
+        content: '· ' / '';
         color: var(--wisp-subtle);
       }
       .home-revisions a {
@@ -523,15 +530,7 @@ const colophon = zh
     @media (prefers-reduced-motion: no-preference) {
       .home-title > * {
         animation: home-rise 520ms var(--wisp-ease) both;
-      }
-      .home-title > :nth-child(2) {
-        animation-delay: 60ms;
-      }
-      .home-title > :nth-child(3) {
-        animation-delay: 120ms;
-      }
-      .home-title > :nth-child(4) {
-        animation-delay: 180ms;
+        animation-delay: calc((sibling-index() - 1) * 60ms);
       }
     }
     @keyframes home-rise {

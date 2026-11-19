@@ -12,7 +12,7 @@ const fold = wisp.features.codeFold.enabled;
 const ic = (n: string) => `<span data-i="${n}">${iconSvg(n)}</span>`;
 const icons = [
   'wrap-text',
-  ...(copy ? ['copy', 'check'] : []),
+  ...(copy ? ['copy', 'check', 'x'] : []),
   ...(fold ? ['chevron-down', 'chevron-up'] : []),
 ]
   .map(ic)
@@ -27,6 +27,8 @@ const icons = [
       const I = (n) => T.content.querySelector('[data-i="' + n + '"]')?.innerHTML;
       const root = document.documentElement;
       const zh = root.lang.startsWith('zh');
+      const copyTimers = new WeakMap();
+      const repeatState = new WeakMap();
       // 当前是否换行：读者选择优先，否则看站点默认（.wisp-code--wrap）
       const wrapped = (box) =>
         root.dataset.wispCodeWrap
@@ -36,14 +38,77 @@ const icons = [
         document
           .querySelectorAll('.wisp-wrap')
           .forEach((b) => b.setAttribute('aria-pressed', String(wrapped(b.parentElement))));
-      document.querySelectorAll('.wisp-code').forEach((box, k) => {
+      const boxes = [...document.querySelectorAll('.wisp-code')];
+      const total = boxes.length;
+      const announce = (s, text) => {
+        const flip = !repeatState.get(s);
+        repeatState.set(s, flip);
+        s.textContent = flip ? text : `${text}\u00A0`;
+      };
+      const runCopy = async (b, pre, s, pill) => {
+        const isZh = document.documentElement.lang.startsWith('zh');
+        const c = pre.querySelector('code').cloneNode(true);
+        c.querySelectorAll('[style*="user-select"]').forEach((e) => e.remove());
+        const text = c.textContent ?? '';
+        let copied = false;
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+            copied = true;
+          }
+        } catch {}
+        clearTimeout(copyTimers.get(b));
+        if (!copied) {
+          delete b.dataset.done;
+          b.dataset.failed = '';
+          b.innerHTML = I('x');
+          const msg = isZh ? '复制失败' : 'Copy failed';
+          pill.textContent = msg;
+          pill.hidden = false;
+          announce(s, msg);
+          copyTimers.set(
+            b,
+            window.setTimeout(() => {
+              b.innerHTML = I('copy');
+              delete b.dataset.failed;
+              pill.hidden = true;
+              pill.textContent = '';
+              s.textContent = '';
+            }, 3000),
+          );
+          return;
+        }
+        delete b.dataset.failed;
+        pill.hidden = true;
+        pill.textContent = '';
+        b.innerHTML = I('check');
+        b.dataset.done = '';
+        announce(s, isZh ? '已复制' : 'Copied');
+        copyTimers.set(
+          b,
+          window.setTimeout(() => {
+            b.innerHTML = I('copy');
+            delete b.dataset.done;
+            s.textContent = '';
+          }, 2000),
+        );
+      };
+
+      boxes.forEach((box, k) => {
         const pre = box.querySelector('pre');
         const el = (t, c) => Object.assign(document.createElement(t), { className: c });
         pre.id ||= 'wisp-c' + k;
+        box.id ||= 'wisp-code-' + k;
+        const langName = box.dataset.language || 'code';
+        const suffix = total > 1 ? (zh ? `（第 ${k + 1} 段）` : ` (${k + 1})`) : '';
+
         const w = el('button', 'wisp-wrap');
         w.type = 'button';
         w.innerHTML = I('wrap-text');
-        w.setAttribute('aria-label', zh ? '自动换行' : 'Wrap lines');
+        w.setAttribute(
+          'aria-label',
+          zh ? `切换 ${langName} 自动换行${suffix}` : `Toggle ${langName} word wrap${suffix}`,
+        );
         w.setAttribute('aria-controls', pre.id);
         w.onclick = () => {
           const next = !wrapped(box);
@@ -60,52 +125,24 @@ const icons = [
         box.append(w);
         if (I('copy')) {
           const b = el('button', 'wisp-copy');
-          const s = el('span', 'wisp-sr');
+          const pill = el('span', 'wisp-copy-status');
+          const s = el('span', 'wisp-sr-only');
           b.type = 'button';
           b.innerHTML = I('copy');
-          b.setAttribute('aria-label', zh ? '复制代码' : 'Copy code');
+          b.setAttribute('command', '--copy');
+          b.setAttribute('commandfor', box.id);
+          b.setAttribute(
+            'aria-label',
+            zh ? `复制 ${langName} 代码${suffix}` : `Copy ${langName} code${suffix}`,
+          );
+          pill.hidden = true;
+          pill.setAttribute('aria-hidden', 'true');
           s.setAttribute('role', 'status');
           s.setAttribute('aria-live', 'polite');
-          b.onclick = async () => {
-            const c = pre.querySelector('code').cloneNode(true);
-            c.querySelectorAll('[style*="user-select"]').forEach((e) => e.remove());
-            const text = c.textContent ?? '';
-            let copied = false;
-            try {
-              if (navigator.clipboard?.writeText) {
-                await navigator.clipboard.writeText(text);
-                copied = true;
-              }
-            } catch {}
-            if (!copied) {
-              const fallback = document.createElement('textarea');
-              fallback.value = text;
-              fallback.setAttribute('readonly', '');
-              fallback.style.cssText = 'position:fixed;inset:-9999px;opacity:0';
-              document.body.append(fallback);
-              fallback.select();
-              try {
-                const execCopy = Reflect.get(document, 'execCommand');
-                copied = Boolean(execCopy?.call(document, 'copy'));
-              } catch {}
-              fallback.remove();
-            }
-            if (!copied) {
-              s.textContent = document.documentElement.lang.startsWith('zh')
-                ? '复制失败'
-                : 'Copy failed';
-              return;
-            }
-            b.innerHTML = I('check');
-            b.dataset.done = '';
-            s.textContent = document.documentElement.lang.startsWith('zh') ? '已复制' : 'Copied';
-            setTimeout(() => {
-              b.innerHTML = I('copy');
-              delete b.dataset.done;
-              s.textContent = '';
-            }, 2000);
-          };
-          box.append(b, s);
+          box.addEventListener('command', (e) => {
+            if (e.command === '--copy') runCopy(b, pre, s, pill);
+          });
+          box.append(b, pill, s);
         }
         const n = +box.dataset.fold;
         if (n && I('chevron-down')) {

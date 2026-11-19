@@ -104,10 +104,16 @@ test('短代码块没有折叠按钮，但有复制按钮', async ({ page }) => 
   await expect(box.locator('.wisp-copy')).toHaveCount(1);
 });
 
-test('复制按钮使用图标，成功后切换为勾并播报“已复制”', async ({ page }) => {
+test('复制按钮使用 Invoker Commands 与唯一定位标签，成功后切换为勾并播报“已复制”', async ({
+  page,
+}) => {
   const box = page.locator('.wisp-code[data-lines="4"]').first();
   const btn = box.locator('.wisp-copy');
-  await expect(btn).toHaveAttribute('aria-label', '复制代码');
+  await expect(btn).toHaveAttribute('aria-label', /^复制 .* 代码/);
+  await expect(btn).toHaveAttribute('command', '--copy');
+  const boxId = await box.getAttribute('id');
+  expect(boxId).toBeTruthy();
+  await expect(btn).toHaveAttribute('commandfor', boxId!);
   await expect(btn.locator('svg')).toHaveCount(1);
   await expect(btn).toHaveText('');
   const before = await btn.innerHTML();
@@ -115,7 +121,7 @@ test('复制按钮使用图标，成功后切换为勾并播报“已复制”',
   await btn.click();
   await expect(btn).toHaveAttribute('data-done', '');
   expect(await btn.innerHTML()).not.toBe(before);
-  await expect(box.locator('[role=status]')).toHaveText('已复制');
+  await expect(box.locator('[role=status]')).toHaveText(/已复制/);
   await expect(btn).not.toHaveAttribute('data-done', '', { timeout: 4000 });
   await expect(box.locator('[role=status]')).toHaveText('');
 });
@@ -186,7 +192,7 @@ test('自动换行按钮只出现在横向溢出的代码块上', async ({ page 
   const wide = page.locator('.wisp-code[data-language="bash"]').first();
   await expect(wide).toHaveAttribute('data-wisp-wide', '');
   await expect(wide.locator('.wisp-wrap')).toBeVisible();
-  await expect(wide.locator('.wisp-wrap')).toHaveAttribute('aria-label', '自动换行');
+  await expect(wide.locator('.wisp-wrap')).toHaveAttribute('aria-label', /^切换 .* 自动换行/);
   await expect(wide.locator('.wisp-wrap')).toHaveAttribute('aria-pressed', 'false');
   const short = page.locator('.wisp-code[data-lines="4"]').first();
   await expect(short.locator('.wisp-wrap')).toBeHidden();

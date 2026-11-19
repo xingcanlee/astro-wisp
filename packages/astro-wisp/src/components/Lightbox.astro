@@ -10,15 +10,31 @@
 import Icon from 'virtual:wisp/components/Icon';
 ---
 
-<dialog class="wisp-lightbox" aria-labelledby="wisp-lightbox-title">
+<dialog
+  id="wisp-lightbox"
+  class="wisp-lightbox"
+  closedby="any"
+  aria-labelledby="wisp-lightbox-title"
+>
   <div class="wisp-lightbox-frame">
-    <button class="wisp-lightbox-close" type="button" data-lightbox-close aria-label="关闭">
+    <button
+      class="wisp-lightbox-close"
+      type="button"
+      command="close"
+      commandfor="wisp-lightbox"
+      autofocus
+      data-lightbox-close
+      aria-label="关闭"
+    >
       <Icon name="x" size={20} />
     </button>
     <div class="wisp-lightbox-media" data-lightbox-media></div>
-    <p class="wisp-sr-only" id="wisp-lightbox-title" data-lightbox-title></p>
+    <h2 class="wisp-sr-only" id="wisp-lightbox-title" data-lightbox-title></h2>
   </div>
 </dialog>
+<template id="wisp-lightbox-expand-ic">
+  <Icon name="maximize-2" size={14} />
+</template>
 
 <script is:inline>
   (() => {
@@ -29,6 +45,7 @@ import Icon from 'virtual:wisp/components/Icon';
     const mediaSlot = dialog.querySelector('[data-lightbox-media]');
     const title = dialog.querySelector('[data-lightbox-title]');
     const close = dialog.querySelector('[data-lightbox-close]');
+    const expandTpl = document.getElementById('wisp-lightbox-expand-ic');
     if (
       !(mediaSlot instanceof HTMLElement) ||
       !(title instanceof HTMLElement) ||
@@ -167,6 +184,11 @@ import Icon from 'virtual:wisp/components/Icon';
           trigger.setAttribute('data-wisp-lightbox-trigger', '');
           trigger.setAttribute('aria-haspopup', 'dialog');
           trigger.setAttribute('aria-label', `${labels.open}${readableLabel(source)}`);
+          const expandIcon =
+            expandTpl instanceof HTMLTemplateElement
+              ? expandTpl.content.firstElementChild?.cloneNode(true)
+              : null;
+          if (expandIcon) trigger.append(expandIcon);
           trigger.addEventListener('click', (event) => {
             event.stopPropagation();
             open(source, trigger);
@@ -194,16 +216,12 @@ import Icon from 'virtual:wisp/components/Icon';
       enhance(source);
     }
 
-    close.addEventListener('click', () => dialog.close());
-    dialog.addEventListener('click', (event) => {
-      // 点图以外的空白处关闭（窄屏时空白属于平移区域，不是对话框本身）
-      if (event.target === dialog || event.target === mediaSlot) dialog.close();
-    });
-    dialog.addEventListener('close', () => {
-      mediaSlot.replaceChildren();
+    dialog.addEventListener('close', async () => {
       const trigger = activeTrigger;
       activeTrigger = null;
       if (trigger?.isConnected) trigger.focus();
+      await Promise.allSettled(dialog.getAnimations().map((a) => a.finished));
+      if (!dialog.open) mediaSlot.replaceChildren();
     });
   })();
 </script>

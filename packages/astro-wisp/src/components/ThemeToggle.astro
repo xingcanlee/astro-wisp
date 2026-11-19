@@ -1,8 +1,8 @@
 ---
 /**
- * 主题切换按钮：light → dark → system 循环。
- * 三种偏好各一个 Lucide 图标（sun / moon / sun-moon），显示的是当前偏好而不是当前明暗，
- * 所以「跟随系统」不需要角标。偏好由 head 内联脚本写入 `<html data-theme-pref>`，图标据此用 CSS 显示，首屏无跳变。
+ * 双态主题切换按钮：直接切换当前明暗（`<meta name="color-scheme">`）。
+ * 切回与系统一致时删除 `localStorage('color-scheme')` 覆盖并恢复 `light dark`，跟随系统变化；
+ * 图标由 CSS `:has(> head > meta[name="color-scheme"])` + `@media (prefers-color-scheme: dark)` 驱动，首屏零跳变。
  * 本组件无 props。
  */
 import Icon from 'virtual:wisp/components/Icon';
@@ -16,11 +16,11 @@ const zh = /^zh\b/i.test(config.site.lang);
   type="button"
   class="wisp-theme-toggle"
   data-wisp-theme-toggle
-  aria-label={zh ? '切换主题' : 'Switch theme'}
+  aria-pressed="false"
+  aria-label={zh ? '深色模式' : 'Dark mode'}
 >
   <Icon name="sun" size={18} class="i-light" />
   <Icon name="moon" size={18} class="i-dark" />
-  <Icon name="sun-moon" size={18} class="i-system" />
 </button>
 
 <style>
@@ -29,8 +29,9 @@ const zh = /^zh\b/i.test(config.site.lang);
     .wisp-theme-toggle {
       display: inline-grid;
       place-items: center;
-      width: 2.75rem;
-      height: 2.75rem;
+      min-width: 2.75rem;
+      min-height: 2.75rem;
+      padding: 0.25rem;
       margin-inline-end: -0.5rem;
       border: 0;
       border-radius: 4px;
@@ -42,71 +43,98 @@ const zh = /^zh\b/i.test(config.site.lang);
     .wisp-theme-toggle:hover {
       color: var(--wisp-fg);
     }
-    .wisp-theme-toggle:active :global(svg) {
-      transform: scale(0.9);
-    }
     /* 焦点环按规范 2px 圆角（组件自身的 4px 会盖过全局焦点环的圆角） */
     .wisp-theme-toggle:focus-visible {
       border-radius: 2px;
     }
-    /* 一个偏好一个图标：浅色 sun、深色 moon、跟随系统 sun-moon；不叠角标 */
     .wisp-theme-toggle :global(svg) {
-      display: none;
       transition: transform 160ms var(--wisp-ease);
     }
-    :global(html[data-theme-pref='light']) .wisp-theme-toggle :global(.i-light),
-    :global(html[data-theme-pref='dark']) .wisp-theme-toggle :global(.i-dark),
-    :global(html:not([data-theme-pref='light']):not([data-theme-pref='dark']))
-      .wisp-theme-toggle
-      :global(.i-system) {
+    .wisp-theme-toggle :global(.i-dark) {
+      display: none;
+    }
+    .wisp-theme-toggle :global(.i-light) {
       display: block;
+    }
+    @media (prefers-color-scheme: dark) {
+      :global(:root:not(:has(> head > meta[name='color-scheme'][content='light'])))
+        .wisp-theme-toggle
+        :global(.i-dark) {
+        display: block;
+      }
+      :global(:root:not(:has(> head > meta[name='color-scheme'][content='light'])))
+        .wisp-theme-toggle
+        :global(.i-light) {
+        display: none;
+      }
+    }
+    :global(:root:has(> head > meta[name='color-scheme'][content='dark']))
+      .wisp-theme-toggle
+      :global(.i-dark) {
+      display: block;
+    }
+    :global(:root:has(> head > meta[name='color-scheme'][content='dark']))
+      .wisp-theme-toggle
+      :global(.i-light) {
+      display: none;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .wisp-theme-toggle:active :global(svg) {
+        transform: scale(0.9);
+      }
     }
     @media (prefers-reduced-motion: reduce) {
       .wisp-theme-toggle :global(svg) {
         transition: none;
       }
     }
+    @media (forced-colors: active) {
+      .wisp-theme-toggle {
+        color: ButtonText;
+        forced-color-adjust: auto;
+      }
+    }
   }
 </style>
 
 <script>
-  import { lang } from 'virtual:wisp/locale';
-  const zh = /^zh\b/i.test(document.documentElement.lang || lang);
-  const d = document.documentElement;
+  const STORAGE_KEY = 'color-scheme';
   const mq = matchMedia('(prefers-color-scheme: dark)');
-  const names: Record<string, string> = zh
-    ? { light: '浅色', dark: '深色', system: '跟随系统' }
-    : { light: 'light', dark: 'dark', system: 'system' };
-  const next: Record<string, string> = { light: 'dark', dark: 'system', system: 'light' };
-  let pref = names[d.dataset.themePref!] ? d.dataset.themePref! : 'system';
-  const apply = () => {
-    d.dataset.themePref = pref;
-    d.dataset.theme = pref === 'dark' || (pref === 'system' && mq.matches) ? 'dark' : 'light';
-    document
-      .querySelectorAll('[data-wisp-theme-toggle]')
-      .forEach((b) =>
-        b.setAttribute(
-          'aria-label',
-          zh
-            ? `主题：${names[pref]}（点击切换为${names[next[pref]!]}）`
-            : `Theme: ${names[pref]} (switch to ${names[next[pref]!]})`,
-        ),
-      );
+  const meta = document.head.querySelector('meta[name="color-scheme"]');
+  const systemTheme = () => (mq.matches ? 'dark' : 'light');
+  const currentTheme = () => {
+    const content = meta?.getAttribute('content');
+    return content === 'light' || content === 'dark' ? content : systemTheme();
   };
-  apply();
+  const sync = (content: 'light' | 'dark' | 'light dark') => {
+    meta?.setAttribute('content', content);
+    const dark = (content === 'light dark' ? systemTheme() : content) === 'dark';
+    for (const btn of document.querySelectorAll('[data-wisp-theme-toggle]')) {
+      btn.setAttribute('aria-pressed', String(dark));
+    }
+  };
+
+  const initial = meta?.getAttribute('content');
+  sync(initial === 'light' || initial === 'dark' ? initial : 'light dark');
+
   document.addEventListener('click', (e) => {
     if (!(e.target as Element).closest?.('[data-wisp-theme-toggle]')) return;
-    pref = next[pref]!;
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    const matchesSystem = next === systemTheme();
     try {
-      localStorage.setItem('wisp-theme', pref);
+      if (matchesSystem) localStorage.removeItem(STORAGE_KEY);
+      else localStorage.setItem(STORAGE_KEY, next);
     } catch {}
-    apply();
+    sync(matchesSystem ? 'light dark' : next);
   });
-  mq.addEventListener('change', () => pref === 'system' && apply());
+
+  mq.addEventListener('change', () => {
+    if (meta?.getAttribute('content') === 'light dark') sync('light dark');
+  });
+
   addEventListener('storage', (e) => {
-    if (e.key === 'wisp-theme') {
-      pref = e.newValue && names[e.newValue] ? e.newValue : 'system';
-      apply();
-    }
+    if (e.key !== null && e.key !== STORAGE_KEY) return;
+    const val = e.newValue === 'light' || e.newValue === 'dark' ? e.newValue : 'light dark';
+    sync(val);
   });
 </script>

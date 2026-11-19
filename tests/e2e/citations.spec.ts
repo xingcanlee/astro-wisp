@@ -15,7 +15,7 @@ test('文内引用是带方括号的上标，紧挨着的合并为 [n, m]', asyn
   const joined = await page
     .locator('sup.wisp-cite--joined a')
     .evaluate((a) => getComputedStyle(a, '::after').content);
-  expect(joined).toBe('","');
+  expect(joined).toBe('"," / ""');
 });
 
 test('有引用的行与没有引用的行行距一致', async ({ page }) => {
@@ -79,11 +79,19 @@ test('点击引用跳到注释并短暂标记，焦点移到注释', async ({ pa
   expect(top).toBeGreaterThanOrEqual(56);
 });
 
-test('悬停引用弹出预览，Esc 关闭', async ({ page, isMobile }) => {
+test('悬停引用触发原生 interestfor 预览（popover="hint" / aria-describedby），Esc 关闭', async ({
+  page,
+  isMobile,
+}) => {
   test.skip(!!isMobile, '触屏不弹出');
   const a = page.locator('sup.wisp-cite a').nth(3);
+  const popId = await a.getAttribute('interestfor');
+  expect(popId).toBeTruthy();
+  await expect(a).toHaveAttribute('aria-describedby', popId!);
+  const pop = page.locator(`#${popId}`);
+  await expect(pop).toHaveAttribute('popover', 'hint');
+  await expect(pop).toHaveAttribute('role', 'tooltip');
   await a.hover();
-  const pop = page.locator('.wisp-cite-pop');
   await expect(pop).toBeVisible();
   await expect(pop).toContainText('FlashAttention');
   expect(await pop.evaluate((el) => getComputedStyle(el).boxShadow)).toBe('none');

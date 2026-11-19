@@ -1,7 +1,7 @@
 /* 自动生成，勿手改。来源：design/palette.json，运行 `pnpm tokens` 重新生成。 */
 
 @layer utilities {
-  [data-theme] .wisp-d {
+  .wisp-d {
     --wd-bg: var(--wisp-bg);
     --wd-fg: var(--wisp-fg);
     --wd-muted: var(--wisp-muted);

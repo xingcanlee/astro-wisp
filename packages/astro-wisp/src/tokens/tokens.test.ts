@@ -58,9 +58,11 @@ describe('生成', () => {
     expect(css).toContain('自动生成，勿手改');
     expect(css).toContain('@layer theme {');
     expect(css).toContain('@media print {');
-    expect(css).toContain('--wisp-bg: #fcfcfb;');
-    expect(css).toContain('--wisp-bg: #111214;');
-    expect(css).toContain('[data-theme="dark"]');
+    expect(css).toContain('color-scheme: light dark;');
+    expect(css).toContain('accent-color: var(--wisp-accent);');
+    expect(css).toContain('--wisp-bg: light-dark(#fcfcfb, #111214);');
+    expect(css).toContain(':root:has(> head > meta[name="color-scheme"][content="dark"])');
+    expect(css).toContain(':root:has(> head > meta[name="color-scheme"][content="light"])');
     expect(css).toContain('--wisp-sem-q: var(--wisp-hue-blue);');
     expect(css).toContain('--wisp-sem-q-fill: var(--wisp-hue-blue-fill);');
     expect(css).toContain('"Noto Sans SC Variable"');
@@ -80,10 +82,11 @@ describe('生成', () => {
   it('pele.css', () => {
     const css = genPele();
     expect(css).toContain('@layer utilities {');
-    expect(css).toContain('@media print {');
     expect(css).toContain('--pele-radius: 4px;');
     expect(css).toContain('--pele-series-1: var(--wisp-hue-blue);');
-    expect(css).toContain('--pele-series-1-fill: color-mix(in srgb, var(--wisp-hue-blue) 58%');
+    expect(css).toContain(
+      '--pele-series-1-fill: light-dark(color-mix(in srgb, var(--wisp-hue-blue) 58%',
+    );
     expect(css).toContain('--pele-series-8: var(--wisp-hue-slate);');
     const fallbackCss = genPele({ ...palette, radius: {} as Palette['radius'] });
     expect(fallbackCss).toContain('--pele-radius: 4px;');
@@ -91,7 +94,7 @@ describe('生成', () => {
   it('diagram.css', () => {
     const css = genDiagram();
     expect(css).toContain('@layer utilities {');
-    expect(css).toContain('[data-theme] .wisp-d');
+    expect(css).toContain('.wisp-d {');
     expect(css).toContain('--wd-blue-fill: var(--wisp-hue-blue-fill);');
     expect(css).toContain('--wd-font-hand: var(--wisp-font-hand);');
   });
@@ -108,7 +111,7 @@ describe('覆盖调色板', () => {
     expect(p.color.base.accent).toEqual({ light: '#0a5c36', dark: '#5ad19a' });
     expect(p.color.base.fg).toEqual(palette.color.base.fg);
     expect(Object.keys(p.color.hue)).toEqual(Object.keys(palette.color.hue));
-    expect(genTokens(p)).toContain('--wisp-accent: #0a5c36;');
+    expect(genTokens(p)).toContain('--wisp-accent: light-dark(#0a5c36, #5ad19a);');
   });
   it('数组整体替换', () => {
     const p = mergePalette({ font: { sans: ['Inter'] } });
