@@ -109,7 +109,7 @@ test('横向滚动容器：只有确实溢出的才是 Tab 停靠点，名称在
   await check();
 });
 
-test('全站滚动条：采用标准 scrollbar-color（桌面/触屏一致，滑块 ≥ 3:1 对比度），溢出表格首列吸左且可拖拽平移', async ({
+test('全站滚动条：桌面端根视口与内部容器不设 scrollbar-color（保障无箭头圆角滑块生效）且悬停切换 --wisp-sb，触屏采用标准 thin 滚动条，溢出表格首列吸左且可拖拽平移', async ({
   page,
   isMobile,
 }) => {
@@ -120,10 +120,21 @@ test('全站滚动条：采用标准 scrollbar-color（桌面/触屏一致，滑
     () => getComputedStyle(document.documentElement).scrollbarColor,
   );
   const tableSc = await table.evaluate((el) => getComputedStyle(el).scrollbarColor);
-  const tableSw = await table.evaluate((el) => getComputedStyle(el).scrollbarWidth);
-  expect(rootSc).not.toBe('auto');
-  expect(tableSc).not.toBe('auto');
-  expect(tableSw).toBe('thin');
+  const isHoverNone = await page.evaluate(() => matchMedia('(hover: none)').matches);
+  if (isHoverNone) {
+    const tableSw = await table.evaluate((el) => getComputedStyle(el).scrollbarWidth);
+    expect(rootSc).not.toBe('auto');
+    expect(tableSc).not.toBe('auto');
+    expect(tableSw).toBe('thin');
+  } else {
+    expect(rootSc).toBe('auto');
+    expect(tableSc).toBe('auto');
+    await page.mouse.move(2, 2);
+    const restSb = await table.evaluate((el) =>
+      getComputedStyle(el).getPropertyValue('--wisp-sb').trim(),
+    );
+    expect(restSb).toBe('transparent');
+  }
   await table.evaluate((el) => {
     (el as HTMLElement).style.maxWidth = '180px';
     document.dispatchEvent(new Event('wisp:overflow'));
@@ -137,6 +148,12 @@ test('全站滚动条：采用标准 scrollbar-color（桌面/触屏一致，滑
   if (!isMobile) {
     await table.scrollIntoViewIfNeeded();
     const box = (await table.boundingBox())!;
+    await page.mouse.move(box.x + 80, box.y + 30);
+    const hoverSb = await table.evaluate((el) =>
+      getComputedStyle(el).getPropertyValue('--wisp-sb').trim(),
+    );
+    expect(hoverSb).not.toBe('transparent');
+    expect(hoverSb.length).toBeGreaterThan(0);
     await page.mouse.move(box.x + 140, box.y + 40);
     await page.mouse.down();
     await page.mouse.move(box.x + 40, box.y + 40, { steps: 8 });

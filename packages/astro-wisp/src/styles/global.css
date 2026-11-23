@@ -411,12 +411,14 @@
   }
 
   /*
-   * 标准滚动条与高对比支持：滑块 ≥ 3:1 非文本对比度，轨道透明；内部滚动区使用细轨道（thin）。
+   * 标准滚动条与高对比支持：
+   * - 桌面 Chromium/WebKit 通过 ::-webkit-scrollbar 渲染无步进箭头的圆角悬浮滑块（滑块 ≥ 3:1 非文本对比度，Chromium 下不向 html/容器设 scrollbar-color，避免废弃 ::-webkit-scrollbar）；
+   * - 内部滚动容器平时设 --wisp-sb: transparent 隐身，悬停、聚焦或拖拽时即时切换 --wisp-sb 显现；
+   * - Firefox 桌面与触屏设备（hover: none）使用标准 scrollbar-width: thin 与 scrollbar-color。
    */
   :root {
     --wisp-scroll-thumb: color-mix(in srgb, var(--wisp-fg) 52%, transparent);
     --wisp-scroll-thumb-hover: color-mix(in srgb, var(--wisp-fg) 72%, transparent);
-    scrollbar-color: var(--wisp-scroll-thumb) transparent;
   }
   @media (prefers-contrast: more) {
     :root {
@@ -427,29 +429,188 @@
       --wisp-scroll-thumb-hover: var(--wisp-fg);
     }
   }
-  @media (forced-colors: active) {
-    :root {
-      scrollbar-color: auto;
+  @media (hover: none) {
+    html {
+      scrollbar-color: var(--wisp-scroll-thumb) transparent;
+    }
+    :where(
+      .wisp-pre,
+      .prose pre,
+      .wisp-table,
+      .prose > table,
+      .katex-display,
+      .wisp-pele-body,
+      .wisp-diagram-body,
+      .wisp-explainer__scroll,
+      .wisp-lightbox-media,
+      .wisp-cite-pop,
+      .wisp-series-inline ol,
+      .wisp-toc-inline > ol,
+      [data-wisp-scroll],
+      [data-wisp-vscroll]
+    ) {
+      scrollbar-width: thin;
+      scrollbar-color: var(--wisp-scroll-thumb) transparent;
     }
   }
-  :where(
-    .wisp-pre,
-    .prose pre,
-    .wisp-table,
-    .prose > table,
-    .katex-display,
-    .wisp-pele-body,
-    .wisp-diagram-body,
-    .wisp-explainer__scroll,
-    .wisp-lightbox-media,
-    .wisp-cite-pop,
-    .wisp-series-inline ol,
-    .wisp-toc-inline > ol,
-    [data-wisp-scroll],
-    [data-wisp-vscroll]
-  ) {
-    scrollbar-width: thin;
-    scrollbar-color: var(--wisp-scroll-thumb) transparent;
+  @media (hover: hover) {
+    @supports selector(::-webkit-scrollbar) {
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+        background: transparent;
+      }
+      ::-webkit-scrollbar-button {
+        display: none;
+        width: 0;
+        height: 0;
+      }
+      ::-webkit-scrollbar-track,
+      ::-webkit-scrollbar-corner {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-track:vertical {
+        margin-block: 4px;
+      }
+      ::-webkit-scrollbar-track:horizontal {
+        margin-inline: 4px;
+      }
+      ::-webkit-scrollbar-thumb {
+        border: 2px solid transparent;
+        border-radius: 999px;
+        background-clip: content-box;
+        background-color: var(--wisp-sb, var(--wisp-scroll-thumb));
+      }
+      ::-webkit-scrollbar-thumb:hover,
+      ::-webkit-scrollbar-thumb:active {
+        border-width: 1px;
+        background-color: var(--wisp-scroll-thumb-hover);
+      }
+      :where(
+        .wisp-pre,
+        .prose pre,
+        .wisp-table,
+        .prose > table,
+        .katex-display,
+        .wisp-pele-body,
+        .wisp-diagram-body,
+        .wisp-explainer__scroll,
+        .wisp-lightbox-media,
+        .wisp-cite-pop,
+        .wisp-series-inline ol,
+        .wisp-toc-inline > ol,
+        [data-wisp-scroll],
+        [data-wisp-vscroll]
+      ) {
+        --wisp-sb: transparent;
+      }
+      :where(
+        .wisp-pre,
+        .prose pre,
+        .wisp-table,
+        .prose > table,
+        .katex-display,
+        .wisp-pele-body,
+        .wisp-diagram-body,
+        .wisp-explainer__scroll,
+        .wisp-lightbox-media,
+        .wisp-cite-pop,
+        .wisp-series-inline ol,
+        .wisp-toc-inline > ol,
+        [data-wisp-scroll],
+        [data-wisp-vscroll]
+      ):where(:hover, :focus-within),
+      [data-wisp-dragging] {
+        --wisp-sb: var(--wisp-scroll-thumb);
+      }
+      :where(
+        .wisp-pre,
+        .prose pre,
+        .wisp-table,
+        .prose > table,
+        .katex-display,
+        .wisp-pele-body,
+        .wisp-diagram-body,
+        .wisp-explainer__scroll,
+        .wisp-lightbox-media,
+        .wisp-cite-pop,
+        .wisp-series-inline ol,
+        .wisp-toc-inline > ol,
+        [data-wisp-scroll],
+        [data-wisp-vscroll]
+      )::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+    }
+    @supports not selector(::-webkit-scrollbar) {
+      html {
+        scrollbar-color: var(--wisp-scroll-thumb) transparent;
+      }
+      :where(
+        .wisp-pre,
+        .prose pre,
+        .wisp-table,
+        .prose > table,
+        .katex-display,
+        .wisp-pele-body,
+        .wisp-diagram-body,
+        .wisp-explainer__scroll,
+        .wisp-lightbox-media,
+        .wisp-cite-pop,
+        .wisp-series-inline ol,
+        .wisp-toc-inline > ol,
+        [data-wisp-scroll],
+        [data-wisp-vscroll]
+      ) {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+      }
+      :where(
+        .wisp-pre,
+        .prose pre,
+        .wisp-table,
+        .prose > table,
+        .katex-display,
+        .wisp-pele-body,
+        .wisp-diagram-body,
+        .wisp-explainer__scroll,
+        .wisp-lightbox-media,
+        .wisp-cite-pop,
+        .wisp-series-inline ol,
+        .wisp-toc-inline > ol,
+        [data-wisp-scroll],
+        [data-wisp-vscroll]
+      ):where(:hover, :focus-within),
+      [data-wisp-dragging] {
+        scrollbar-color: var(--wisp-scroll-thumb) transparent;
+      }
+    }
+  }
+  @media (forced-colors: active) {
+    html,
+    :where(
+      .wisp-pre,
+      .prose pre,
+      .wisp-table,
+      .prose > table,
+      .katex-display,
+      .wisp-pele-body,
+      .wisp-diagram-body,
+      .wisp-explainer__scroll,
+      .wisp-lightbox-media,
+      .wisp-cite-pop,
+      .wisp-series-inline ol,
+      .wisp-toc-inline > ol,
+      [data-wisp-scroll],
+      [data-wisp-vscroll]
+    ) {
+      scrollbar-color: auto;
+    }
+    ::-webkit-scrollbar {
+      width: auto;
+      height: auto;
+    }
   }
 
   /*

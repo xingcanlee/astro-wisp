@@ -48,7 +48,7 @@ scripts/     new_post.py  check_post.py  tests/   （Python + uv，PEP 723 内�
 2. `title` ≤ 80、`description` ≤ 200 个字符；`description` 写清文章解决什么问题。
 3. 标签和分类复用已有写法，大小写一致（不要同时有 `llm` 和 `LLM`）。
 4. 中文段落用全角标点；中英文之间不手动加空格；中文强调用 `**粗体**`，不用斜体。
-5. 术语首次出现时标注英文，如“自注意力（self-attention）”。
+5. 术语首次出现时用英文前置：`English Term（中文说明）`，缩写须给全称：`SM（Streaming Multiprocessor，流式多处理器）`，禁止倒写成“中文（缩写）”。
 6. 每个代码块都有语言标识；长代码块的折叠是可选项，默认不用管。
 7. 每张图都有 alt，描述图要表达的结论；图注用 `"图 N：说明"`。
 8. 不硬编码颜色，不写 `style=`，不用 Tailwind 色阶；颜色只能来自主题变量。
