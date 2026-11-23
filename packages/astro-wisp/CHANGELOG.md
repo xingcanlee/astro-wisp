@@ -2,6 +2,13 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.6.2 (2026-11-23)
+
+### 修复与变更
+
+- **桌面端无箭头圆角滚动条**：恢复桌面端悬停设备下 Chromium/WebKit 的 `::-webkit-scrollbar` 极细圆角悬浮滑块与 `--wisp-sb` 悬停/聚焦/拖拽渐显（不在 `html` 与容器上设 `scrollbar-color` 以免 Chromium 121+ 回退至带步进箭头的原生滚动条），同时保留 0.6.x 的高对比滑块变量与 `forced-colors` 回退，并将标准 `scrollbar-width: thin` / `scrollbar-color` 限定在 Firefox 与触屏设备（`@media (hover: none)`）。
+- **`wisp-writer` 术语规范同步**：明确首次出现的英文缩写统一采用 `缩写（English Full Name，中文说明）`、非缩写英文术语采用 `English Term（中文说明）`，禁止倒写成“中文（缩写）”。
+
 ## 0.6.1 (2026-11-19)
 
 ### 修复
