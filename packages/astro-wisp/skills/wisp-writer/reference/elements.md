@@ -131,10 +131,10 @@ import MatMul from './MatMul';
 />
 ```
 
-- 主题只提供通用积木（`astro-wisp/explainers`：`Explainer`、`Player`、`Stage`、`Matrix`、`record()` 等），具体讲解组件放在文章目录里（如 `src/content/posts/<slug>/MatMul.tsx`），从文章用相对路径导入。站点里已有的讲解组件就是可用列表。
-- 组件前用一句话交代它演示什么、怎么操作（播放/步进）；不依赖交互也能读懂文章。
+- 主题提供通用积木与交互外壳（`astro-wisp/explainers`：`Explainer`、`Stage`、`Matrix`、`RichText`、`record()` 等，内置顶部阶段标签、重播、演示及原生全屏展开），具体讲解组件就近放在文章目录的 `explainers/` 下（如 `src/content/posts/<slug>/explainers/<name>/`），从文章用 `./` 相对路径导入。
+- 组件前用一句话交代它演示什么与交互重点；不依赖交互也能读懂文章。
 - 每篇文章的交互组件控制在 1 到 3 个。
-- 需要的算法没有现成组件时：说明需要新增讲解组件（算法 `(input) => Step[]` 或 `record()` + 用积木写画面，放在文章目录，见主题文档“交互讲解组件”），这是代码改动，先向用户说明，不要在写文章时顺手创建。
+- 需要的算法没有现成组件时：先向用户说明需要新增讲解组件（算法 `Step[]` / `record()` + HTML/SVG + Motion 阶段画面，见主题文档 `docs/guide/explainers.md`），不要在写文章时顺手创建。
 
 ## 图片
 

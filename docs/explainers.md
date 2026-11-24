@@ -1,84 +1,55 @@
 # 交互式讲解组件（Explainers）
 
-用于演示算法原理、矩阵乘、注意力机制、LLM 推理过程等。使用 React 19 + Motion，以 Astro island 的形式嵌入 MDX。
+用于分步推导算法原理、张量映射、哈希分桶、注意力机制与推理调度。基于 React 19 + Motion（`motion/react`），以 Astro island 的形式嵌入 MDX。
 
-**主题只提供通用积木**（`astro-wisp/explainers`），不内置具体讲解。具体讲解（矩阵乘、排序、注意力……）由站点组合积木实现，通常放在文章目录里。这样主题组件保持通用、可复用，站点不需要的讲解也不会进入主题包。React、react-dom、motion 是主题的可选 peer 依赖。
+**主题只提供通用积木**（`astro-wisp/explainers`），不内置具体讲解。文章私有的讲解组件直接放在文章目录的 `explainers/` 下，跨文章复用的领域原语留在站点公共目录，这样文章自包含，不用的讲解也不会进入其他页面包。React、react-dom、motion 是主题的可选 peer 依赖。
 
-## 1. 分层
+## 1. 分层与目录约定
 
 ```
 packages/astro-wisp/src/explainers/
-├─ index.ts                      # astro-wisp/explainers（core + React）
-├─ core/                         # astro-wisp/explainers/core：纯 TS，不能 import react 或 DOM
-│  ├─ timeline.ts                # Step<S> = { state; caption; focus? }、record()、cellId/itemId/focusOf
-│  ├─ format.ts                  # 数字、矩阵格式化
-│  ├─ tones.ts                   # Tone（语义色 | hue）→ var(--wisp-sem-*) / var(--wisp-hue-*)
-│  └─ tones.generated.ts         # 由调色板生成（pnpm tokens）
+├─ index.ts                         # astro-wisp/explainers（core + React）
+├─ core/                            # astro-wisp/explainers/core：纯 TS，不依赖 React 或 DOM
+│  ├─ timeline.ts                   # Step<S> = { state; caption; label?; duration?; focus? }、record()
+│  ├─ format.ts                     # 数字、矩阵格式化
+│  ├─ tones.ts                      # Tone（语义色 | hue）→ var(--wisp-sem-*) / var(--wisp-hue-*)
+│  └─ tones.generated.ts            # 由调色板生成（pnpm tokens）
 ├─ react/
-│  ├─ Explainer.tsx              # figure + 标题 + Player
-│  ├─ Player.tsx / usePlayer.ts  # 通用播放器：播放/暂停/单步/进度/循环倍速/键盘/aria-live
-│  ├─ labels.ts                  # 界面文字（中文 / 英文，随站点语言；可逐项覆盖）
-│  └─ primitives/                # Stage、Matrix、Cell、Label（SVG 原语，只用令牌）
-└─ explainers.css                # 由 Player 引入，只在用到讲解的页面加载
+│  ├─ Explainer.tsx                 # 外壳：header 工具条 + 顶部阶段 tab / 刻度条 + 舞台 + caption + 原生 dialog 全屏
+│  ├─ useExplainer.ts               # 步进 / 重播（replayKey）/ 自动演示 / 全屏 / reduced-motion 状态机
+│  ├─ ExplainerIcon.tsx             # Lucide 内联控制图标
+│  ├─ labels.ts                     # 界面文字（中文 / 英文，随站点语言；可逐项覆盖）
+│  ├─ RichText.tsx                  # KaTeX 行内公式渲染与 SSR 采集缓存
+│  └─ primitives/                   # Stage、Matrix、Cell、Label、TexLabel
+└─ explainers.css                   # 由 Explainer 引入，只在用到讲解的页面加载
 
-站点 / 文章目录（例：src/content/posts/matrix-multiplication/）
-├─ matmul.ts + matmul.test.ts    # 算法：(A, B) => Step<MatMulState>[]
-├─ MatMul.tsx                    # 画面：Explainer + Stage + Matrix + Label
-└─ matmul.css                    # 文章私有样式（@layer utilities）
+文章私有目录（例：src/content/posts/<slug>/explainers/<name>/）
+├─ index.tsx                        # 组装 <Explainer> 与阶段视图切换
+├─ steps.ts + steps.test.ts         # 纯数据与步进状态生成 + vitest 校验
+├─ *Stage.tsx                       # 按阶段拆分的 HTML + SVG + Motion 子组件（每文件 ~80–150 行）
+└─ style.css                        # 文章讲解局部样式（@layer utilities）
 ```
 
-规则：
+## 2. 编排与设计规范
 
-1. **算法是 `(input) => Step[]` 形式的纯函数**，预先生成全部步骤；命令式算法用 `record(initial, (state, emit) => …)` 录制（每次 emit 保存深拷贝）。每一步都附带一句 caption，例如“C[1][0] = 3×5 + 4×7 = 43”。算法必须有 vitest 单测。
-2. **渲染器是 `(step) => SVG`**，没有内部业务状态。格子高亮由 Motion 做透明度过渡；reduced-motion 下直接切换。
-3. **颜色**：只能使用 `Tone`（`toneStroke` / `toneFill`）或 `var(--wisp-*)`，例如矩阵 A 用 `tone="q"`。禁止写十六进制颜色。
-4. **尺寸**：SVG 通过 `Stage` 输出（viewBox、宽度 100%、窄屏横向滚动），外壳 `Explainer` 默认与正文栏齐宽（`wide = false`，超宽舞台按需显式传 `wide`）。移动端每个格子至少 28px。
-5. **通用性**：新原语（箭头、指针、柱状条……）在两个以上讲解中会用到时，加进主题的积木，而不是在讲解里各写一份。
+1. **算法与状态是纯函数**：通过 `(input) => Step<S>[]` 或 `record(initial, (state, emit) => …)` 预生成全部步骤。≤ 8 步时每步可提供 `label`（3–8 字），渲染为顶部语义阶段标签栏；还可设置 `duration` 控制自动演示停留毫秒数（默认 `3600ms`）。
+2. **HTML + SVG 混合聚焦舞台（3Blue1Brown 思路）**：每一步只聚焦当前机理，用 Flex / Grid 与原生 `<RichText>` 排版公式与数据结构（随容器响应、零 KaTeX `<foreignObject>` 裁切），内联 SVG 仅承担括号、连线与 Lucide 图标；复杂多阶段讲解拆分成多个阶段子组件，避免把 4–6 个阶段硬塞进一张固定尺寸 SVG。
+3. **Motion 对象连续性与水合安全**：直接用 `motion/react` 的 `<MotionConfig reducedMotion="user">`、`<LayoutGroup>`、`AnimatePresence`、`layoutId`、`pathLength`、`stagger` 编排因果推演（非活跃元素压暗、线条书写、元素从上一步滑入下一步），不自建动画 hook 封装。首屏 Step 0 默认静态直出或设置 `initial={false}`，保证 SSR 与客户端水合零偏差；通过 `ctx.replayKey > 0` 或切换步骤触发进场编排。
+4. **颜色与几何硬约束**：只能使用 `Tone`（`toneStroke` / `toneFill`）或 `var(--wisp-*)` 语义令牌，单图非中性（slate）色调最多 3 种；禁止十六进制颜色、渐变、阴影、毛玻璃、胶囊圆角及 `rx="2"`；所有圆角只用 `3px` 或 `4px`。
+5. **原生全屏推演**：外壳自带 `<dialog>` 全屏按钮（`F` 键触发，`Esc` 关闭并归还焦点），`children(step, index, { replayKey, expanded, reducedMotion, total })` 可感知 `expanded` 并在宽画布下展开多列布局，且保持当前步骤与组件状态不断开。
 
-## 2. Player 交互约定
+## 3. 交互与无障碍约定
 
-| 操作                   | 鼠标                            | 键盘（Player 获得焦点时） |
-| ---------------------- | ------------------------------- | ------------------------- |
-| 播放 / 暂停 / 重新播放 | ▶ 按钮                          | Space                     |
-| 上一步 / 下一步        | 上一步 / 下一步按钮             | ← / →                     |
-| 第一步 / 最后一步      | —（无按钮）                     | Home / End                |
-| 拖动进度               | range 滑块                      |                           |
-| 速度                   | 倍速按钮循环切换 0.5× → 1× → 2× |                           |
+| 操作              | 鼠标 / 触控                     | 键盘（Explainer 获得焦点时） |
+| ----------------- | ------------------------------- | ---------------------------- |
+| 切换阶段          | 点击顶部阶段标签（≤8 步）       | ← / →（标签栏内同步移焦）    |
+| 拖动进度          | 标题栏下缘进度条（>8 步）       | ← / →                        |
+| 上一步 / 下一步   | 标题栏 ‹ / › 按钮               | ← / →                        |
+| 第一步 / 最后一步 | 顶部首/末标签或进度条           | Home / End                   |
+| 重播本步动画      | 标题栏重播按钮（rotate-ccw）    | R                            |
+| 自动演示 / 停止   | 标题栏演示按钮（play / square） | Space                        |
+| 全屏查看 / 退出   | 标题栏全屏按钮 / 遮罩 / × 按钮  | F / Esc                      |
 
-- caption 区域设置 `aria-live="polite"`。
-- 界面文字（按钮名、进度朗读）随站点语言（`site.lang`，zh* → 中文，其余 → 英文），`lang` / `labels` 属性可覆盖。
-- reduced-motion 的检测放在 effect 中（首帧与 SSR 一致），不用 Motion 的 `useReducedMotion`：它在客户端首帧就返回真实值，会写进 `aria-description`，导致 hydration 不匹配。纯视觉过渡（Cell）仍用 Motion 的 hook。
-- 在 `prefers-reduced-motion` 下，不做插值，直接切换到下一步的状态；播放按钮仍可点击，手动播放和单步操作都不受限制。
-- **SSR**：Astro 会把第一步渲染成静态 HTML（React 服务端渲染），没有 JS 时显示第一步加上 caption。
-- 使用 `client:visible` 进行 hydration。
-
-## 3. MDX 用法
-
-```mdx
-import MatMul from './MatMul';
-
-<MatMul
-  client:visible
-  a={[
-    [1, 2],
-    [3, 4],
-  ]}
-  b={[
-    [5, 6],
-    [7, 8],
-  ]}
-/>
-```
-
-## 4. 示例讲解（演示站，不进主题包）
-
-| 讲解      | 内容                                                  | 状态                                               |
-| --------- | ----------------------------------------------------- | -------------------------------------------------- |
-| MatMul    | 逐元素累加，同时高亮 A 的一行和 B 的一列              | 已有（`src/content/posts/matrix-multiplication/`） |
-| Attention | QKᵀ → scale → mask → softmax → ·V，可切换 causal mask | 计划                                               |
-| Sort      | 冒泡、快排对比（`record()` 的典型用法）               | 计划                                               |
-| KVCache   | 逐 token 生成时 cache 的增长                          | 计划                                               |
-
-## 5. 性能边界
-
-SVG 元素数量控制在 2000 以内。超过时（大型 heatmap 等）改用 `<canvas>`，并由该组件自己读取 CSS 变量（`getComputedStyle`），在主题切换（`<meta name="color-scheme">` 变更或系统配色变化）时重绘。
+- 说明区置于 `aria-live="polite"` 容器中（自动演示开启时临时切为 `off` 避免朗读干扰），配合 `CaptionGhosts` 预留最长一步高度。
+- `reduced-motion` 在 `useEffect` 内读取后写进演示按钮 `aria-description`，避免 SSR 与首帧属性不一致；`<MotionConfig reducedMotion="user">` 自动抑制位移/路径动画。
+- **SSR 兜底**：无 JS 时依然静态呈现完整的第 1 步舞台与图注说明。推荐使用 `client:visible`。

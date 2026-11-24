@@ -2,9 +2,21 @@
  * 分步讲解的数据协议：算法写成 `(input) => Step<S>[]` 的纯函数，预先生成全部步骤；渲染器只依赖当前 state。
  */
 
-/** 一帧：渲染器只依赖 state 即可完整绘制。focus 是需要高亮的元素 id（约定见 cellId）。 */
-export type Step<S> = { state: S; caption: string; focus?: string[] };
+/** 一帧：渲染器只依赖 state 即可完整绘制。label 用作顶部语义阶段标签，duration 控制自动演示停留毫秒数。 */
+export type Step<S> = {
+  state: S;
+  caption: string;
+  label?: string;
+  duration?: number;
+  focus?: string[];
+};
 export type Timeline<S> = Step<S>[];
+
+export interface EmitOptions {
+  focus?: string[];
+  label?: string;
+  duration?: number;
+}
 
 /** 把索引限制在 [0, length-1]；空时间线返回 0。非整数向下取整，NaN 视为 0。 */
 export function clampIndex(i: number, length: number): number {
@@ -49,16 +61,20 @@ export function focusOf(focus: readonly string[] | undefined, prefix: string): S
  */
 export function record<S>(
   initial: S,
-  run: (state: S, emit: (caption: string, focus?: string[]) => void) => void,
+  run: (state: S, emit: (caption: string, opts?: string[] | EmitOptions) => void) => void,
 ): Timeline<S> {
   const state = structuredClone(initial);
   const steps: Timeline<S> = [];
-  run(state, (caption, focus) => {
-    steps.push(
-      focus
-        ? { state: structuredClone(state), caption, focus }
-        : { state: structuredClone(state), caption },
-    );
+  run(state, (caption, opts) => {
+    const step: Step<S> = { state: structuredClone(state), caption };
+    if (Array.isArray(opts)) {
+      step.focus = opts;
+    } else if (opts) {
+      if (opts.focus !== undefined) step.focus = opts.focus;
+      if (opts.label !== undefined) step.label = opts.label;
+      if (opts.duration !== undefined) step.duration = opts.duration;
+    }
+    steps.push(step);
   });
   if (steps.length === 0) throw new Error('record：算法没有产生任何步骤（至少调用一次 emit）');
   return steps;

@@ -39,7 +39,10 @@ export default function Cell({
   heat,
 }: CellProps) {
   const reduce = useReducedMotion();
-  const transition = { duration: reduce ? 0 : 0.15, ease: 'easeOut' as const };
+  const transition = {
+    duration: reduce ? 0 : 0.24,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
   return (
     <g>
       <rect

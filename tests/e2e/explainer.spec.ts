@@ -5,18 +5,16 @@ const URL = '/posts/matrix-multiplication/';
 test('MatMul hydrate，键盘 → 前进，caption 的 aria-live 文本变化', async ({ page }) => {
   await page.goto(URL);
   const figure = page.locator('.wisp-explainer').first();
-  const player = figure.locator('.wisp-player');
-  await player.scrollIntoViewIfNeeded();
-  await expect(player).toBeVisible();
-  await expect(player.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
-  const caption = player.locator('.wisp-player__caption');
+  await figure.scrollIntoViewIfNeeded();
+  await expect(figure).toBeVisible();
+  await expect(figure.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
+  const caption = figure.locator('.wisp-explainer__caption');
   await expect(caption).toHaveAttribute('aria-live', 'polite');
   const before = await caption.textContent();
-  await player.focus();
+  await figure.focus();
   await page.keyboard.press('ArrowRight');
   await expect.poll(() => caption.textContent()).not.toBe(before);
-  // 有标题时步数在标题行（figcaption），没有标题时在控制条右侧
-  const count = figure.locator('.wisp-player__count');
+  const count = figure.locator('.wisp-explainer__count');
   await expect(count).toHaveText(/^2 \//);
   await page.keyboard.press('ArrowLeft');
   await expect(count).toHaveText(/^1 \//);
@@ -25,11 +23,10 @@ test('MatMul hydrate，键盘 → 前进，caption 的 aria-live 文本变化', 
 test('翻页时卡片高度不变（说明区按最长一步预留高度）', async ({ page }) => {
   await page.goto(URL);
   const figure = page.locator('.wisp-explainer').first();
-  const player = figure.locator('.wisp-player');
-  await player.scrollIntoViewIfNeeded();
-  await expect(player.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
-  const total = Number(await player.locator('.wisp-player__range').getAttribute('max')) + 1;
-  await player.focus();
+  await figure.scrollIntoViewIfNeeded();
+  await expect(figure.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
+  const total = Number(await figure.locator('.wisp-explainer__range').getAttribute('max')) + 1;
+  await figure.focus();
   const heights = new Set<number>();
   for (let i = 0; i < total; i++) {
     heights.add(Math.round(((await figure.boundingBox())?.height ?? 0) * 10));
@@ -38,33 +35,44 @@ test('翻页时卡片高度不变（说明区按最长一步预留高度）', as
   expect([...heights]).toHaveLength(1);
 });
 
-test('倍速按钮在 0.5× → 1× → 2× 之间循环', async ({ page }) => {
+test('全屏 dialog 保持步骤状态，Esc 关闭后焦点返回触发按钮', async ({ page }) => {
   await page.goto(URL);
-  const player = page.locator('.wisp-player').first();
-  await player.scrollIntoViewIfNeeded();
-  await expect(player.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
-  const speed = player.locator('.wisp-player__speed');
-  await expect(speed).toHaveText('1×');
-  await speed.click();
-  await expect(speed).toHaveText('2×');
-  await speed.click();
-  await expect(speed).toHaveText('0.5×');
-  await expect(speed).toHaveAttribute('aria-label', /0\.5/);
+  const figure = page.locator('.wisp-explainer').first();
+  await figure.scrollIntoViewIfNeeded();
+  await expect(figure.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
+
+  await figure.getByRole('button', { name: '下一步' }).click();
+  await expect(figure.locator('.wisp-explainer__count')).toHaveText('2 / 14');
+
+  const expandBtn = figure.getByRole('button', { name: '全屏查看' });
+  await expandBtn.click();
+
+  const dialog = figure.locator('dialog.wisp-explainer__dialog[open]');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('.wisp-explainer__count')).toHaveText('2 / 14');
+
+  await dialog.getByRole('button', { name: '下一步' }).click();
+  await expect(dialog.locator('.wisp-explainer__count')).toHaveText('3 / 14');
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(figure.locator('.wisp-explainer__count')).toHaveText('3 / 14');
+  await expect(figure.getByRole('button', { name: '全屏查看' })).toBeFocused();
 });
 
-test.describe('boundary focus & offscreen pause', () => {
-  test('末步下一步使用 aria-disabled 并保留焦点；滚出视口后自动暂停播放', async ({ page }) => {
+test.describe('boundary focus & offscreen demo pause', () => {
+  test('末步下一步使用 aria-disabled 并保留焦点；滚出视口后自动停止演示', async ({ page }) => {
     await page.goto(URL);
-    const player = page.locator('.wisp-player').first();
-    await player.scrollIntoViewIfNeeded();
-    await expect(player.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
+    const figure = page.locator('.wisp-explainer').first();
+    await figure.scrollIntoViewIfNeeded();
+    await expect(figure.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
 
-    const next = player.getByRole('button', { name: '下一步' });
-    const prev = player.getByRole('button', { name: '上一步' });
+    const next = figure.getByRole('button', { name: '下一步' });
+    const prev = figure.getByRole('button', { name: '上一步' });
     await expect(prev).toHaveAttribute('aria-disabled', 'true');
     await expect(prev).not.toHaveAttribute('disabled');
 
-    const range = player.locator('.wisp-player__range');
+    const range = figure.locator('.wisp-explainer__range');
     const lastStep = Number(await range.getAttribute('max'));
     for (let i = 0; i < lastStep; i++) await next.click();
     await expect(next).toHaveAttribute('aria-disabled', 'true');
@@ -73,32 +81,31 @@ test.describe('boundary focus & offscreen pause', () => {
     await page.keyboard.press('Enter');
     await expect(next).toBeFocused();
 
-    // 重新开始播放后滚离视口 → 自动暂停
-    await player.locator('.wisp-player__play').click();
-    await expect(player.locator('.wisp-player__play')).toHaveAttribute('aria-label', '暂停');
+    const demo = figure.locator('.wisp-explainer__demo');
+    await demo.click();
+    await expect(demo).toHaveAttribute('aria-label', '停止演示');
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await expect(player.locator('.wisp-player__play')).toHaveAttribute('aria-label', '播放');
+    await expect(demo).toHaveAttribute('aria-label', '自动演示');
   });
 });
 
 test.describe('reduced-motion', () => {
   test.use({ reducedMotion: 'reduce' });
-  test('保留手动播放，仅关闭过渡动画', async ({ page }) => {
+  test('保留自动演示与手动步进，仅关闭过渡动画', async ({ page }) => {
     await page.goto(URL);
     const figure = page.locator('.wisp-explainer').first();
-    const player = figure.locator('.wisp-player');
-    await player.scrollIntoViewIfNeeded();
-    await expect(player.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
-    const play = player.locator('.wisp-player__play');
-    const count = figure.locator('.wisp-player__count');
-    await player.focus();
+    await figure.scrollIntoViewIfNeeded();
+    await expect(figure.locator('xpath=ancestor::astro-island')).not.toHaveAttribute('ssr', '');
+    const demo = figure.locator('.wisp-explainer__demo');
+    const count = figure.locator('.wisp-explainer__count');
+    await figure.focus();
     await page.keyboard.press('End');
-    await expect(play).toBeEnabled();
-    await expect(play).toHaveAttribute('aria-label', '重新播放');
-    await expect(play).toHaveAttribute('aria-description', /手动播放仍可用/);
+    await expect(demo).toBeEnabled();
+    await expect(demo).toHaveAttribute('aria-label', '自动演示');
+    await expect(demo).toHaveAttribute('aria-description', /手动步进/);
     await expect(count).toHaveText('14 / 14');
-    await play.click();
-    await expect(play).toHaveAttribute('aria-label', '暂停');
-    await expect(count).toHaveText(/^2 \//);
+    await demo.click();
+    await expect(demo).toHaveAttribute('aria-label', '停止演示');
+    await expect(count).toHaveText(/^1 \//);
   });
 });

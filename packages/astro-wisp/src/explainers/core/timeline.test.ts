@@ -21,18 +21,27 @@ describe('timeline', () => {
     expect(stepAt(steps, Number.NaN)).toBe(steps[0]);
     expect(() => stepAt([], 0)).toThrow(/空/);
   });
-  it('record 每次 emit 保存独立快照', () => {
+  it('record 每次 emit 保存独立快照，支持可选 label / duration / focus', () => {
     const steps = record({ arr: [3, 1, 2] }, (s, emit) => {
       emit('初始');
       [s.arr[0], s.arr[1]] = [s.arr[1], s.arr[0]];
       emit('交换', [itemId('arr', 0), itemId('arr', 1)]);
+      emit('完成', { label: '完成', duration: 4200, focus: [itemId('arr', 0)] });
     });
     expect(steps.map((x) => x.state.arr)).toEqual([
       [3, 1, 2],
       [1, 3, 2],
+      [1, 3, 2],
     ]);
     expect(steps[0]).not.toHaveProperty('focus');
+    expect(steps[0]).not.toHaveProperty('label');
     expect(steps[1].focus).toEqual(['arr:0', 'arr:1']);
+    expect(steps[2]).toMatchObject({
+      caption: '完成',
+      label: '完成',
+      duration: 4200,
+      focus: ['arr:0'],
+    });
   });
   it('record 不修改输入，且至少要有一步', () => {
     const input = { n: 1 };
