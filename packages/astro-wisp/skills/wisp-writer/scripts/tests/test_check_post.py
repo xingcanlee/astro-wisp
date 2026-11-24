@@ -220,3 +220,30 @@ def test_footnote_in_code_is_ignored(site, write_post, check):
     body = "正文 `arr[^1]` 不是引用。\n\n```py\nx[^1]\n```\n"
     p = write_post("x", fm() + body)
     assert "fn-undefined" not in rules(check(p, site))
+
+
+def test_heading_code_warning(site, write_post, check):
+    p = write_post("x", fm() + "## `CondHandle` 与 O(1) 查表\n\n### 复杂度 $O(1)$ 允许\n")
+    f = [x for x in check(p, site) if x.rule == "heading-code"]
+    assert len(f) == 1 and f[0].level == "warning" and f[0].line == 7
+
+
+def test_quote_mixed_warning(site, write_post, check):
+    p = write_post("x", fm() + "这里用“弯引号”，那里又写「直角引号」。\n")
+    assert "quote-mixed" in rules(check(p, site))
+    p_ok = write_post("y", fm() + "全文统一用“弯引号”和 `code「x」` 没问题。\n")
+    assert "quote-mixed" not in rules(check(p_ok, site))
+
+
+def test_ppt_bold_bullet_warning(site, write_post, check):
+    long_desc = "这" * 80
+    p = write_post("x", fm() + f"- **核心矛盾**：{long_desc}\n- **短条目**：只写一句话。\n")
+    f = [x for x in check(p, site) if x.rule == "ppt-bold-bullet"]
+    assert len(f) == 1 and f[0].level == "warning"
+
+
+def test_backtick_number_warning(site, write_post, check):
+    body = "错误码 `207008` 与值 `0` 不应套反引号，但 `0x10`、`-1` 与 `v1.2` 放行。\n\n```py\nx = `1024`\n```\n"
+    p = write_post("x", fm() + body)
+    f = [x for x in check(p, site) if x.rule == "backtick-number"]
+    assert len(f) == 2 and all(x.level == "warning" for x in f)

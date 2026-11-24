@@ -67,13 +67,15 @@ class Checker:
         self.check_frontmatter(fm)
         body = ["" for _ in range(fm.end_line)] + lines[fm.end_line :]
         self.fences = []
+        self.unmasked_inline: list[str] = []
         masked = self.mask(body)
-        self.check_headings(masked)
+        self.check_headings(masked, body)
         self.check_images(masked)
         self.check_components(masked, body)
         self.check_fences()
         self.check_hardcoded(masked)
         self.check_punct(masked)
+        self.check_style_warnings(masked, body)
         self.check_todo(masked)
         self.check_footnotes(masked)
         return sorted(self.findings, key=lambda f: (f.line, f.rule))
@@ -106,6 +108,7 @@ class Checker:
         t = re.sub(r"<!--.*?-->", blank, t, flags=re.S)
         t = re.sub(r"\{/\*.*?\*/\}", blank, t, flags=re.S)
         t = re.sub(r"\$\$.*?\$\$", blank, t, flags=re.S)
+        self.unmasked_inline = t.split("\n")
         t = re.sub(r"(`+)(?!`).+?(?<!`)\1(?!`)", blank, t)
         t = re.sub(r"(?<![\\$\w])\$(?![\s$])[^$\n]+?(?<![\s\\])\$(?![\d$])", blank, t)
         return t.split("\n")
@@ -189,16 +192,26 @@ class Checker:
                     self.add(ln["category"], "warning", "category-similar", f"分类 {c!r} 与已有分类 {', '.join(map(repr, sim))} 写法相近或仅大小写不同，请统一为已有写法")
 
     # ------------------------------------------------------------ 标题
-    def check_headings(self, masked: list[str]) -> None:
+    def check_headings(self, masked: list[str], body: list[str]) -> None:
         prev = 1  # frontmatter 的 title 相当于 h1
         for i, l in enumerate(masked, 1):
             m = re.match(r"^(#{1,6})\s+\S", l)
+            raw_line = body[i - 1] if i - 1 < len(body) else l
+            m_hash = re.match(r"^(#{1,6})\s+", l)
             if m:
                 n = len(m.group(1))
+            elif m_hash and "`" in raw_line:
+                n = len(m_hash.group(1))
+                m = m_hash
             elif re.match(r"^\s*<h([1-6])\b", l):
                 n = int(re.match(r"^\s*<h([1-6])", l).group(1))
             else:
                 continue
+            if m:
+                raw_h = raw_line[m.end(1) :].strip()
+                raw_no_math = re.sub(r"(?<![\\$\w])\$(?![\s$])[^$\n]+?(?<![\s\\])\$(?![\d$])", "", raw_h)
+                if "`" in raw_h or re.search(r"(?<![A-Za-z0-9_])O\([^)\n]+\)", raw_no_math):
+                    self.add(i, "warning", "heading-code", "小标题中不要包含行内代码或纯文本复杂度公式")
             if n == 1:
                 self.add(i, "error", "heading-h1", "正文中不要使用一级标题，标题由 frontmatter 的 title 生成，正文从 h2 开始")
                 continue
@@ -312,6 +325,47 @@ class Checker:
             if found:
                 uniq = "".join(dict.fromkeys(found))
                 self.add(i, "warning", "halfwidth-punct", f"中文语境中使用了半角标点 {uniq}，请改为全角")
+
+    # ------------------------------------------------------------ 风格警告
+    def check_style_warnings(self, masked: list[str], body: list[str]) -> None:
+        text = "\n".join(masked)
+        text = re.sub(r"^\s*(?:import|export)\s.*$", blank, text, flags=re.M)
+        text = re.sub(r"<[A-Za-z][^>]*>", blank, text, flags=re.S)
+        text = re.sub(r"!\[[^\]]*\]\([^)]*\)", blank, text)
+        text = re.sub(r"\]\([^)]*\)", "]()", text)
+        corner_line: int | None = None
+        curly_line: int | None = None
+        for i, l in enumerate(text.split("\n"), 1):
+            if corner_line is None and re.search(r"[「」『』]", l):
+                corner_line = i
+            if curly_line is None and re.search(r"[“”]", l):
+                curly_line = i
+        if corner_line is not None and curly_line is not None:
+            self.add(corner_line, "warning", "quote-mixed", "正文中同时使用了直角引号「」和弯引号“”，请统一为弯引号“”")
+
+        for i, l in enumerate(masked, 1):
+            if not re.match(r"^\s*[-*]\s+", l) or i - 1 >= len(body):
+                continue
+            raw_l = body[i - 1]
+            if not re.match(r"^\s*[-*]\s+\*\*[^*]+\*\*[：:]", raw_l):
+                continue
+            vis = re.sub(r"\[\^[^\]]+\]", "", raw_l)
+            vis = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", vis)
+            vis = re.sub(r"(?<![\\$\w])\$(?![\s$])[^$\n]+?(?<![\s\\])\$(?![\d$])", "X", vis)
+            vis = re.sub(r"^\s*[-*]\s+", "", vis).replace("**", "").replace("`", "").strip()
+            if len(vis) > 80:
+                self.add(i, "warning", "ppt-bold-bullet", f"避免使用「粗体词头+长段解释」的 PPT 列表（当前 {len(vis)} 字），请拆写为自然段落或短条目")
+
+        inline_text = "\n".join(self.unmasked_inline)
+        inline_text = re.sub(r"^\s*(?:import|export)\s.*$", blank, inline_text, flags=re.M)
+        inline_text = re.sub(r"<[A-Za-z][^>]*>", blank, inline_text, flags=re.S)
+        inline_text = re.sub(r"!\[[^\]]*\]\([^)]*\)", blank, inline_text)
+        inline_text = re.sub(r"\]\([^)]*\)", "]()", inline_text)
+        inline_text = re.sub(r"(?<![\\$\w])\$(?![\s$])[^$\n]+?(?<![\s\\])\$(?![\d$])", blank, inline_text)
+        for i, l in enumerate(inline_text.split("\n"), 1):
+            for m in re.finditer(r"(?<!`)(`+)([^`\n]+?)\1(?!`)", l):
+                if len(m.group(1)) == 1 and re.fullmatch(r"\d+(?:\.\d+)?", m.group(2)):
+                    self.add(i, "warning", "backtick-number", f"纯数字 {m.group(0)} 不要用反引号包裹")
 
     # ------------------------------------------------------------ TODO 占位
     def check_todo(self, masked: list[str]) -> None:
