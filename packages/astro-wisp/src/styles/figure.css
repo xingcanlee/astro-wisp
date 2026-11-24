@@ -188,20 +188,9 @@
   margin-inline: calc((100% - var(--wisp-wide-w)) / 2);
 }
 
-/* 两栏（正文 + 目录）时宽内容留在正文栏内，不压到目录 */
+/* 有目录栏或系列栏时，宽内容留在正文列内，保持中轴对称且不压到侧栏 */
 @media (min-width: 60rem) {
-  .wisp-has-toc .wisp-wide {
-    --wisp-wide-w: 100%;
-    margin-inline: 0;
-  }
-}
-/* 三栏且左栏空着（只有目录、没有系列）时，宽内容向左突破到左栏 */
-@media (min-width: 80rem) {
-  .wisp-has-toc:not(.wisp-has-series) .wisp-wide {
-    --wisp-wide-w: calc(100% + var(--wisp-side, 14rem) + var(--wisp-gutter, 4rem));
-    margin-inline: calc(100% - var(--wisp-wide-w)) 0;
-  }
-  /* 系列栏占据正文左侧时，宽内容留在正文列内，避免覆盖导航。 */
+  .wisp-has-toc .wisp-wide,
   .wisp-has-series .wisp-wide {
     --wisp-wide-w: 100%;
     margin-inline: 0;

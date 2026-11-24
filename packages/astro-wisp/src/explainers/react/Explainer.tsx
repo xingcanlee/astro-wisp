@@ -15,7 +15,7 @@ export interface ExplainerProps<S> {
   title?: string;
   /** 无障碍名称；缺省用 title */
   label?: string;
-  /** 突破正文宽度（.wisp-wide），默认 true */
+  /** 突破正文宽度（.wisp-wide），默认 false */
   wide?: boolean;
   lang?: string;
   labels?: Partial<PlayerLabels>;
@@ -54,7 +54,7 @@ export default function Explainer<S>({
   children,
   title,
   label,
-  wide = true,
+  wide = false,
   lang,
   labels,
 }: ExplainerProps<S>) {

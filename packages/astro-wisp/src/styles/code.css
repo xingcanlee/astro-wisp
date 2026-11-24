@@ -20,12 +20,6 @@
   background: var(--wisp-code-bg);
   color: var(--wisp-fg);
 }
-/* 宽屏：代码清单向两侧各伸出 1rem，多放约 4 个字符，行尾注释少截断 */
-@media (min-width: 48rem) {
-  .prose .wisp-code {
-    margin-inline: -1rem;
-  }
-}
 /* 标题栏：与代码同底，只用一条发丝线分开，像手册里清单的题注行 */
 .wisp-code::before {
   content: '';

@@ -299,9 +299,9 @@ const needsCjkFont = /^(zh|ja|ko)\b/i.test(lang);
           },
           { capture: true, passive: true },
         );
-        // 超宽非代码容器（表格、宽 Mermaid、块级公式、讲解舞台）与灯箱大图：支持鼠标按住拖拽平移（1D/2D 自适应，不影响选词与代码框选）
+        // 超宽非代码容器（表格、宽 Mermaid、块级公式、讲解舞台）：支持鼠标按住拖拽平移（1D/2D 自适应，不影响选词与代码框选）
         const DRAG_SEL =
-          '.wisp-table[data-wisp-overflow], .prose > table[data-wisp-overflow], .wisp-pele-body[data-wisp-overflow], .wisp-diagram-body[data-wisp-overflow], .katex-display[data-wisp-overflow], .wisp-explainer__scroll[data-wisp-overflow], [data-wisp-scroll][data-wisp-overflow], .wisp-lightbox-media';
+          '.wisp-table[data-wisp-overflow], .prose > table[data-wisp-overflow], .wisp-pele-body[data-wisp-overflow], .wisp-diagram-body[data-wisp-overflow], .katex-display[data-wisp-overflow], .wisp-explainer__scroll[data-wisp-overflow], [data-wisp-scroll][data-wisp-overflow]';
         document.addEventListener('pointerdown', (e) => {
           if (
             e.pointerType !== 'mouse' ||

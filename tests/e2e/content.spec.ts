@@ -154,6 +154,182 @@ test('图表和 Mermaid SVG 可用键盘打开 lightbox，并恢复焦点', asyn
   await expect(dialog).not.toHaveAttribute('open', '');
 });
 
+test('lightbox 支持舒适区初始放大、滚轮缩放、拖拽平移、双击复位与自动显隐控制条', async ({
+  page,
+}) => {
+  const diagramFig = page.locator('figure.wisp-diagram[aria-labelledby]').nth(1);
+  const trigger = diagramFig.locator('[data-wisp-lightbox-trigger]');
+  await diagramFig.scrollIntoViewIfNeeded();
+  await trigger.focus();
+  await page.keyboard.press('Enter');
+
+  const dialog = page.locator('dialog.wisp-lightbox');
+  const stage = dialog.locator('[data-lightbox-stage]');
+  const chrome = dialog.locator('[data-lightbox-chrome]');
+  const caption = dialog.locator('[data-lightbox-caption]');
+  const pct = dialog.locator('[data-lightbox-pct]');
+  const svg = dialog.locator('[data-lightbox-media] svg');
+
+  await expect(dialog).toHaveAttribute('open', '');
+  await expect(caption).toBeVisible();
+  await expect(caption).toContainText('图 2：');
+
+  // 确认克隆题注与 SVG 不会引入重复 id
+  const dupIds = await page.evaluate(() => {
+    const seen = new Map<string, number>();
+    document.querySelectorAll('[id]').forEach((e) => seen.set(e.id, (seen.get(e.id) ?? 0) + 1));
+    return [...seen].filter(([, c]) => c > 1);
+  });
+  expect(dupIds).toEqual([]);
+
+  const vp = page.viewportSize()!;
+  const initialBox = (await svg.boundingBox())!;
+  const initialPctText = (await pct.textContent())!.trim();
+  const initialPct = Number.parseInt(initialPctText, 10);
+  expect(Math.abs(initialBox.x + initialBox.width / 2 - vp.width / 2)).toBeLessThan(4);
+  if (vp.width >= 1000) {
+    expect(initialBox.width).toBeGreaterThan(418 * 1.4);
+    expect(initialPct).toBe(165);
+  }
+
+  const isCoarse = await page.evaluate(
+    () => matchMedia('(hover: none), (pointer: coarse)').matches,
+  );
+  if (!isCoarse) {
+    await expect(chrome).toHaveCSS('opacity', '0');
+  }
+
+  // 鼠标移动后控制条淡入
+  await page.mouse.move(vp.width / 2, vp.height / 2);
+  await expect(dialog).toHaveAttribute('data-chrome', 'visible');
+  await expect(chrome).toHaveCSS('opacity', '1');
+
+  // 鼠标滚轮放大：底层页面不滚动，比例增大，题注自动退场，SVG 停稳后提交清晰尺寸
+  const yBefore = await page.evaluate(() => scrollY);
+  await page.mouse.move(vp.width / 2 + 30, vp.height / 2);
+  await page.mouse.wheel(0, -240);
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => scrollY)).toBe(yBefore);
+
+  const afterWheelBox = (await svg.boundingBox())!;
+  const afterWheelPct = Number.parseInt((await pct.textContent())!.trim(), 10);
+  expect(afterWheelPct).toBeGreaterThan(initialPct);
+  expect(afterWheelBox.width).toBeGreaterThan(initialBox.width + 20);
+  await expect(dialog).toHaveAttribute('data-zoomed', '');
+  await expect(caption).toHaveCSS('opacity', '0');
+
+  // SVG 停稳后应直接更新矢量尺寸，mediaSlot 不残留额外缩放因子
+  const inlineTransform = await dialog
+    .locator('[data-lightbox-media]')
+    .evaluate((el) => (el as HTMLElement).style.transform);
+  expect(inlineTransform).not.toContain('scale(');
+
+  // 继续放大直到水平溢出视口（桌面端同时垂直溢出），拖拽平移且松手不关闭
+  for (let i = 0; i < 6; i += 1) {
+    const box = (await svg.boundingBox())!;
+    if (box.width > vp.width + 60) break;
+    await page.keyboard.press('+');
+    await page.waitForTimeout(220);
+  }
+  await expect(stage).toHaveAttribute('data-pannable', '');
+  const beforeDrag = (await svg.boundingBox())!;
+  const cx = vp.width / 2;
+  const cy = vp.height / 2;
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx - 90, cy - 60, { steps: 6 });
+  await page.mouse.up();
+  await expect(dialog).toHaveAttribute('open', '');
+  const afterDrag = (await svg.boundingBox())!;
+  expect(afterDrag.x).toBeLessThan(beforeDrag.x - 20);
+  if (beforeDrag.height > vp.height) {
+    expect(afterDrag.y).toBeLessThan(beforeDrag.y - 15);
+  }
+
+  // 工具栏按钮与键盘快捷键
+  const pctBeforeBtn = Number.parseInt((await pct.textContent())!.trim(), 10);
+  await dialog.locator('[data-lightbox-zoom-out]').click();
+  await page.waitForTimeout(220);
+  expect(Number.parseInt((await pct.textContent())!.trim(), 10)).toBeLessThan(pctBeforeBtn);
+
+  await dialog.locator('[data-lightbox-zoom-in]').click();
+  await page.waitForTimeout(220);
+
+  await page.keyboard.press('1');
+  await page.waitForTimeout(220);
+  expect((await pct.textContent())!.trim()).toBe('100%');
+
+  await page.keyboard.press('0');
+  await page.waitForTimeout(220);
+  expect((await pct.textContent())!.trim()).toBe(initialPctText);
+  await expect(dialog).not.toHaveAttribute('data-zoomed', '');
+  await expect(caption).toHaveCSS('opacity', '1');
+
+  // 双击图片切换放大与复位
+  await page.mouse.dblclick(cx, cy);
+  await page.waitForTimeout(220);
+  await expect(dialog).toHaveAttribute('data-zoomed', '');
+  expect(Number.parseInt((await pct.textContent())!.trim(), 10)).toBeGreaterThan(initialPct);
+
+  await page.mouse.dblclick(cx, cy);
+  await page.waitForTimeout(220);
+  await expect(dialog).not.toHaveAttribute('data-zoomed', '');
+  expect((await pct.textContent())!.trim()).toBe(initialPctText);
+
+  // 点击空白背景关闭并还原焦点
+  await page.mouse.click(10, 10);
+  await expect(dialog).not.toHaveAttribute('open', '');
+  await expect(trigger).toBeFocused();
+});
+
+test('lightbox 位图与 Mermaid 图全屏后均支持上下左右自由拖拽', async ({ page }) => {
+  const dialog = page.locator('dialog.wisp-lightbox');
+  const stage = dialog.locator('[data-lightbox-stage]');
+
+  // 1. 位图（figure.wisp-image）
+  const imgFig = page.locator('figure.wisp-image');
+  await imgFig.scrollIntoViewIfNeeded();
+  await imgFig.locator('[data-wisp-lightbox-trigger]').click();
+  await expect(dialog).toHaveAttribute('open', '');
+  await expect(stage).toHaveAttribute('data-pannable', '');
+  const mediaImg = dialog.locator('[data-lightbox-media] img');
+  await expect.poll(async () => (await mediaImg.boundingBox())?.width ?? 0).toBeGreaterThan(100);
+  const imgBefore = (await mediaImg.boundingBox())!;
+  const imgCx = imgBefore.x + imgBefore.width / 2;
+  const imgCy = imgBefore.y + imgBefore.height / 2;
+  await page.mouse.move(imgCx, imgCy);
+  await page.mouse.down();
+  await page.mouse.move(imgCx - 80, imgCy - 60, { steps: 6 });
+  await page.mouse.up();
+  await expect(dialog).toHaveAttribute('open', '');
+  const imgAfter = (await mediaImg.boundingBox())!;
+  expect(imgAfter.x).toBeLessThan(imgBefore.x - 20);
+  expect(imgAfter.y).toBeLessThan(imgBefore.y - 15);
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toHaveAttribute('open', '');
+
+  // 2. 紧凑型 Mermaid 图（时序图）
+  const mermaidFig = page.locator('figure.wisp-pele').nth(1);
+  await mermaidFig.scrollIntoViewIfNeeded();
+  await mermaidFig.locator('[data-wisp-lightbox-trigger]').click();
+  await expect(dialog).toHaveAttribute('open', '');
+  await expect(stage).toHaveAttribute('data-pannable', '');
+  const mediaSvg = dialog.locator('[data-lightbox-media] svg');
+  const svgBefore = (await mediaSvg.boundingBox())!;
+  const svgCx = svgBefore.x + svgBefore.width / 2;
+  const svgCy = svgBefore.y + svgBefore.height / 2;
+  await page.mouse.move(svgCx, svgCy);
+  await page.mouse.down();
+  await page.mouse.move(svgCx - 80, svgCy - 60, { steps: 6 });
+  await page.mouse.up();
+  await expect(dialog).toHaveAttribute('open', '');
+  const svgAfter = (await mediaSvg.boundingBox())!;
+  expect(svgAfter.x).toBeLessThan(svgBefore.x - 20);
+  expect(svgAfter.y).toBeLessThan(svgBefore.y - 15);
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toHaveAttribute('open', '');
+});
+
 test('页面中所有 id 唯一', async ({ page }) => {
   const dup = await page.evaluate(() => {
     const seen = new Map<string, number>();

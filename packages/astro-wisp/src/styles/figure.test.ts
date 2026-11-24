@@ -5,10 +5,10 @@ const css = readFileSync(new URL('./figure.css', import.meta.url), 'utf8');
 const proseCss = readFileSync(new URL('./prose.css', import.meta.url), 'utf8');
 
 describe('wide figure layout', () => {
-  it('keeps wide content inside a desktop series rail', () => {
-    expect(css).toContain('.wisp-has-toc:not(.wisp-has-series) .wisp-wide');
+  it('keeps wide content inside prose column when TOC or series rail is present', () => {
+    expect(css).not.toContain('.wisp-has-toc:not(.wisp-has-series) .wisp-wide');
     expect(css).toMatch(
-      /\.wisp-has-series \.wisp-wide\s*\{[\s\S]*?--wisp-wide-w: 100%;[\s\S]*?margin-inline: 0;/,
+      /\.wisp-has-toc \.wisp-wide,\s*\.wisp-has-series \.wisp-wide\s*\{[\s\S]*?--wisp-wide-w: 100%;[\s\S]*?margin-inline: 0;/,
     );
   });
   it('centers wide prose content instead of inheriting figure margin', () => {
@@ -56,9 +56,7 @@ describe('wide figure layout', () => {
     expect(narrowTableBlock).not.toMatch(/\.wisp-table\[data-wisp-overflow\]\s+:is\(th, td\)/);
     expect(narrowTableBlock).not.toMatch(/\.wisp-table\[data-wisp-overflow\]\s+td/);
   });
-  it('uses --wisp-side token for wide figures when only TOC is present', () => {
-    expect(css).toMatch(
-      /\.wisp-has-toc:not\(\.wisp-has-series\) \.wisp-wide\s*\{[\s\S]*?var\(--wisp-side, 14rem\)/,
-    );
+  it('keeps wide figures symmetric instead of breaking asymmetrically into the left rail', () => {
+    expect(css).not.toMatch(/\.wisp-has-toc:not\(\.wisp-has-series\) \.wisp-wide/);
   });
 });

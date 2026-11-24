@@ -48,8 +48,6 @@
 .prose p {
   margin-block: 1em;
   text-indent: 0;
-  /* 避免段末只剩一个字或一个标点（「：」「。」）落单成行 */
-  text-wrap: pretty;
 }
 .prose > :first-child {
   margin-top: 0;
@@ -226,7 +224,6 @@
 .prose li {
   margin-block: 0.35em;
   padding-inline-start: 0.25em;
-  text-wrap: pretty;
 }
 .prose li > :is(ul, ol) {
   margin-block: 0.35em;
@@ -477,12 +474,6 @@
   margin-top: var(--wisp-block-gap);
   padding-bottom: 0.4375rem;
   margin-bottom: calc(var(--wisp-block-gap) - 0.4375rem);
-}
-/* 宽屏：与代码清单一样向两侧轻度外扩 1rem，临界多列表不必挤出滚动条 */
-@media (min-width: 48rem) {
-  .prose > .wisp-table:not(.wisp-wide) {
-    margin-inline: -1rem;
-  }
 }
 .prose .wisp-table > table {
   display: table;

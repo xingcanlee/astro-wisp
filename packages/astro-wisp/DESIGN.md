@@ -1,6 +1,6 @@
 ---
 name: Wisp
-description: 中文优先的技术博客主题，按一本装订好的技术参考手册来排：书眉、章节号、编号目录、三线表、代码清单。
+description: A CJK-first technical blog theme typeset like a bound technical reference manual — running heads, chapter numbers, numbered tables of contents, booktabs tables, and code listings.
 colors:
   paper: '#fcfcfb'
   paper-dark: '#111214'
@@ -156,267 +156,275 @@ components:
 
 # Design System: Wisp
 
-> 本文件是 Wisp 主题外观的唯一规范。改主题样式、写组件、给站点做覆盖之前先读它。
-> 颜色值的事实来源仍是 `design/palette.json`（经 `pnpm tokens` 生成 `--wisp-*` 令牌）；本文件的 frontmatter 是它的镜像，两者不一致时以 palette.json 为准并更新本文件。
-> 产品层面的事实（读者、定位、约束）见仓库根目录 `PRODUCT.md`。
+> This document is the single source of truth for Wisp's visual design. Read it before styling the theme, building components, or overriding layouts in a consuming site.
+> Canonical color values live in `design/palette.json` (compiled into `--wisp-*` custom properties via `pnpm tokens`). The YAML frontmatter above mirrors those tokens; if they ever diverge, `palette.json` wins and this file should be updated to match.
+> Product-level context (audience, positioning, scope constraints) lives in `PRODUCT.md` at the repository root.
 
 ## Overview
 
-**北极星：一本装订好的技术参考手册。** 每个系列是手册的一个「部分」，每篇文章是一章。读者靠编号定位：书眉写着「站点 / 系列 · 7 / 23 篇」，章首有大号章节号，正文的每个 h2 带编号并与右侧目录一一对应，左侧系列栏是带编号的篇目表，首页是整本手册的总目录（带点线引导和阅读时长，就像页码）。
+**North star: a bound technical reference manual.** Each series functions as a "part" of the manual, and each post is a chapter. Readers orient themselves through numbering: the running head reads `Site / Series · 7 / 23`, each chapter opens with a display chapter number, every body `h2` carries a hierarchical number synced with the right-hand table of contents, the left-hand series rail presents a numbered chapter index, and the home page serves as the master table of contents — complete with dot leaders and reading times in place of page numbers.
 
-框架属于手册，正文栏保持安静：42rem 的阅读栏、真实对比度、1.8 的中文行高，正文里不出现装饰。手册感只来自编号、发丝线、三线表、代码清单的题注行和书眉——没有卡片阴影、没有渐变、没有胶囊标签、没有彩色竖条。
+Structure belongs to the manual's apparatus while the prose column stays quiet: a `42rem` reading measure, honest contrast, a generous `1.8` line height for Chinese body copy, and zero ornament inside running text. The editorial feel comes exclusively from numbering, hairlines, booktabs three-rule tables, code listing headers, and the running head — never from card shadows, gradients, pill badges, or thick colored accent bars.
 
-拒绝的东西：通用 Tailwind 博客的圆角卡片网格、毛玻璃顶栏、首屏 hero 大图、眉题（eyebrow）、emoji 或 Unicode 字符当图标、终端/黑客风。
+**Explicit non-goals:** rounded card grids typical of generic Tailwind blogs, frosted-glass headers, full-bleed hero banners, eyebrows/kickers, emoji or raw Unicode symbols used as UI icons, and dark hacker/terminal clichés.
 
-**关键特征**
+**Key Characteristics**
 
-- 编号是导航：章节号、§ 编号、篇目编号同源，屏幕上任何两处编号都能对上。
-- 发丝线分层：1px `rule` 分隔同级内容，1px `ink` 线（或 2px）收住一个完整单元（表格、修订记录、区块标题、章末）。
-- 一个强调色：teal 只用于「你在这里」和「可以点」——当前项编号、链接、主按钮、阅读进度。
-- 中文排版是一等公民：禁止负字距、中文强调用着重号、`text-autospace` 自动中西文间距。
+- **Numbering is navigation**: chapter numbers, `§` section numbers, and rail entry numbers share one source of truth so any two indicators on screen match identically.
+- **Hairline hierarchy**: `1px rule` lines divide peers, while `1px` (or `2px`) `ink` lines frame complete units — tables, changelog logs, home section headers, and chapter endings.
+- **Single accent**: teal is reserved strictly for _"you are here"_ and _"this is interactive"_ — active numbers, links, primary buttons, and reading progress.
+- **CJK typography as a first-class citizen**: negative letter-spacing is forbidden, Chinese emphasis uses under-dots rather than oblique italics, and `text-autospace` handles CJK–Latin micro-spacing automatically.
 
 ## Colors
 
-整站是**克制型**配色：冷调纸白 + 墨色 + 一个 teal 强调色。8 色分类色（hue）与 ML 语义色只出现在图表、代码和讲解组件里，不进入页面框架。
+The site uses a restrained palette: cool paper white paired with charcoal ink and a single teal accent. The eight categorical hues and ML semantic tones appear solely inside diagrams, syntax-highlighted code, and interactive explainers — never in page chrome.
 
 ### Primary
 
-- **手册 teal**（`accent` #0f766e / dark #4fd1c0）：当前位置（书眉里的「7 / 23 篇」、当前篇编号、当前目录项、h2 编号）、正文链接、主按钮底色、阅读进度线、焦点环。一屏里 teal 的面积不超过 5%。
+- **Manual teal** (`accent` `#0f766e` / dark `#4fd1c0`): indicates current location (`7 / 23` in the running head, active chapter number, active TOC entry, `h2` counters), prose links, primary button fills, the reading progress hairline, and focus rings. Teal occupies no more than 5% of any viewport.
 
 ### Neutral
 
-- **纸白**（`paper` #fcfcfb / dark #111214）：页面底色，也是讲解组件的舞台底色。
-- **墨色**（`ink` #1d1d1f / dark #e6e6e3）：正文、标题，以及「收口线」（表格顶底线、章末线、区块标题上方的粗线）。
-- **灰**（`muted` #5c6067）：元信息、说明、表头、目录未选中项；对 paper ≥ 4.5:1。
-- **淡灰**（`subtle` #8b9098）：只用于非文本：点线引导、行号、列表符号、书眉里的「/」「·」分隔符。编号列（首页目录、归档、系列栏、目录）是读者找位置用的文字，用 `muted`。对比度不满足正文 AA，**不能用于需要阅读的文字**。
-- **发丝线**（`rule` #e2e2dd）：所有 1px 分隔线和描边。
-- **浅底**（`surface` #f4f4f2 / `surface-2`）：要点块（blockquote）、行内代码、讲解组件说明区。
-- **代码底**（`code-bg` #f6f6f4）：代码清单底色。
+- **Paper** (`paper` `#fcfcfb` / dark `#111214`): page background and interactive explainer stage canvas.
+- **Ink** (`ink` `#1d1d1f` / dark `#e6e6e3`): body copy, headings, and framing rules (booktabs top/bottom rules, chapter-end dividers, and `2px` overlines above home section titles).
+- **Muted** (`muted` `#5c6067`): metadata, captions, table headers, and inactive TOC labels; maintains ≥ 4.5:1 contrast against `paper`.
+- **Subtle** (`subtle` `#8b9098`): strictly non-text cues — dot leaders, code line numbers, list markers, and `/` or `·` delimiters in the running head. Number columns in the home index, archive, series rail, and TOC aid navigation and therefore use `muted`. Because `subtle` does not meet AA body-text contrast, **never use it for readable copy**.
+- **Rule** (`rule` `#e2e2dd`): all `1px` dividers and borders.
+- **Surface** (`surface` `#f4f4f2` / `surface-2`): note blocks (`blockquote`), inline code chips, and explainer caption wells.
+- **Code background** (`code-bg` `#f6f6f4`): fenced code listing blocks.
 
-### Categorical inks（图表与讲解的 8 个 hue）
+### Categorical inks (8 hues for diagrams & explainers)
 
-8 个 hue 按**印刷油墨**调，而不是屏幕原色：在 OKLCH 里描边 L≈0.37–0.51、彩度 ≤ 0.11（暗色 L≈0.70–0.85、彩度 ≤ 0.10），填充是接近纸色的淡洗（L≈0.95、彩度 ≈0.02；暗色 L≈0.26）。放在墨色正文和 teal 旁边，它们读起来是几种有色墨水，而不是一组荧光色块。
+All eight hues are calibrated as **print inks** rather than saturated screen primaries: in OKLCH, strokes sit at L ≈ 0.37–0.51 with chroma ≤ 0.11 (dark mode: L ≈ 0.70–0.85, chroma ≤ 0.10), paired with near-paper tinted washes (L ≈ 0.95, chroma ≈ 0.02; dark mode: L ≈ 0.26). Set beside ink-black prose and manual teal, they read like colored drafting inks rather than neon swatches.
 
-| hue（语义）            | 墨色         | stroke light / dark | fill light / dark |
-| ---------------------- | ------------ | ------------------- | ----------------- |
-| blue（q、active）      | 钢蓝         | #2f5783 / #a9cbef   | #e9f2fb / #1a2634 |
-| amber（k、highlight）  | 赭石         | #7b5518 / #f2c681   | #fbf2df / #2e2515 |
-| green（v、done）       | 苔绿         | #2c522d / #84b585   | #e9f5e9 / #1a281c |
-| rose（grad、error）    | 砖红         | #984646 / #eda9aa   | #fcedec / #341f1f |
-| violet（weight）       | 茄紫         | #4d335c / #bb9ece   | #f5eef9 / #291e2e |
-| teal（activation）     | 手册 teal    | #0f766e / #7fd3c5   | #e3f5f3 / #112926 |
-| orange（bias）         | 铁锈         | #762f06 / #ce8d66   | #fceee4 / #311f15 |
-| slate（mask、visited） | 冷灰（中性） | #464e57 / #9da7b3   | #eaedf2 / #23272b |
+| Hue (semantics)       | Ink tone            | Stroke light / dark | Fill light / dark |
+| --------------------- | ------------------- | ------------------- | ----------------- |
+| blue (q, active)      | Steel blue          | #2f5783 / #a9cbef   | #e9f2fb / #1a2634 |
+| amber (k, highlight)  | Ochre               | #7b5518 / #f2c681   | #fbf2df / #2e2515 |
+| green (v, done)       | Moss green          | #2c522d / #84b585   | #e9f5e9 / #1a281c |
+| rose (grad, error)    | Brick red           | #984646 / #eda9aa   | #fcedec / #341f1f |
+| violet (weight)       | Eggplant            | #4d335c / #bb9ece   | #f5eef9 / #291e2e |
+| teal (activation)     | Manual teal         | #0f766e / #7fd3c5   | #e3f5f3 / #112926 |
+| orange (bias)         | Rust                | #762f06 / #ce8d66   | #fceee4 / #311f15 |
+| slate (mask, visited) | Cool gray (neutral) | #464e57 / #9da7b3   | #eaedf2 / #23272b |
 
-- light 的 teal 就是 `accent`，activation 和界面强调色是同一种墨；dark 的 teal 用比 `accent` 安静一档的 #7fd3c5，作为分类色时不比其他七个更跳。
-- 每个 stroke 对 `paper` 和对自己的 fill 都 ≥ 4.5:1（`pnpm contrast` 检查），所以可以用于 1px 线和小字。
-- 容易混的两两（blue/violet、green/teal、amber/orange、teal/slate）靠明度拉开，色觉缺陷（红绿、蓝黄）模拟下仍可分辨；各 hue 的明度顺序在两个主题里大体一致，没有哪个颜色单独发亮。
+- In light mode, categorical `teal` matches UI `accent` directly so activations share the primary ink; in dark mode, categorical `teal` steps back slightly (`#7fd3c5`) so it does not overpower the other seven hues inside a diagram.
+- Every stroke clears ≥ 4.5:1 against both `paper` and its own fill (verified by `pnpm contrast`), ensuring crisp legibility for `1px` lines and diagram labels.
+- Potentially close hue pairs (`blue`/`violet`, `green`/`teal`, `amber`/`orange`, `teal`/`slate`) are separated in lightness so they stay distinguishable under red–green and blue–yellow color-vision deficiency simulations, with consistent lightness ordering across themes and no single hue glowing brighter than its peers.
 
 ### Named Rules
 
-**一个强调色规则。** teal 是唯一的界面强调色。不要为了区分状态引入第二个界面色；状态用记号表达（编号变色、加粗、1px 竖线），不用色块。
+**One accent color rule.** Teal is the sole UI accent color. Never introduce a second accent color to encode state; convey state through typographic cues (recolored numbers, font weight, `1px`/`2px` border markers) rather than tinted fills.
 
-**语义色只属于内容。** `--wisp-sem-*`（Q 蓝、K 琥珀、V 绿、weight 紫、activation teal、grad 砖红、bias 铁锈橙、mask 灰……）在全站所有文章、图表、讲解组件中保持同一含义；页面框架不得借用它们做装饰。
+**Semantic colors belong to content.** `--wisp-sem-*` tokens (Q blue, K amber, V green, weight violet, activation teal, grad rose, bias rust, mask slate, etc.) preserve one consistent meaning across every article, diagram, and explainer site-wide; page chrome may never borrow them for decoration.
 
-**印刷油墨规则。** 分类色是低彩度的墨，不是屏幕原色：新增或覆盖 hue 时保持 OKLCH 彩度 ≤ 0.11、填充是淡洗，不引入 Tailwind 色阶那样的饱和蓝紫。
+**Print-ink rule.** Categorical colors are low-chroma drafting inks, not neon primaries. Any added or overridden hue must stay at OKLCH chroma ≤ 0.11 with a lightly washed fill — never introduce raw saturated Tailwind blue or violet scales.
 
-**一张图最多 3 种 hue。** 图表默认是中性的（`surface` 底、`muted`/`fg` 1px 线、`fg` 文字），颜色只给这张图要讲的语义角色；`slate` 是中性灰，不计。不要用颜色区分并列的兄弟节点，强调用加粗描边或 `highlight`，不再引入新颜色；节点里的字用 `fg`。图中矩形圆角也是 4px（draw.io `rounded=1;absoluteArcSize=1;arcSize=8`，Excalidraw `roundness.value: 4`）。
+**At most three hues per diagram.** Diagrams default to neutral surfaces (`surface` fill, `muted`/`fg` `1px` strokes, `fg` text), applying color strictly to the semantic roles under discussion (`slate` is neutral and excluded from the cap). Never color-code parallel sibling nodes just for variety — draw attention with a heavier stroke or `highlight` instead, and keep node labels in `fg`. Diagram rectangles also use a `4px` corner radius (draw.io: `rounded=1;absoluteArcSize=1;arcSize=8`; Excalidraw: `roundness.value: 4`).
 
-**令牌规则。** 颜色只能来自 `--wisp-*` / `--wd-*` 令牌或讲解组件的 `Tone`。禁止十六进制硬编码、Tailwind 原始色阶和 `dark:` 颜色变体。混色用 `color-mix()` 基于令牌。
+**Token-only rule.** All colors must come from `--wisp-*` / `--wd-*` tokens or explainer `Tone` props. Hardcoded hex literals, Tailwind default color palettes, and `dark:` color utilities are banned; mix derived colors from tokens with `color-mix()`.
 
 ## Typography
 
-**正文与标题：** Inter Variable（西文、数字）+ Noto Sans SC Variable（汉字、全角标点），回落字体栈使用与 `Noto Sans SC Variable` 垂直度量对齐的本地 `@font-face` **`Wisp CJK Fallback`**（`ascent-override: 116%; descent-override: 28.8%; line-gap-override: 0%`，依次映射本地 PingFang SC / HarmonyOS Sans SC / MiSans / Microsoft YaHei），避免加载前后行高跳变。
-**代码：** JetBrains Mono Variable，关闭编程连字（读者要看到真实字符）。
-**手绘图：** Excalifont，仅在含手绘图且开启 `hasExcalifont` 的页面加载。
+**Prose & headings:** Inter Variable (Latin, numerals) + Noto Sans SC Variable (Hanzi, full-width punctuation). The fallback stack inserts a metric-matched local `@font-face` named **`Wisp CJK Fallback`** (`ascent-override: 116%; descent-override: 28.8%; line-gap-override: 0%` mapped sequentially to local PingFang SC / HarmonyOS Sans SC / MiSans / Microsoft YaHei) so line heights do not shift when webfont slices finish loading.
+**Code:** JetBrains Mono Variable, with programming ligatures disabled so readers always inspect exact characters.
+**Sketch diagrams:** Excalifont, loaded on demand only on pages that render hand-drawn diagrams with `hasExcalifont` enabled.
 
-全部自托管（Astro Fonts API + Fontsource）；预加载 Inter 拉丁 400 与 JetBrains Mono 拉丁 400；思源黑体受 **`fonts.cjkDisplay`** 控制，默认 **`swap`**（按 `unicode-range` 分片加载且配合 `Wisp CJK Fallback` 度量对齐消除换字时的行高跳变；亦可设为 `fallback` 或 `optional`）。Inter 统一开启 `"cv11", "ss01"`。
+All fonts are self-hosted via Astro Fonts API and Fontsource. Inter Latin 400 and JetBrains Mono Latin 400 are preloaded; Noto Sans SC loading is configured via **`fonts.cjkDisplay`** (defaults to **`swap`**, combining `unicode-range` chunking with the metric-matched fallback to prevent vertical shift; also accepts `fallback` or `optional`). Inter enables `"cv11"` and `"ss01"` everywhere.
 
 ### Hierarchy
 
-| 角色           | 规格                                                | 用途                                                                                                                                                                             |
-| -------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| home-title     | clamp(2.5→4rem) / 700 / 1.1                         | 首页扉页站点名，全站唯一的大字                                                                                                                                                   |
-| chapter-number | 1.5em of h1 / 300 / teal / tabular                  | 章首的章节号（标题以「05 」开头时自动拆出）                                                                                                                                      |
-| chapter-title  | clamp(1.75→2.25rem) / 700 / 1.3                     | 文章标题；中文标题构建期用 `Intl.Segmenter` 与长词边界拆出 `<wbr>` 并 `word-break: normal; overflow-wrap: anywhere`，只在自然词边界换行                                          |
-| h2             | 1.5rem / 700 / 1.3，上方 2.5em 留白，**不画分隔线** | 章节；CSS 计数器编号 0.8em / 400 / teal / tabular，与标题第一行同基线。≥80rem 悬挂在栏间距里、右对齐到正文左边线外 0.75rem；更窄时在标题前的编号列里，换行后续行悬挂对齐标题起点 |
-| h3             | 1.1875rem / 600                                     | 小节；编号形如 2.1，0.8em / muted / tabular，悬挂与对齐方式同 h2（≥80rem 时 h2、h3 标题都从正文左边线开始）                                                                      |
-| h4             | 1rem / 600 / muted                                  | 段落小标题，不编号                                                                                                                                                               |
-| body           | 1rem（移动 16px，≥768px 17px）/ 400 / 1.8           | 正文，行宽 42rem（≥768px 时 714px，约 42 个汉字；技术文章要给代码、公式和图留宽度，所以取中文舒适区间的上沿）                                                                    |
-| section-title  | 1.25rem / 700                                       | 首页区块标题、归档年份                                                                                                                                                           |
-| lead           | 1.125rem / 1.7                                      | 首页描述                                                                                                                                                                         |
-| ui-large       | 0.9375rem                                           | 按钮、首页篇目、修订记录                                                                                                                                                         |
-| ui             | 0.875rem                                            | 导航、书眉、侧栏标题、题注                                                                                                                                                       |
-| ui-small       | 0.8125rem / 1.5                                     | 侧栏条目、元信息、表头、时间                                                                                                                                                     |
-| label          | 0.75rem                                             | 编号列、语言名                                                                                                                                                                   |
-| code           | 0.8125rem / 1.7                                     | 代码清单                                                                                                                                                                         |
+| Role           | Specification                                          | Usage                                                                                                                                                                                                                                                                      |
+| -------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| home-title     | `clamp(2.5→4rem)` / 700 / 1.1                          | Site nameplate on the home title page — the largest type on the entire site.                                                                                                                                                                                               |
+| chapter-number | `1.5em` of h1 / 300 / teal / tabular                   | Display chapter index in the chapter opener (automatically split from titles starting with `05 `).                                                                                                                                                                         |
+| chapter-title  | `clamp(1.75→2.25rem)` / 700 / 1.3                      | Article title; Chinese titles inject `<wbr>` at `Intl.Segmenter` and long-identifier boundaries at build time with `word-break: normal; overflow-wrap: anywhere` so wraps occur cleanly at word boundaries.                                                                |
+| h2             | `1.5rem` / 700 / 1.3, `2.5em` top margin, **no rules** | Major sections; CSS counter number `0.8em` / 400 / teal / tabular aligned on the first baseline. At `≥80rem`, hangs in the gutter right-aligned `0.75rem` outside the left prose edge; narrower screens place it in a leading column with hanging indent on wrapped lines. |
+| h3             | `1.1875rem` / 600                                      | Subsections; `2.1`-style counter at `0.8em` / muted / tabular with the same gutter-hanging / column-aligned behavior as `h2` (`≥80rem` aligns both `h2` and `h3` titles cleanly on the prose left edge).                                                                   |
+| h4             | `1rem` / 600 / muted                                   | Minor run-in/paragraph subheadings, unnumbered.                                                                                                                                                                                                                            |
+| body           | `1rem` (16px mobile, 17px `≥768px`) / 400 / 1.8        | Running prose in a `42rem` measure (`714px` at `≥768px`, roughly 42 Hanzi per line — upper bound of CJK comfort to give code, math, and figures room).                                                                                                                     |
+| section-title  | `1.25rem` / 700                                        | Home page section titles and archive year headings.                                                                                                                                                                                                                        |
+| lead           | `1.125rem` / 1.7                                       | Home page lead description.                                                                                                                                                                                                                                                |
+| ui-large       | `0.9375rem`                                            | Primary/secondary buttons, home index entries, and recent changelog rows.                                                                                                                                                                                                  |
+| ui             | `0.875rem`                                             | Navigation, running head, rail titles, and figure captions.                                                                                                                                                                                                                |
+| ui-small       | `0.8125rem` / 1.5                                      | Rail items, metadata, table headers, and timestamps.                                                                                                                                                                                                                       |
+| label          | `0.75rem`                                              | Number columns and code language tags.                                                                                                                                                                                                                                     |
+| code           | `0.8125rem` / 1.7                                      | Fenced code listings.                                                                                                                                                                                                                                                      |
 
 ### Named Rules
 
-**禁止负字距。** Inter 的紧凑预设会把汉字挤坏；正文 `letter-spacing: 0`，标题最多 `0.01em`。
+**No negative letter-spacing.** Tight presets tuned for Latin headlines crush Hanzi strokes; keep `letter-spacing: 0` on prose and at most `0.01em` on headings.
 
-**中文没有斜体。** `em:lang(zh)` 改为着重号（`text-emphasis: dot; position: under right`）；西文段落以及中文段落里纯西文的 `em`/`i`（由 `rehype-a11y` 自动标 `lang="en"`）保持真斜体。
+**No italics in Chinese.** `em:lang(zh)` switches from italic slant to under-right emphasis dots (`text-emphasis: dot; position: under right`). Latin prose and pure-Latin `em`/`i` spans inside Chinese paragraphs (auto-tagged `lang="en"` by `rehype-a11y`) retain true italic styling.
 
-**数字都是表格数字。** 编号、日期、阅读时长、计数、表格一律 `font-variant-numeric: tabular-nums`，让编号列竖直对齐。
+**Tabular numerals everywhere.** Chapter numbers, dates, reading durations, counts, and table figures always apply `font-variant-numeric: tabular-nums` so number columns align vertically.
 
-**现代中文排版（渐进增强）。** `text-autospace: normal`、`text-spacing-trim: trim-start`、`line-break: strict`、`overflow-wrap: anywhere`、`hanging-punctuation: first allow-end`；正文段落和列表项启用 `text-wrap: pretty`（段末不留单个字或「：」「。」落单成行）。章首标题、正文各级标题、导航列表与卡片标题不在词块上强行 `balance`/`pretty` 或 `keep-all` 凑行高，而是结合中文词边界（`Intl.Segmenter`）与长技术标识子词边界（斜杠路径、CamelCase、snake_case、模块属性点号）在构建期注入 `<wbr>`，让标题尽量填满每一行后再于自然词boundary折行。作者不需要手动在中英文之间加空格。
+**Modern CJK typesetting (progressive enhancement).** Apply `text-autospace: normal`, `text-spacing-trim: trim-start`, `line-break: strict`, `overflow-wrap: anywhere`, and `hanging-punctuation: first allow-end`. Prose paragraphs and list items use greedy wrapping (`text-wrap: wrap`) so lines fill completely before breaking under strict CJK punctuation rules, avoiding `pretty` where it leaves awkward premature rags on Chinese text. Chapter titles, headings, navigation entries, and card titles likewise avoid forcing `balance`, `pretty`, or `keep-all`; instead, build-time transforms insert `<wbr>` at `Intl.Segmenter` CJK word boundaries and long technical identifier boundaries (slash paths, `CamelCase`, `snake_case`, dotted module paths) so titles fill each line before breaking cleanly at semantic boundaries. Authors never need to manually insert spaces between Hanzi and Latin words.
 
-**等宽字体只给代码和数据。** 不要用 mono 当「技术感」装饰：编号、标签、导航都用正文字体。
+**Monospace strictly for code and data.** Never use monospace fonts as generic "tech aesthetic" decoration — numbers, tags, and navigation always stay in the proportional sans family.
 
 ## Layout
 
-| 区域               | 规格                                                                                                                                                                                                                   |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 外框 `.wisp-shell` | `measure`(42rem) + 2×`side`(14rem) + 2×`gutter`(4rem)，页眉、页脚、文章网格、首页共用，左右边线全站对齐                                                                                                                |
-| 页面边距           | 移动 20px，≥768px 32px                                                                                                                                                                                                 |
-| 页眉               | 高 56px（`--wisp-header-h`），吸顶，实色底 + 底部 1px rule                                                                                                                                                             |
-| 文章页 ≥60rem      | 正文 + 右侧目录两栏；属于系列时，系列 `<details>` 占正文列第一行（标题前），目录跨两行吸顶                                                                                                                             |
-| 文章页 ≥80rem      | 系列 \| 正文 \| 目录三栏（栏宽固定，展开 / 收起系列栏不移动正文）；系列栏默认收起，只留一行与目录标题行成对的按钮；h2 编号悬挂在正文左侧的栏间距里                                                                     |
-| 文章页 <60rem      | 单栏；系列和目录各是一个 `<details>`，分别在标题前和标题后                                                                                                                                                             |
-| 侧栏               | 吸顶（header-h + 2rem）。标题行固定在栏顶，只有下面的篇目独立滚动；两栏外边线贴外框左右边线。侧栏隐藏滚动条轨道，仅靠上下缘的渐隐遮罩表达还有内容可滚。系列栏篇目出现时（打开文章、展开）自动把当前篇滚到栏高约 1/3 处 |
-| 代码清单           | ≥768px 时向两侧各伸出 1rem                                                                                                                                                                                             |
-| 宽内容             | `.wisp-wide`：`min(100vw - 40px, 64rem)`                                                                                                                                                                               |
-| 首页目录           | 每个系列一行：左列部分标题（≥60rem 时吸顶），右列篇目（≥80rem 时分两栏）                                                                                                                                               |
-| 区块间距           | 首页区块 5rem；正文 h2 上方 2.5em、下方 0.75em（上大下小）；正文里的块（代码、表格、公式、图、要点块、讲解组件）与前后段落统一 1.75em（`--wisp-block-gap`，按正文字号算，约 30px）                                     |
+| Region                    | Specification                                                                                                                                                                                                                                                                                                                               |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Outer shell `.wisp-shell` | `measure` (`42rem`) + `2×side` (`14rem`) + `2×gutter` (`4rem`); shared across header, footer, article grid, and home page so outer edges align globally.                                                                                                                                                                                    |
+| Page padding              | `20px` mobile, `32px` at `≥768px`.                                                                                                                                                                                                                                                                                                          |
+| Header                    | `56px` tall (`--wisp-header-h`), sticky, solid background with `1px rule` bottom border.                                                                                                                                                                                                                                                    |
+| Article page `≥60rem`     | Two columns: prose + right TOC; when inside a series, the collapsible series `<details>` sits in the first row of the prose column (above the chapter opener) while the TOC spans both rows and sticks.                                                                                                                                     |
+| Article page `≥80rem`     | Three columns (`Series \| Prose \| TOC`) with fixed column tracks so expanding/collapsing the series rail never shifts the prose column; series rail starts collapsed as one toggle row paired with the TOC header; `h2` numbers hang in the left gutter.                                                                                   |
+| Article page `<60rem`     | Single column; series (`<details>`) sits above the title and TOC (`<details>`) sits below the opener.                                                                                                                                                                                                                                       |
+| Side rails                | Sticky (`header-h + 2rem`). Rail headers stay pinned while the item list scrolls independently; outer edges align flush with `.wisp-shell`. Rail scrollbars are hidden and indicate overflow via top/bottom fade masks. Opening or expanding the series rail auto-scrolls the active chapter to roughly one-third from the top of the rail. |
+| Code listings             | Aligned flush with both left and right edges of the prose column.                                                                                                                                                                                                                                                                           |
+| Wide content `.wisp-wide` | Expands symmetrically out to `min(100vw - 40px, 64rem)` when no sidebar is present; stays strictly within `100%` of the prose column whenever a TOC or series rail is shown.                                                                                                                                                                |
+| Home TOC                  | One row per series: part title column on left (sticky at `≥60rem`) and chapter index on right (two columns at `≥80rem`).                                                                                                                                                                                                                    |
+| Vertical rhythm           | Home sections `5rem`; prose `h2` `2.5em` top / `0.75em` bottom (clear grouping by proximity); prose blocks (code, tables, display math, figures, note blocks, explainers) uniformly use `--wisp-block-gap` (`1.75em`, ~30px at body size).                                                                                                  |
 
-**滚动条与渐隐**：桌面端 Chromium/WebKit 主文档与内部滚动区通过 `::-webkit-scrollbar` 渲染无步进箭头的圆角悬浮滑块（滑块 `color-mix(in srgb, var(--wisp-fg) 52%, transparent)`，悬停 `72%`，满足 ≥3:1 非文本对比度；`prefers-contrast: more` 下进一步提对比度；内部滚动区平时通过 `--wisp-sb: transparent` 隐身，悬停、聚焦或拖拽时即时显现；`html` 与容器不设 `scrollbar-color` 以免在 Chromium 下废弃 `::-webkit-scrollbar`），Firefox 桌面与触屏设备（`hover: none`）回退标准 `scrollbar-width: thin` / `scrollbar-color`，`forced-colors: active` 回交系统滚动条；导航轨道（侧栏 `[data-rail-scroll]`、页眉 `.wisp-nav ul`）保留 `scrollbar-width: none` 并配以 `scroll(self inline/block)` + `mask: ... no-clip subtract` 纯 CSS 滚动渐隐；所有内部滚动区使用 `overscroll-behavior` 阻断穿透与手势误触，超宽非代码容器与灯箱大图支持鼠标按住 1D/2D 拖拽平移；横向溢出容器仅在确实溢出时动态获得 `tabindex`、`role="region"` 与「…，可横向滚动」名称。
+**Scrollbars & overflow fades:** On hover-capable Chromium/WebKit desktops, the root document and scrollable regions render arrowless rounded floating thumbs via `::-webkit-scrollbar` (`color-mix(in srgb, var(--wisp-fg) 52%, transparent)` at rest, `72%` on hover for ≥ 3:1 non-text contrast, boosted further under `prefers-contrast: more`; internal scrollers keep `--wisp-sb: transparent` at rest and reveal immediately on hover, focus, or active drag; `scrollbar-color` is intentionally omitted on `html` and containers so Chromium 121+ does not revert to arrowed native scrollbars). Desktop Firefox and touch devices (`hover: none`) fall back to standard `scrollbar-width: thin` / `scrollbar-color`, while `forced-colors: active` defers to system scrollbars. Navigation scrollers (side rails `[data-rail-scroll]` and header `.wisp-nav ul`) keep `scrollbar-width: none` paired with pure-CSS `scroll(self inline/block)` fade masks (`mask: ... no-clip subtract`). All internal scroll containers set `overscroll-behavior` to prevent scroll chaining, and overflowing non-code blocks support 1D/2D pointer drag-panning (the Lightbox uses a dedicated full-viewport zoom/pan canvas). Horizontal overflow containers dynamically gain `tabindex`, `role="region"`, and an accessible label only when they actually overflow.
 
-**自适应与对比度声明**：`<head>` 输出 `<meta name="color-scheme" content="light dark" />`（配全站 `light-dark()` 令牌，无 JS 也原生跟随系统暗色）与 `<meta name="text-scale" content="scale" />`；不在 `html` 写死 `font-size`，仅在 `body`（≥48rem）设 `1.0625rem`，`prefers-reduced-motion: no-preference` 仅门控位移动效而不关闭颜色/透明度反馈。
+**Adaptive color & typography hints:** `<head>` emits `<meta name="color-scheme" content="light dark" />` (paired with `light-dark()` tokens across the stylesheet so dark mode follows OS preferences with zero JS) and `<meta name="text-scale" content="scale" />`. No fixed `font-size` is set on `html` (only `1.0625rem` on `body` at `≥48rem`), and `prefers-reduced-motion: no-preference` gates spatial transforms without suppressing helpful color or opacity state feedback.
 
-间距以 4px 为单位：4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 80 / 96。断点用 Tailwind 默认（sm 640 / md 768 / lg 1024 / xl 1280）加上布局专用的 60rem / 80rem。
+Spacing steps in `4px` increments: `4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 80 / 96`. Breakpoints use Tailwind's standard scale (`sm` 640 / `md` 768 / `lg` 1024 / `xl` 1280) plus the layout-specific `60rem` and `80rem` thresholds.
 
 ## Elevation & Depth
 
-**没有阴影，没有例外。** 层级只靠字号、字重、留白和线。横向溢出提示也不用阴影：可滚动容器（代码、表格、公式、Mermaid、讲解舞台）哪一侧还有没显示的内容，内容就在那一侧 1.5rem 内渐隐到容器底色（`mask-image`，与底色无关）；滚到头时那一侧的渐隐消失，不溢出的容器不画。键盘聚焦时去掉渐隐，让焦点环完整。
+**Zero shadows, no exceptions.** Hierarchy is built strictly through scale, weight, whitespace, and hairlines. Even horizontal overflow cues shun box shadows: overflowing containers (code blocks, tables, display equations, Mermaid diagrams, explainer stages) fade content out over `1.5rem` at whichever edge still has hidden content via background-agnostic `mask-image`. Reaching an edge removes that side's fade, non-overflowing blocks draw none, and keyboard focus clears the fade so the focus ring stays crisp.
 
 ### Named Rules
 
-**线代替阴影。** 1px `rule` 分隔同级内容；1px `ink` 收住一个完整单元（三线表顶底线、修订记录、章末的上一篇/下一篇）；2px `ink` 只用于首页区块标题上方，像手册的分隔页。描边与阴影不叠加。
+**Rules instead of shadows.** Use `1px rule` to separate peers, `1px ink` to close complete units (booktabs top/bottom rules, recent changelog lists, chapter-end prev/next navigation), and `2px ink` exclusively above home section headings like chapter divider sheets in a printed manual. Never pair borders with drop shadows.
 
-**页眉不做毛玻璃。** 实色底 + 发丝线；阅读进度是压在这条线上的 1px teal。
+**No frosted glass headers.** The sticky header uses an opaque `paper` fill + bottom hairline; reading progress renders as a `1px teal` line riding directly along that seam.
 
 ## Shapes
 
-只有两档形状圆角（另有 2px 只给焦点环、999px 只给滚动条滑块）：
+Only two core corner radii exist (alongside `2px` reserved for focus rings and `999px` for floating scrollbar thumbs):
 
-- **box 4px**：代码清单、要点块、讲解组件卡片、按钮、图片、浮动按钮、提示块。
-- **mark 3px**：行内代码、kbd、`<mark>` 高亮、任务列表复选框、小按钮（复制、播放器控制）。
+- **box `4px`**: code listings, note blocks, explainer cards, buttons, figures/images, floating controls, tooltips/popovers.
+- **mark `3px`**: inline code chips, `kbd`, `<mark>` highlights, task list checkboxes, small utility buttons (copy, wrap, player step controls).
 
-不用胶囊形（pill），不用圆形按钮，不用 8px 以上的圆角。
+Never use pill shapes, circular buttons, or any corner radius larger than `4px`.
 
 ## Components
 
 ### Buttons
 
-- **主按钮**：teal 底、`accent-fg` 字，高 44px，左右 18px，圆角 4px，0.9375rem/500。hover 上移 1px 并向墨色混 12%，按下回落并缩到 0.98。
-- **次按钮**：纸白底、1px rule 描边、墨色字；hover 描边变 muted。
-- 每屏最多一个主按钮。图标按钮（主题切换、复制、Lightbox 关闭）是 44×44 的透明方块，4px 圆角，hover 只改颜色；焦点环仍是 2px 圆角。
-- **主题切换**：双态按钮直接切换当前明暗（同步 `<meta name="color-scheme">` 与 `aria-pressed`，切回与系统一致时删除 `localStorage('color-scheme')` 恢复 `light dark`），`sun` / `moon` 图标由 `:has(> head > meta[name='color-scheme'])` + `@media (prefers-color-scheme: dark)` 纯 CSS 显隐，首屏零跳变。
-- **返回顶部**：置于文章结尾的 44×44 `position: sticky` 按钮，由 `@container scroll-state(scrollable: top)` 纯 CSS 控制显隐，天然停驻在页脚上方；隐藏或点击后将焦点移交 `h1` / `#main`，不丢焦点到 `body`。
+- **Primary**: `accent` teal fill with `accent-fg` ink, `44px` height, `18px` horizontal padding, `4px` radius, `0.9375rem` / `500`. Lifts `1px` and mixes 12% toward `ink` on hover; settles and scales to `0.98` on press.
+- **Secondary**: `paper` fill, `1px rule` border, `ink` text; border shifts to `muted` on hover.
+- Keep at most one primary button per viewport. Icon-only buttons (theme toggle, copy, lightbox close) are `44×44` transparent hit targets with `4px` corners that respond only via color change on hover while preserving a `2px`-radius focus ring.
+- **Theme toggle**: a two-state button toggling light and dark directly (synchronizing `<meta name="color-scheme">` and `aria-pressed`, deleting `localStorage('color-scheme')` whenever toggled back to match OS preference to restore native `light dark`). The `sun` / `moon` icon visibility is driven purely by CSS (`:has(> head > meta[name='color-scheme'])` + `@media (prefers-color-scheme: dark)`), eliminating first-paint flicker.
+- **Back to top**: a `44×44` `position: sticky` button placed at the end of the article, shown and hidden purely via `@container scroll-state(scrollable: top)` so it parks naturally above the footer; activating it transfers focus cleanly to `h1` / `#main` rather than losing focus to `body`.
 
-### Running head（书眉，签名组件）
+### Running head (signature component)
 
-页眉左侧：品牌标记 + 站点名；文章页在其后接 `/ 系列名 · 7 / 23 篇`（篇数计数用 teal、表格数字），当正文 h1 滚出视口后淡入 `· 章节标题`（200ms，IntersectionObserver）。「/」「·」是 subtle 色的排版标点，不读出。品牌名、书眉、导航按基线对齐。系列名链接到总览篇。≥80rem 且有 JS 时「7 / 23 篇」是一个外观不变的按钮（hover 和展开时加 1px 下划线），展开 / 收起左侧系列栏，与栏顶按钮是同一个开关；系列栏吸顶，在页面任何位置点开都在视口内。窄于 60rem 时书眉隐藏，由文首的系列 `<details>` 承担。站点覆盖 Header 时通过 `running` prop 拿到这些数据（有 `href` 和 `position` 时视为系列，输出带 `data-series-toggle` 的按钮）。
+Left side of the header displays the brand mark and site title. On article pages belonging to a series, it appends `/ Series Name · 7 / 23` (counts in `accent` teal with `tabular-nums`), then fades in `· Chapter Title` (`200ms` via `IntersectionObserver`) once the article `h1` scrolls past the viewport. Structural `/` and `·` separators render in `subtle` and are hidden from screen readers. Brand mark, running head, and nav items align on a single baseline, and the series name links to the series overview. At `≥80rem` with JS enabled, `7 / 23` acts as an inline toggle (`1px` underline on hover/open) controlling the left series rail identically to the rail's own header button so readers can open the chapter list from anywhere down the page. Below `60rem`, the running head hides and yields to the in-flow series `<details>` above the title. Custom site headers receive this metadata via the `running` prop (`href` and `position` mark a series entry and render a `[data-series-toggle]` button).
 
-### Chapter opener（章首）
+### Chapter opener
 
-章节号（大号细体 teal）+ 标题 + 元信息（日期 · 阅读时长 · 分类，无图标）+ `#标签` 行，下面一条 1px rule。**没有眉题。** 标题不以编号开头时不显示章节号。
+Display chapter number (large light-weight teal) + title + single-line metadata (`date · reading time · category`, no icons) + `#tag` row, underscored by a `1px rule`. **Zero eyebrows.** Titles without a leading numeric prefix omit the chapter number cleanly.
 
-### Numbered navigation（系列栏、目录）
+### Numbered navigation (series rail & TOC)
 
-两列网格：编号列（等宽数字、muted；hover 时与标题一起变墨色）+ 标题列（换行后悬挂对齐）；无编号篇目（如系列总览）取消空编号列、通栏贴齐左轴。左侧系列栏是离散章节索引，不画通高灰线，篇目与栏顶标题共一条外框左轴，仅在当前篇左外侧悬挂一段 2px teal 短竖标（编号变 teal，标题变墨色并加粗）；右侧目录是页内连续滚动进度轴，保留左侧 1px rule 连续轨道并将当前项激活段加粗为 2px teal（标题加粗至 500、小节 h3 缩小至 `0.78125rem` 并扩大编号列宽度）。窄屏（`<60rem`）文首的折叠系列与折叠目录复用同一指示语言：折叠系列同样在当前篇左外侧标出 2px teal 短竖标；折叠目录同样画出 1px rule 连续左轨、2px teal 激活条与 `0.78125rem` 次级字号层级（同时保留左侧 6px 焦点环缓冲区与 44px 触控行高）。目录编号与正文 h2/h3 的 CSS 计数器同一算法（只在顶层是 h2 时编号）。
+Uses a two-column grid: fixed tabular number column (`muted`, darkening to `ink` with title on hover) + hanging-indented title column. Unnumbered entries (such as a series overview post) omit the empty number cell and span cleanly from the left axis. Visually, the two rails serve distinct roles: the left **series rail** is a discrete chapter index with no full-height vertical line — items align flush with the rail header and mark only the active chapter with a short `2px teal` outer tick (number turns `accent`, title turns `ink` bold). The right **TOC** is a continuous in-page scroll track keeping a `1px rule` left guide across all items and highlighting active sections with a `2px teal` segment (weight `500`, `h3` scaled down to `0.78125rem` with widened number track). On `<60rem` viewports, collapsible series and TOC `<details>` blocks mirror the same visual distinction while reserving a `6px` left focus-ring buffer and `44px` touch row height. TOC numbering shares the identical CSS counter algorithm as body `h2`/`h3` headings (active only when top-level headings start at `h2`).
 
-**系列栏（≥80rem）默认收起。** 栏里只有一行吸顶的 `<button>`：系列名（0.875rem/600 墨色）+ `7 / 10`（0.75rem muted 表格数字）+ 1.75rem 方块里的 Lucide chevron（朝下 = 收起着，朝上 = 展开着），整行 2.5rem 高，与右侧目录的标题行同字号、同高度、同吸顶位置、同一基线，两栏成对。点开后篇目表在原位出现（150–200ms 透明度 + 下移 0.375rem，减少动效时无动画；不做高度动画），chevron 转 180°。状态是 `html[data-series="open|collapsed"]`，由 Post 的内联脚本在首帧前从 `localStorage` 的 `wisp-series-open` 写入；`aria-expanded` / `aria-controls` 同步，按钮 `title` 是「展开 / 收起系列篇目」。无 JS 时没有 `data-series`：按钮隐藏，静态标题行 + 篇目表完整显示（与目录的 `html:not([data-toc])` 同一规则）。60–80rem 及以下仍是标题前折叠的 `<details>`，summary 与栏顶同一写法：系列名 + `7 / 23` + 右端 chevron。
+**Series rail (`≥80rem`) defaults collapsed.** At rest it renders one sticky `2.5rem` `<button>`: series title (`0.875rem` / `600` `ink`) + `7 / 10` (`0.75rem` `muted` tabular) + a Lucide chevron inside a `1.75rem` box (down = collapsed, up = open), matching the TOC header bar in font size, height, sticky offset, and baseline so the pair balance across the reading column. Opening reveals the item list in place (`150–200ms` opacity + `0.375rem` translate, disabled under reduced motion, avoiding height transitions) and rotates the chevron `180°`. State lives in `html[data-series="open|collapsed"]`, restored before first paint from `localStorage['wisp-series-open']` with `aria-expanded` / `aria-controls` kept in sync (`title` toggles expand/collapse). Without JS (`html:not([data-toc])` parity), buttons hide and full lists render expanded statically. From `60–80rem` down, series navigation renders as `<details>` above the title with the same `<summary>` composition (`Series Name` + `7 / 23` + trailing chevron).
 
-**目录栏顶**是系列栏顶的镜像：`<button>`「目录」+ 右端同一个 chevron，2.5rem 高，右缘贴外框；收起后仍是这一行（文字不消失），只有篇目隐藏。窄屏折叠目录的 summary 同样是「目录」+ 右端 chevron。有小节的 h2 右端有一个 1.5rem 的小 chevron（朝右 / 朝下），固定在栏右缘、对齐标题第一行。点目录项立即高亮该项；滚到页面底部时高亮最后一节。
+**TOC header** mirrors the series header (`<button>` label + trailing chevron, `2.5rem` height, right-aligned to `.wisp-shell`); collapsing leaves the labeled row intact and hides only the outline. Collapsible mobile TOC matches this `<summary>`. Parent `h2` rows with subsections place a `1.5rem` chevron (right/down) pinned at the right edge aligned with the first title line. Clicking a TOC link highlights the item immediately; reaching page bottom highlights the final section.
 
-**键盘顺序**：系列栏 → 目录栏 → 正文（DOM 顺序如此，位置由网格决定）；目录是进入正文的导航，收起时只占一个 Tab。两个侧栏外层是普通 `div`，地标名只在里面的 `<nav>` 上：目录叫「目录」，系列叫「系列：系列名」。
+**Keyboard order:** Series rail → TOC → Main prose (DOM matches logical flow while CSS grid controls visual columns). The TOC serves as entry navigation into prose and takes a single Tab stop when collapsed. Rail wrappers are plain `<div>` containers, placing landmark labels solely on their inner `<nav>` (`Table of Contents` / `Series: <name>`).
 
-### Code listing（代码清单）
+### Code listing
 
-1px rule 描边、4px 圆角、`code-bg` 底；顶部 2.125rem（触屏 2.75rem）题注行与代码同底，只用一条发丝线分开：左边小写语言名（mono 0.75rem muted），右边「自动换行」按钮（Lucide `wrap-text`，`aria-pressed`，按下时 teal；只在不换行时确实横向溢出的块上出现）和复制按钮（Lucide 图标，成功后变 `sem-done` 并 `aria-live` 播报），两个按钮同尺寸、同 hover。行号用 CSS counter，subtle，不可选中。长代码折叠：底部渐隐 + 「展开」按钮（与题注行同一条件下高 44px：窄于 64rem 或触屏）；在展开的长代码底部点「收起」时，代码块顶端回到页眉下方（遵守 `scroll-padding-top`，减少动态效果时直接跳），焦点留在按钮上。
+`1px rule` border, `4px` radius, `code-bg` fill, topped by a `2.125rem` (`2.75rem` on touch) caption bar separated solely by a hairline rule: lowercase language name on the left (`mono` `0.75rem` `muted`), matched icon controls on the right — word-wrap toggle (Lucide `wrap-text`, `aria-pressed`, teal when active, rendered only on blocks that actually overflow horizontally when unwrapped) and copy button (Lucide icon transitioning to `sem-done` with `aria-live` announcement). Line numbers use CSS counters in `subtle` and `user-select: none`. Long listings collapse with a bottom fade and "Expand" button (44px tall at `<64rem` or on touch devices matching the header bar); clicking "Collapse" at the bottom of an expanded block scrolls the block header back below the sticky site header (`scroll-padding-top`, instant under reduced motion) while keeping focus on the toggle button.
 
-**换行**：默认长行横向滚动（右侧渐隐提示）；站点可用 `features.codeWrap` 改为默认换行。换行是读者偏好，存在 localStorage 并作用于整页代码块，首帧前生效。换行时每个逻辑行只在第一视觉行有行号，续行悬挂缩进到代码起点再多缩 2ch；diff 行的底色覆盖整个逻辑行。打印时一律换行。
+**Line wrapping:** Long lines scroll horizontally by default (fade-masked on overflow); sites can opt into default wrapping via `features.codeWrap`. Reader toggles persist in `localStorage` across the page before first paint. Wrapped logical lines display a line number only on their first visual row, indent continuation rows `2ch` past the code origin, and span `diff` highlights across the entire logical line. Print stylesheets always wrap code lines.
 
-### Tables（三线表）
+### Tables (booktabs three-rule)
 
-顶线、底线 1px ink；表头下 1px（ink 45% 混 rule）；行间 1px rule。表头 0.8125rem/600/muted，不加粗正文。单元格左对齐、首列贴边；单元格里的行内代码只在空格处换行、不在记号中间断开（`file.py:234-358` 整体不拆）；长描述单元格（`rehype-a11y` 标记 `data-wisp-prose`）保底阅读宽度，避免被短数字列挤压成细条。表格包在 `div.wisp-table` 里（宽屏两侧轻度外扩 1rem，底部与横向细滑块隔开呼吸间距），确实横向溢出时首列吸左固定（向右滚离左缘后带 1px rule 分隔线），并可键盘聚焦与鼠标按住拖拽平移；窄屏（`≤40rem`）解除继承的 `max-width: 100%` 并限制吸顶首列与非首列最大宽度，确保每列完整落入首列右侧可视窗且长代码记号可换行。
+`1px ink` top and bottom rules, `1px` `color-mix(45% ink / rule)` header divider, `1px rule` between body rows. Headers render in `0.8125rem` / `600` / `muted`; body cells never bold automatically. Text left-aligns with zero outer indent on the first column; inline code inside cells breaks only at whitespace rather than splitting tokens (`file.py:234-358` stays intact), and descriptive columns (`data-wisp-prose` tagged by `rehype-a11y`) receive a readable `min-width` floor so short numeric columns cannot crush prose cells into narrow strips. Tables sit inside `div.wisp-table` (flush with both edges of the prose measure, breathing gap above the thin horizontal thumb). Overflowing tables stick column 1 to the left (gaining a `1px rule` seam once scrolled) and enable keyboard focus + pointer drag-panning; on narrow viewports (`≤40rem`), inherited `max-width: 100%` relaxes and sticky column + sibling cell max-widths stay capped so every column fits inside the viewport beside sticky column 1 while long code tokens can wrap cleanly.
 
-### Note block / Disclosure（要点块与折叠块）
+### Note block / Disclosure
 
-Markdown 引用块 = 手册里的「要点」：`surface` 浅底 + 1px `rule` 描边（与代码清单同一种收边；暗色里 surface 与纸色太近，只靠底色看不出是一个块）、4px 圆角、正文色、不用斜体、**不画彩色竖条**。正文折叠块（`<details>`）复用同一卡片语言（`surface` 底 + 1px `rule` + 4px 圆角），`<summary>` 高 ≥44px 并带 Lucide chevron，展开后内部行内代码改用纸白底与外框区分；窄屏（`≤40rem`）两者统一收窄左右内衬为 `1rem`。
+Markdown blockquotes act as manual "Note" callouts: `surface` fill + `1px rule` border (matching code listings, essential in dark mode where `surface` sits close to `paper`) + `4px` radius + body ink text — upright roman type with **no colored left accent bar**. Inline disclosures (`<details>`) share this exact container language (`surface` + `1px rule` + `4px` radius), with a `≥44px` `<summary>` row and trailing Lucide chevron; inline code inside an expanded disclosure switches to `paper` fill for separation. Below `40rem`, both components tighten horizontal padding to `1rem`.
 
 ### Figures
 
-**所有图同一套题注语法**（draw.io / Excalidraw、Mermaid、Markdown 图片、`<Figure>`）：`<figure class="wisp-figure …">`，图在上、题注在下（中文排版：图题在下，表题在上）。题注 muted 0.875rem/1.6，**贴正文栏左缘**——图比栏窄时图居中，题注仍与正文左边线对齐。题注以图号开头（`图 05-1：`、`图 3:`、`Figure 2.`、`Fig. 2:`）时图号拆成 `.wisp-fig-no`：墨色、600、表格数字；没写图号就是普通题注，主题不自动编号。
+**One unified caption model** across draw.io / Excalidraw diagrams, Mermaid diagrams, Markdown images, and `<Figure>`: `<figure class="wisp-figure ...">`, media above, caption below (CJK convention places figure captions below and table captions above). Captions set in `muted` `0.875rem` / `1.6` stay **flush with the prose left margin** even when narrower artwork centers horizontally. When a caption begins with a figure prefix (`图 05-1：`, `图 3:`, `Figure 2.`, `Fig. 2:`), the prefix extracts into `.wisp-fig-no` (`ink`, `600`, tabular); unprefixed captions remain plain prose captions without auto-numbering.
 
-- **题注 + 动作**（图表的「源文件」「draw.io」）：题注独占 100% 栏宽并启用 `text-wrap: pretty`，长短题注都不与工具动作争抢行宽。动作栏全端共享同一实体工具条外观（纸白实底 + 1px `rule` 描边 + 4px 圆角，无阴影；两项之间用 1px `rule` 竖线分隔，0.75rem muted、hover teal，Lucide 图标 + 短词，完整含义在 `aria-label` / `title`）。有悬停能力的宽屏（≥40rem、`hover: hover`、`pointer: fine`）将工具条收进图表右上角浮动定位并默认隐藏（`opacity: 0`），鼠标移入或键盘聚焦时 150ms 淡入；figure 的可访问名称只取题注文字（`aria-labelledby`）。
-- **只有动作**：桌面端同样悬浮于图表右上角；**只有题注**：只有题注。都没有：图下什么都没有。
-- **触屏或窄于 40rem**：工具条常驻呈现在题注（或图体）下方贴左缘的一行里，通过扩展链接隐形热区维持触控高度 ≥ 44px（视觉条高保持紧凑）；打印时隐藏动作。
-- **Markdown 图片**：`![alt](./x.webp '图 05-3：…')` 这种段落里只有一张、带标题的图片由 `rehype-figure` 排成 figure，title 变成题注并从 img 上去掉（不再有重复的悬停提示）；不带标题的图片保持原样。Astro 的图片优化不受影响。Mermaid 题注写在围栏 meta 里：` ```mermaid caption="图 3：…" `。
-- **配图描边**：figure 里的配图（位图与独立 `.svg` 论文图）统一加 1px `rule` 描边定出边缘（两种主题都加；白底配图在浅色与深色页上都有清晰边界），不加滤镜、不反色。
+- **Caption + Actions** (e.g., diagram "Source" / "draw.io" links): the caption spans the full `100%` measure with `text-wrap: pretty` so long/short captions never compete with tool buttons. Action links share one hairline toolbar across viewports (solid `paper` fill, `1px rule` border, `4px` radius, zero shadow, `1px rule` vertical divider between items, `0.75rem` `muted` transitioning to `accent` on hover, Lucide icon + terse label with descriptive `aria-label` / `title`). On hover-capable wide screens (`≥40rem`, `hover: hover`, `pointer: fine`), the bar floats top-right over the diagram (`opacity: 0` at rest) and fades in over `150ms` on hover or focus-within; accessible figure names bind solely to the caption text via `aria-labelledby`.
+- **Actions only:** floats top-right identically on desktop. **Caption only:** renders caption alone. Neither present: bare diagram frame.
+- **Touch or `<40rem`:** the action toolbar renders statically below the caption (or figure) flush left, preserving a `≥44px` hit target via expanded transparent link insets while keeping its visual bar compact; actions hide in print.
+- **Markdown images:** standalone paragraph images with a title (`![alt](./x.webp '图 05-3：…')`) are promoted into figures by `rehype-figure`, moving `title` into the visible caption and stripping duplicate `img[title]` browser tooltips; untitled inline images remain untouched, and Astro image optimization works seamlessly. Mermaid diagrams accept captions via fenced metadata (` ```mermaid caption="图 3：…" `).
+- **Artwork framing:** bitmap images and standalone `.svg` figures inside a figure receive a crisp `1px rule` hairline border in both themes so white-background illustrations separate cleanly from dark paper without filters or color inversion.
 
-图按容器缩放，但不放大超过自然宽度；窄屏（`≤40rem`）非宽内容图表向两侧轻度外扩 `0.5rem` 以争取额外画布宽度（题注仍贴正文左缘）。`.wisp-diagram-body` 与 Mermaid 一样受可读最小宽度下限保护（`min(var(--wd-w), max(100%, min(31rem, calc(var(--wd-w) * 0.72))))`），窄屏放不下时在图内横向滚动（`overflow-x: auto`，支持拖拽平移与键盘焦点）而非压缩到字不可辨。既可直接点击图体、也可通过图角独立的原生 `<button data-wisp-lightbox-trigger>`（桌面悬停或聚焦显现，触屏常显）打开 Lightbox 看原尺寸：宽屏按视口缩放显示；窄于 40rem 时按自然宽度（最多 2 倍视口宽）放在可平移的区域里，打开时滚到中间，关闭按钮固定在右上角。**图上和题注旁不加缩放比例之类的标记**：图应该按正文栏宽度来画（自然宽度 640–700px），而不是画宽了再提示读者放大。draw.io 标签里的公式（`math="1"`）按行内排版。Mermaid 最小缩放 75%，放不下在图内横向滚动。
+Artwork scales down proportionally to container width and never scales past its natural dimensions in-flow; on narrow screens (`≤40rem`), standard (non-`.wisp-wide`) figures bleed `0.5rem` outward on each side for breathing room while captions remain flush with the prose column. `.wisp-diagram-body` shares Mermaid's legible minimum-width floor (`min(var(--wd-w), max(100%, min(31rem, calc(var(--wd-w) * 0.72))))`), scrolling horizontally inside the figure (with drag-pan and keyboard focus) rather than shrinking labels below legibility.
 
-### Explainer（交互讲解）
+Clicking any image/diagram directly — or activating its corner trigger `<button data-wisp-lightbox-trigger>` (revealed on hover/focus on desktop, always visible on touch) — opens the **full-viewport Lightbox inspector** on a solid `paper` canvas:
 
-手册里的一幅插图，不是媒体播放器。整张卡片只有一圈 1px rule、4px 圆角、纸白底，从上到下：
+- Inline SVGs auto-fit to a comfortable viewport proportion (capped at `1.65×` so crisp diagrams never overwhelm small screens or stay tiny on wide monitors); bitmaps open at `min(fit, 1:1)`.
+- Supports cursor-anchored scroll-wheel zoom, trackpad pinch zoom and two-finger 2D pan, immediate and zoomed 2D pointer/touch free dragging across **all** media types (bitmaps, Mermaid, draw.io, and Excalidraw alike — clamped with safe visibility margins so at least one corner always remains inside the viewport), two-finger touch pinch zoom, double-click / double-tap zoom toggle & reset, and full keyboard navigation (`+` / `=` / `-` / `_` / `0` / `1` / Arrow keys / `Esc`). Inline SVGs commit crisp vector width/height attributes once wheel/pinch/drag interaction settles so text labels and `<foreignObject>` KaTeX/MathJax formulas stay razor sharp at any zoom level.
+- A fixed `44×44` close button stays anchored top-right. The bottom-centered hairline toolbar (`- | % | + | reset`, `4px` radius, `1px rule` border and dividers, `tabular-nums`) and caption echo stay hidden at rest and fade in only when the pointer moves, focus enters the toolbar, the screen is tapped, or the view differs from its initial fit/scale (deep zoom suppresses the caption echo to keep artwork unobstructed). Clicking empty canvas or pressing `Esc` closes the dialog and restores focus to the trigger.
 
-- **标题行**（可选）：左边标题，开头的图号（`图 05-2a：`、`Figure 2:`）与静态图题同一语法——图号 `.wisp-fig-no` 墨色 600 tabular，其余 muted 常规；右边步数「3 / 10」muted tabular，按最宽的「10 / 10」预留宽度。下方一条发丝线。没有标题时不画这一行，步数并到控制条右侧倍速键前。
-- **舞台**：纸白底，SVG 画面。舞台有 min-height 棘轮：同一宽度下只增不减，宽度变化时重新计，不做动画。
-- **进度刻度线**：舞台与说明的分界就是这条 1px rule；已走过的部分是 2px teal（与页眉阅读进度线同一语言），≤ 24 步时每步一个 1×7px 刻度（已到达的变 teal），更多时只有连续的线。控件是透明的 `<input type="range">`，命中区桌面端 24px、无悬停/粗指针设备扩大至 36px；方形滑块（12px、3px 圆角、纸白描边）在桌面端仅于 hover / 键盘焦点时显现，在触屏或无悬停设备上常显（`opacity: 1`），焦点环 2px teal。
-- **说明**：`surface` 底，墨色 0.9375rem / 1.6（窄屏 0.875rem），左对齐；支持 `$…$` 行内公式（KaTeX）。说明区高度 = 当前宽度下最长那一步的高度：全部步骤的说明叠在同一网格格子里，只有当前那段可见并在 `aria-live` 区里，所以翻页、播放、改窗宽时卡片都不跳。
-- **控制条**：同一 `surface` 上的一行，320px 也不换行。左边 上一步 / 播放 / 下一步：只有播放键是 teal 实心，上一步 / 下一步是无边框的幽灵按钮（hover `surface-2`，3px 圆角，禁用时 `subtle`）；播到最后一步播放键换成 Lucide rotate-ccw（「重新播放」）。右边一个倍速键，按一下在 0.5× → 1× → 2× 之间循环，数字 tabular、按最宽值预留宽度。按钮 40×40（`pointer: coarse` 44×44）。没有「第一步 / 最后一步」按钮，Home / End 键仍然可用；按钮的 title 带键位提示（← → 空格）。
-- **动效**：只有 150ms 的颜色 / 背景过渡；播放 / 暂停换图标不改变按钮尺寸；`prefers-reduced-motion` 下全部关闭。
-- **SVG 原语**：格子文字是 mono 16px（数据），Label 是 sans 14px / 600，`TexLabel` 用 foreignObject 放 KaTeX（同 14px，必须给宽高）。强高亮描边向格子内收，不会被舞台边界裁掉。
+**Never display scale percentages or magnification badges inline on figures or captions:** diagrams should be authored cleanly for the `42rem` column (`640–700px` natural width) rather than drawn oversized and pushed onto the viewer to zoom. Math expressions (`math="1"`) inside draw.io labels render inline. Mermaid caps minimum inline downscaling at `75%` before falling back to horizontal container scroll.
 
-### Citations（引用）
+### Explainer (interactive diagrams)
 
-作者语法就是 GFM 脚注（`[^key]`），渲染成手册式的引用：
+Designed as an inline diagram plate inside the manual, not a video player. Matches the prose column width by default (`wide = false`; opt into `wide` strictly for genuinely wide multi-column stages). Framed cleanly by one `1px rule` outline, `4px` radius, and `paper` stage background from top to bottom:
 
-- **文内标记**：真上标，teal、500、表格数字，带方括号 `[1]`（GB/T 7714 顺序编码制的写法，也不会和公式上标混淆）；紧挨着的引用合并成 `[1, 2]`。不加下划线（hover 才有）；点击区约 24px 高，但标记行高为 0，有无引用的行行距完全一致；标记不会单独落到行首。
-- **点击与状态反馈**：文内引用 / 回链点击平滑滚动（`prefers-reduced-motion: reduce` 直接跳转）并短暂标记 2 秒；注释项 `li` 与 `h2–h6` 目标均带 `tabindex="-1"`，焦点直接到达目标而不掉回 `body`。
-- **预览**：通过构建期生成 `<div popover="hint" role="tooltip">` + `interestfor` + `aria-describedby`（指向具体注释卡片）与 CSS 锚点定位（`position-area` + `position-try-fallbacks`）声明式弹出；`Esc` 或移开即关闭。
-- **文末列表**：标题「参考与注释」/「References」（0.875rem / 600 / 墨色，不参与 h2 编号、不进目录），上方一条 1px rule 与正文分开——章末的 1px ink 收口线仍由下面的上一篇/下一篇负责，不画两条墨线。列表去掉左侧悬空竖轨，采用与文内呼应的 `[n]` 方括号编号列（与标题左对齐，muted 表格数字）+ 悬挂对齐的 0.875rem muted 正文，注文内 `code` 继承柔和字色与 `code-bg` 底色；长 URL 在栏内断行。每条末尾只保留唯一一枚返回正文的 Lucide `arrow-up`（subtle，hover teal），多处引用时不堆砌序号尾巴。
+- **Header row** (optional): left title reusing static-caption syntax when prefixed with a figure number (`图 05-2a：`, `Figure 2:` — `.wisp-fig-no` `ink` `600` tabular, remainder `muted` regular); right step readout (`3 / 10`, `muted` tabular reserved to widest count width), separated by a bottom hairline. When omitted, the step counter moves cleanly ahead of the playback speed control.
+- **Stage**: `paper` canvas hosting an SVG scene. Stage height uses a minimum-height ratchet — only growing at a given width and resetting when width changes — with zero height animation.
+- **Progress rule**: the `1px rule` divider separating stage and caption double-functions as the scrub track: completed progress thickens to `2px teal` (echoing the header reading-progress line), with `1×7px` step ticks up to 24 steps (turning teal when reached) or a continuous line beyond 24 steps. Powered by an invisible `<input type="range">` with a `24px` desktop hit band expanded to `36px` on coarse/no-hover devices; the square scrub thumb (`12px`, `3px` radius, `paper` stroke) appears on hover/focus on desktop and stays visible (`opacity: 1`) on touch devices with a `2px teal` focus ring.
+- **Caption well**: `surface` background, `ink` text at `0.9375rem` / `1.6` (`0.875rem` on narrow viewports), left-aligned, supporting inline KaTeX math (`$…$`). Every step's caption occupies the same CSS grid cell with only the active step visible inside an `aria-live` region, locking the card height to the tallest step at the current width so stepping, playing, or resizing never jumps the page.
+- **Control bar**: single row on `surface` that stays on one line even at `320px`. Left cluster: Previous / Play / Next — only Play uses solid `accent` teal; Previous and Next are borderless ghost buttons (`surface-2` hover, `3px` radius, `subtle` when disabled), and Play switches to Lucide `rotate-ccw` ("Replay") on the final step. Right side: a single speed toggle cycling `0.5× → 1× → 2×` (`tabular-nums`, reserved width). Buttons are `40×40` (`44×44` under `pointer: coarse`). Omit first/last jump buttons (while retaining `Home`/`End` keyboard shortcuts), and include shortcut hints (`←`, `→`, `Space`) in button titles.
+- **Motion**: strictly `150ms` color/background transitions; swapping Play/Pause icons never shifts button dimensions; disabled completely under `prefers-reduced-motion: reduce`.
+- **SVG primitives**: grid cell data uses `mono` `16px`, diagram `Label` uses `sans` `14px` / `600`, and `TexLabel` embeds KaTeX inside explicitly sized `foreignObject` boxes at `14px`. Heavy highlight strokes inset within nodes so stage edges never clip them.
 
-### Prev / Next（章末）
+### Citations
 
-一条 1px ink 线收住全文，下面左右两格：小号 muted 标签（带箭头图标）+ 墨色标题；hover 标签和标题变 teal、箭头外移 3px。不是卡片。
+Authors write standard GFM footnotes (`[^key]`), rendered like formal engineering citations:
 
-### Home（扉页 + 总目录）
+- **In-text markers**: true superscripts in `accent` teal, weight `500`, `tabular-nums`, enclosed in square brackets `[1]` (GB/T 7714 sequential citation style, unambiguous next to mathematical exponents); adjacent markers merge cleanly (`[1, 2]`). Underlines appear only on hover. A `~24px` hit target preserves zero marker line-height so cited and uncited prose share identical leading, and non-breaking attachment keeps markers from stranding at line starts.
+- **Click & focus behavior**: footnote links and backlinks smooth-scroll (jumping instantly under `prefers-reduced-motion: reduce`) and flash a `2s` highlight; footnote `<li>` items and `h2–h6` headings carry `tabindex="-1"` so focus lands on the target rather than resetting to `body`.
+- **Hover preview**: declaratively driven by build-time `<div popover="hint" role="tooltip">`, `interestfor`, `aria-describedby` (pointing to the matching note card), and CSS Anchor Positioning (`position-area` + `position-try-fallbacks`); dismisses immediately on `Esc` or pointer leave.
+- **Reference list**: section title (`References` / `参考与注释` in `0.875rem` / `600` `ink`, excluded from `h2` numbering and TOC), separated from prose by a `1px rule` (leaving the single `1px ink` closing rule to the Prev/Next divider below). Uses bracketed `[n]` numbers aligned flush with the heading in a fixed `muted` tabular track and hanging-indented `0.875rem` `muted` note text; inline code inside notes keeps softer contrast on `code-bg` and long URLs wrap inside the column. Each entry ends with one subtle Lucide `arrow-up` backlink (hover `accent`) rather than repeating trailing backlink counters.
 
-扉页：站点名（home-title）、描述、版本说明行（「2 个系列 · 33 篇 · 更新于 …」）、主按钮「从「系列」开始读」+ 次按钮。然后：**目录**（每个系列一个部分：teal 部分号 + 系列名、副题、简介、篇数与日期；右侧完整篇目：编号 · 标题 · 点线引导 · 阅读时长；编号列 muted 表格数字，标题换行时悬挂对齐，点线从标题最后一行末尾引到时长、时长与最后一行同基线，像印刷目录的页码）→ **其他文章**（不属于系列的文章）→ **修订记录**（日期 | 编号 | 标题 | 所属系列的三线列表；带编号篇目同样拆出固定编号列，窄于 40rem 时第一行展示「日期 · 系列名」，第二行通栏展示编号与标题，不隐藏所属系列）。触屏（`pointer: coarse`）时篇目行和修订记录行的链接命中高度 ≥44px（加大内边距或把命中区铺满整行），字号和行距不变。首页扉页文字入场一次（520ms 上浮，逐行 60ms），其他地方不做入场动画。
+### Prev / Next (chapter end)
+
+A single `1px ink` closing rule caps the article, followed by two side-by-side columns: small `muted` directional label with arrow icon + `ink` chapter title; hover shifts both label and title to `accent` teal and nudges the arrow outward by `3px`. Never boxed as cards.
+
+### Home (title page & master TOC)
+
+Title section: site nameplate (`home-title`), lead description, edition metadata line (`2 series · 33 posts · updated ...`), primary CTA (`Start reading "..."`) + secondary action. Below follows: **Contents** (one block per series: teal part number + series title, subtitle, blurb, entry count & date on the left; full numbered index on the right with `number · title · dot leader · reading time`, fixed `muted` tabular numbers, hanging-indented titles, dot leaders extending from the final line of each title to baseline-aligned reading times like printed book pages) → **Other essays** (standalone posts outside any series) → **Changelog** (booktabs log of `date | number | title | series`, preserving fixed number columns for numbered posts and collapsing on `<40rem` to `date · series` above a full-width `number + title` line so series context stays intact). Under `pointer: coarse`, index and changelog rows ensure `≥44px` link hit heights without enlarging type or line-height. Only the home title block plays a one-shot entrance (`520ms` rise, `60ms` stagger); nothing else animates on entry.
 
 ### Archive / Tags
 
-归档：每年一张三线列表（月-日 | 编号 | 标题 | 所属系列）。系列篇标题里的「05 」拆成编号列（muted 表格数字，与首页目录同宽），只要有一篇带编号，所有行都留出编号列，标题左缘对齐；窄屏（`<40rem`）保留非空所属系列名作为次级行贴标题左缘，避免多系列章节混淆。标签 / 分类索引：`#标签名` 文字链接 + 计数（muted 表格数字），hover teal，不用胶囊底。标签、分类、分页列表页的页头与 Page 布局同一规格（标题 + 说明，下方 1px rule），文章之间 1px rule。触屏及窄屏（`<48rem`）下整行链接（归档行、修订行）、索引目录链接、分页链接、目录/系列折叠链接、元信息链接与脚注回链命中区 ≥44px，行内卡片与章首标签链接 ≥32px 且间距 ≥8px。
+Archive organizes posts into one booktabs table per year (`MM-DD | number | title | series`). Leading `05 ` prefixes extract into the fixed `muted` tabular number column matched to the home TOC; whenever at least one post is numbered, every row reserves the column so titles align vertically across mixed entries. Below `40rem`, non-empty series names render as a secondary line aligned beneath the title so chapters from different series stay clear. Tag and category indexes display plain text links (`#tag` + `muted` tabular count, hover `accent`) without pill backgrounds. Tag, category, and paginated archive pages reuse the standard page header (`title` + `description` + `1px rule`), separating posts with `1px rule` hairlines. On touch devices and viewports `<48rem`, full-row links (archive/changelog rows), index links, pagination controls, collapsible TOC/series links, metadata links, and footnote backlinks enforce `≥44px` hit areas, while inline chip/tag links keep `≥32px` height with `≥8px` separation.
 
 ### Icons
 
-只用 Lucide（构建期内联 SVG，`Icon.astro`；React 里用 `PlayerIcon.tsx` 这样的内联路径），描边 2、尺寸 1em、颜色 currentColor。**禁止用 emoji 或 Unicode 字符（▶ ⏮ ✓ ← 等）当图标。**
+Strictly Lucide icons (inlined SVG at build time via `Icon.astro`, or lightweight path helpers like `PlayerIcon.tsx` in React), `stroke-width: 2`, `1em` box, colored with `currentColor`. **Never use emoji or raw Unicode glyphs (`▶`, `⏮`, `✓`, `←`, etc.) as UI icons.**
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** 让每个编号都能对上：章节号、§ 编号、目录编号、系列编号来自同一数据。
-- **Do** 用线和留白分层：同级 1px rule，收口 1px ink，区块 2px ink。
-- **Do** 所有数字用 `tabular-nums`；编号列固定宽度并让标题悬挂对齐。
-- **Do** 主题内部互相引用组件走 `virtual:wisp/components/<Name>`，样式放进正确的 `@layer`（框架 → components，正文内容 → utilities）。
-- **Do** 浏览器自带的表面也要设计：选区色、焦点环（2px teal，offset 2px）、滚动条、下划线偏移（0.25em）。
-- **Do** `prefers-reduced-motion: reduce` 下关闭所有过渡和入场动画。
-- **Do** 画图时按正文栏宽度排版（自然宽度 640–700px，流程从上到下走）；横向一字排开的宽图会被缩到看不清。
-- **Do** 图里默认用中性节点，只给要讲的语义角色上色（一张图 ≤ 3 种 hue，slate 不计）；强调用加粗描边。
+- **Do** keep every number unified across the interface: chapter openers, `§` headings, TOC entries, and series rail items must derive from one data model.
+- **Do** establish hierarchy with hairlines and whitespace: `1px rule` between peers, `1px ink` to close units, `2px ink` exclusively above home section titles.
+- **Do** set all numbers in `tabular-nums` inside fixed-width columns with hanging-indented titles.
+- **Do** reference internal theme components via `virtual:wisp/components/<Name>`, and place CSS rules in their proper cascade layer (`components` for chrome, `utilities` for prose content).
+- **Do** craft native browser surfaces with equal care: text selection highlight, focus rings (`2px` teal, `2px` offset), floating scrollbars, and `text-underline-offset: 0.25em`.
+- **Do** disable all transitions and entrance animations cleanly under `prefers-reduced-motion: reduce`.
+- **Do** author figures for the `42rem` prose measure (`640–700px` natural width, vertical flow preferred); excessively wide horizontal diagrams become illegible when scaled down.
+- **Do** keep diagram nodes visually neutral by default and reserve categorical hues (`≤ 3` per diagram, `slate` excluded) strictly for active semantic distinctions, using heavier strokes for emphasis.
 
 ### Don't:
 
-- **Don't** 用卡片 + 阴影做列表；不要嵌套卡片；不要用 hover 上浮的卡片做导航。
-- **Don't** 在标题上方放眉题（eyebrow / kicker）。
-- **Don't** 给引用块、提示块、列表项加 2px 以上的彩色竖条。
-- **Don't** 用毛玻璃、渐变、渐变文字、发光描边。
-- **Don't** 用 emoji 或 Unicode 字符当图标。
-- **Don't** 使用负字距，或给中文 `em` 用斜体。
-- **Don't** 让等宽字体出现在正文、标题或导航里。
-- **Don't** 在页面框架里使用 hue / 语义色；也不要在 teal 之外引入第二个界面强调色。
-- **Don't** 圆角超过 4px，或使用胶囊形（图表节点也一样）。
-- **Don't** 在一张图里用颜色区分兄弟节点，或把节点文字染成描边色；不要引入调色板之外的饱和蓝紫。
+- **Don't** build lists out of shadowed cards, nest cards inside cards, or float navigation cards on hover.
+- **Don't** place eyebrows or kickers above titles.
+- **Don't** draw colored left bars (`> 1px`) beside blockquotes, callouts, or list items.
+- **Don't** use frosted glass, background/text gradients, or glowing outlines.
+- **Don't** substitute emoji or Unicode symbols for vector icons.
+- **Don't** apply negative letter-spacing or oblique italics to Chinese text.
+- **Don't** leak monospace type into body copy, headings, or navigation chrome.
+- **Don't** pull categorical or semantic diagram hues into page chrome, or introduce any second UI accent alongside teal.
+- **Don't** use corner radii larger than `4px` or pill capsules — including inside diagram nodes.
+- **Don't** color-code sibling diagram nodes solely for contrast, dye node text to match stroke colors, or introduce saturated colors outside the ink palette.
