@@ -32,7 +32,7 @@ packages/astro-wisp/src/explainers/
 1. **算法是 `(input) => Step[]` 形式的纯函数**，预先生成全部步骤；命令式算法用 `record(initial, (state, emit) => …)` 录制（每次 emit 保存深拷贝）。每一步都附带一句 caption，例如“C[1][0] = 3×5 + 4×7 = 43”。算法必须有 vitest 单测。
 2. **渲染器是 `(step) => SVG`**，没有内部业务状态。格子高亮由 Motion 做透明度过渡；reduced-motion 下直接切换。
 3. **颜色**：只能使用 `Tone`（`toneStroke` / `toneFill`）或 `var(--wisp-*)`，例如矩阵 A 用 `tone="q"`。禁止写十六进制颜色。
-4. **尺寸**：SVG 通过 `Stage` 输出（viewBox、宽度 100%、窄屏横向滚动），外壳 `Explainer` 默认放在 `.wisp-wide` 中。移动端每个格子至少 28px。
+4. **尺寸**：SVG 通过 `Stage` 输出（viewBox、宽度 100%、窄屏横向滚动），外壳 `Explainer` 默认与正文栏齐宽（`wide = false`，超宽舞台按需显式传 `wide`）。移动端每个格子至少 28px。
 5. **通用性**：新原语（箭头、指针、柱状条……）在两个以上讲解中会用到时，加进主题的积木，而不是在讲解里各写一份。
 
 ## 2. Player 交互约定
@@ -81,4 +81,4 @@ import MatMul from './MatMul';
 
 ## 5. 性能边界
 
-SVG 元素数量控制在 2000 以内。超过时（大型 heatmap 等）改用 `<canvas>`，并由该组件自己读取 CSS 变量（`getComputedStyle`），在 `data-theme` 变化时重绘（用 MutationObserver 监听）。
+SVG 元素数量控制在 2000 以内。超过时（大型 heatmap 等）改用 `<canvas>`，并由该组件自己读取 CSS 变量（`getComputedStyle`），在主题切换（`<meta name="color-scheme">` 变更或系统配色变化）时重绘。

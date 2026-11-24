@@ -2,7 +2,7 @@
   "name": "astro-wisp",
   "version": "0.6.4",
   "type": "module",
-  "description": "Wisp —— 安静好读的技术博客主题（Astro 集成）",
+  "description": "Wisp —— 专注中文长文阅读的技术博客主题（Astro 集成）",
   "author": "xingcanlee",
   "license": "MIT",
   "homepage": "https://github.com/xingcanlee/astro-wisp#readme",

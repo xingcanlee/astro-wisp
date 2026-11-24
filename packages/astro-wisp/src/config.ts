@@ -11,7 +11,7 @@ export const wispConfigSchema = z.object({
   site: z
     .object({
       title: z.string().default('Wisp'),
-      description: z.string().default('安静好读的技术博客'),
+      description: z.string().default('专注长文阅读的技术博客'),
       author: z.string().default(''),
       authorGithub: z.url().optional(),
       lang: z.string().default('zh-CN'),

@@ -1,6 +1,6 @@
 # Wisp
 
-**安静好读的技术博客主题。**
+**专注中文长文阅读的技术博客主题。**
 
 Wisp 是一个 Astro 7 集成（npm 包 `astro-wisp`），基于 Tailwind CSS 4 和 MDX，不加载运行时框架。它专注于文字的阅读体验：中文排版、代码与公式、构建期生成的图表，以及少量按需加载的交互讲解。
 
@@ -39,16 +39,16 @@ Wisp 是一个 Astro 7 集成（npm 包 `astro-wisp`），基于 Tailwind CSS 4 
 - **Markdown / MDX**：标准 Markdown 与 MDX，脚注（渲染为文末的引用列表，悬停预览）、任务列表、表格、标题锚点和目录。
 - **公式**：KaTeX，构建期渲染，只有含公式的文章才加载样式。
 - **代码**：Shiki 双主题（浅色、深色自动切换），可选行号、一键复制和自动换行开关；超过 24 行的代码块默认折叠，可用 `fold` / `nofold` / `fold=N` 单独控制。
-- **阅读体验**：宽屏目录可收起并记住状态，h3 分组随阅读位置自动展开；顶部阅读进度条、返回顶部按钮；Lucide 图标（构建期内联）；滚动条随主题配色。
+- **阅读体验**：左侧系列栏默认收起并记住状态，顶栏书眉显示章节位置；右侧目录可收起且随阅读进度高亮（h3 分组自动展开）；纯 CSS 滚动驱动顶部阅读进度条与吸底返回顶部按钮；Lucide 图标（构建期内联）；桌面端无箭头圆角悬浮滚动条随主题配色与悬停/聚焦渐显。
 - **Mermaid**：由 [Pele](https://www.npmjs.com/package/pele) 在构建期渲染为内联 SVG，运行时没有 Mermaid.js。
-- **图表**：Excalidraw 与 draw.io 源文件经 `wisp diagram build` 生成可移植、可主题化的 `.wisp.svg`，题注与「源文件」下载链接同一行，读者可以下载源文件。
-- **交互讲解**：通用的分步讲解积木（`Explainer` / `Player` / `Stage` / `Matrix`、`record()` 录制器，说明与标题支持 `$…$` 行内公式），React 19 + Motion，以 island 形式按需水合。
-- **主题**：浅色、深色、跟随系统三态切换，首屏无闪烁。
-- **中文排版**：字体经 Astro 官方 Fonts API 自托管（Inter、JetBrains Mono、Excalifont），思源黑体按 unicode-range 分片、跨页缓存；全部 OFL 授权，不请求第三方字体服务；中英文间距自动处理，不做负字距。
+- **图表**：Excalidraw 与 draw.io 源文件经 `wisp diagram build` 生成可移植、可主题化的 `.wisp.svg`；桌面端悬停时在图右上角显示「源文件 / 在线打开」细线工具条（触屏及窄屏落于题注下方）；内置全视口纸白 Lightbox，支持舒适区自动放大、光标锚点滚轮缩放、全图体 2D 自由拖拽、触屏捏合与矢量清晰重绘，底部控制条与题注自动显隐。
+- **交互讲解**：通用的分步讲解积木（`Explainer` / `Player` / `Stage` / `Matrix`、`record()` 录制器，说明与标题支持 `$…$` 行内公式），默认与正文栏齐宽（`wide = false`，超宽舞台按需开启 `wide`），基于 React 19 + Motion，以 island 形式按需水合。
+- **主题**：基于原生 `<meta name="color-scheme">` 与 CSS `light-dark()`，默认跟随系统配色，明暗双态一键切换且首屏无闪烁。
+- **中文排版**：字体经 Astro 官方 Fonts API 自托管（Inter、JetBrains Mono、Excalifont），思源黑体按 unicode-range 分片、跨页缓存并受 `fonts.cjkDisplay` 控制（配合垂直度量对齐的 `Wisp CJK Fallback` 回退栈避免加载跳变）；全部 OFL 授权，不请求第三方字体服务；中英文间距自动处理，禁负字距，中文 `em` 用着重号代替斜体，正文贪心折行，标题按自然词与代码标识边界注入 `<wbr>`。
 - **订阅与搜索引擎**：RSS（默认全文）、Sitemap。
-- **无障碍**：跳转链接、语义化结构、键盘可操作的交互组件、尊重 `prefers-reduced-motion`。
+- **无障碍**：跳转链接、语义化结构、键盘可操作的交互组件、尊重 `prefers-reduced-motion` 与 `forced-colors`。
 - **可定制、可升级**：主题以 npm 包分发，`pnpm up astro-wisp` 即可升级；通过配置覆盖组件、调色板、样式和路由，不需要改主题源码。
-- **少量客户端增强**：主题切换、代码复制和图片 Lightbox 使用小型原生脚本，不加载运行时框架；交互讲解组件才按需加载 React。
+- **少量客户端增强**：阅读进度、引用悬停预览（`popover="hint"` + `interestfor`）与返回顶部依赖现代原生 HTML/CSS；主题切换、代码块控制与全视口 Lightbox 使用轻量原生脚本，仅交互讲解组件按需加载 React。
 
 ## 快速开始
 
@@ -207,25 +207,26 @@ export default defineConfig({
 });
 ```
 
-| 选项                 | 类型                     | 默认值               | 说明                                                                                                                  |
-| -------------------- | ------------------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `site.title`         | string                   | `Wisp`               | 站点标题                                                                                                              |
-| `site.description`   | string                   | `安静好读的技术博客` | 站点描述                                                                                                              |
-| `site.author`        | string                   | `""`                 | 作者                                                                                                                  |
-| `site.authorGithub`  | URL                      | —                    | 配置后页脚作者名链接到 GitHub                                                                                         |
-| `site.lang`          | string                   | `zh-CN`              | 站点语言                                                                                                              |
-| `nav`                | `{label, href}[]`        | 归档、标签、关于     | 顶部导航                                                                                                              |
-| `social`             | `{kind, href, label?}[]` | RSS                  | 社交链接，`kind` 可选 github、x、mastodon、bluesky、email、rss、link                                                  |
-| `home.featuredCount` | 整数 ≥ 0                 | `3`                  | 首页精选篇数                                                                                                          |
-| `home.pageSize`      | 整数 ≥ 1                 | `10`                 | 列表每页篇数                                                                                                          |
-| `features.*`         | boolean                  | `true`               | `codeCopy`、`lineNumbers`、`codeWrap`（默认 `false`）、`math`、`mermaid`、`toc`、`diagramDownload`；`codeFold` 为对象 |
-| `mermaid.strict`     | boolean                  | `false`              | `true` 时 Mermaid 渲染失败使构建失败                                                                                  |
-| `rss.fullText`       | boolean                  | `true`               | RSS 输出全文；`false` 只输出摘要                                                                                      |
-| `taxonomy.slugMap`   | Record<string, string>   | `{}`                 | 覆盖标签、分类的 URL 段                                                                                               |
-| `components`         | Record<组件名, 路径>     | `{}`                 | 覆盖主题组件或布局，见下文                                                                                            |
-| `customCss`          | string[]                 | `[]`                 | 追加的样式文件                                                                                                        |
-| `palette`            | 路径或对象               | —                    | 覆盖调色板（与默认值深度合并）                                                                                        |
-| `routes.*`           | boolean                  | `true`               | `home`、`posts`、`archive`、`tags`、`categories`、`about`、`rss`、`notFound`                                          |
+| 选项                 | 类型                                 | 默认值                   | 说明                                                                                                                  |
+| -------------------- | ------------------------------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `site.title`         | string                               | `Wisp`                   | 站点标题                                                                                                              |
+| `site.description`   | string                               | `专注长文阅读的技术博客` | 站点描述                                                                                                              |
+| `site.author`        | string                               | `""`                     | 作者                                                                                                                  |
+| `site.authorGithub`  | URL                                  | —                        | 配置后页脚作者名链接到 GitHub                                                                                         |
+| `site.lang`          | string                               | `zh-CN`                  | 站点语言                                                                                                              |
+| `nav`                | `{label, href}[]`                    | 归档、标签、关于         | 顶部导航                                                                                                              |
+| `social`             | `{kind, href, label?}[]`             | RSS                      | 社交链接，`kind` 可选 github、x、mastodon、bluesky、email、rss、link                                                  |
+| `home.featuredCount` | 整数 ≥ 0                             | `3`                      | 首页精选篇数                                                                                                          |
+| `home.pageSize`      | 整数 ≥ 1                             | `10`                     | 列表每页篇数                                                                                                          |
+| `features.*`         | boolean                              | `true`                   | `codeCopy`、`lineNumbers`、`codeWrap`（默认 `false`）、`math`、`mermaid`、`toc`、`diagramDownload`；`codeFold` 为对象 |
+| `mermaid.strict`     | boolean                              | `false`                  | `true` 时 Mermaid 渲染失败使构建失败                                                                                  |
+| `rss.fullText`       | boolean                              | `true`                   | RSS 输出全文；`false` 只输出摘要                                                                                      |
+| `fonts.cjkDisplay`   | `'swap' \| 'fallback' \| 'optional'` | `'swap'`                 | 思源黑体分片加载策略（配合度量对齐回退栈 `Wisp CJK Fallback`）                                                        |
+| `taxonomy.slugMap`   | Record<string, string>               | `{}`                     | 覆盖标签、分类的 URL 段                                                                                               |
+| `components`         | Record<组件名, 路径>                 | `{}`                     | 覆盖主题组件或布局，见下文                                                                                            |
+| `customCss`          | string[]                             | `[]`                     | 追加的样式文件                                                                                                        |
+| `palette`            | 路径或对象                           | —                        | 覆盖调色板（与默认值深度合并）                                                                                        |
+| `routes.*`           | boolean                              | `true`                   | `home`、`posts`、`archive`、`tags`、`categories`、`about`、`rss`、`notFound`                                          |
 
 数组（如 `nav`、`social`）整体替换，对象逐字段深度合并。非法值会在启动时报错并指出字段路径。完整说明见 [docs/guide/configuration.md](docs/guide/configuration.md)。
 
@@ -293,7 +294,7 @@ export default defineConfig({
 
 ## 外观规范
 
-主题的视觉规范（字体、配色、圆角、间距、组件样式、品牌原则）写在 [DESIGN.md](DESIGN.md)，随 npm 包发布，安装后位于 `node_modules/astro-wisp/DESIGN.md`。站点或 Agent 用 `customCss` 或覆盖组件改样式之前，先读它。
+主题的英文视觉规范（字体、配色、圆角、间距、组件样式、品牌原则）写在 [DESIGN.md](DESIGN.md)，随 npm 包发布，安装后位于 `node_modules/astro-wisp/DESIGN.md`。站点或 Agent 用 `customCss` 或覆盖组件改样式之前，先读它。
 
 ## 给 AI Agent
 

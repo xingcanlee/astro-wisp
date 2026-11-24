@@ -37,13 +37,13 @@ export default defineConfig({
 
 ## site
 
-| 字段                | 类型   | 默认值               | 说明                                                         |
-| ------------------- | ------ | -------------------- | ------------------------------------------------------------ |
-| `site.title`        | string | `Wisp`               | 站点标题，用于页头和 RSS 频道名                              |
-| `site.description`  | string | `安静好读的技术博客` | 站点描述，用于首页和 RSS                                     |
-| `site.author`       | string | `""`                 | 作者名                                                       |
-| `site.authorGithub` | URL    | —                    | 配置后页脚作者名链接到 GitHub                                |
-| `site.lang`         | string | `zh-CN`              | 站点语言，默认写入 `<html lang>`；交互组件的界面语言也跟随它 |
+| 字段                | 类型   | 默认值                   | 说明                                                         |
+| ------------------- | ------ | ------------------------ | ------------------------------------------------------------ |
+| `site.title`        | string | `Wisp`                   | 站点标题，用于页头和 RSS 频道名                              |
+| `site.description`  | string | `专注长文阅读的技术博客` | 站点描述，用于首页和 RSS                                     |
+| `site.author`       | string | `""`                     | 作者名                                                       |
+| `site.authorGithub` | URL    | —                        | 配置后页脚作者名链接到 GitHub                                |
+| `site.lang`         | string | `zh-CN`                  | 站点语言，默认写入 `<html lang>`；交互组件的界面语言也跟随它 |
 
 正式域名不在这里配置，使用 Astro 自己的 [`site`](https://docs.astro.build/en/reference/configuration-reference/#site) 选项（见上例）。未设置时构建会给出警告，并暂用 `https://example.com`。
 
@@ -91,6 +91,12 @@ export default defineConfig({
 | 字段           | 类型    | 默认值 | 说明                                                                                                                       |
 | -------------- | ------- | ------ | -------------------------------------------------------------------------------------------------------------------------- |
 | `rss.fullText` | boolean | `true` | `true` 时 `/rss.xml` 输出全文；`false` 时只输出摘要。含交互组件的文章无法在 RSS 中渲染，两种设置下都会降级为摘要加原文链接 |
+
+## fonts
+
+| 字段               | 类型                                 | 默认值   | 说明                                                                                                                   |
+| ------------------ | ------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `fonts.cjkDisplay` | `'swap' \| 'fallback' \| 'optional'` | `'swap'` | 控制思源黑体（Noto Sans SC）分片 CSS 的 `font-display` 策略；正文栈已通过 `Wisp CJK Fallback` 对齐行高，可抑制加载跳变 |
 
 ## taxonomy
 

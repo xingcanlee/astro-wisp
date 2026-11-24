@@ -1,6 +1,6 @@
 # astro-wisp
 
-Wisp —— 安静好读的技术博客主题（Astro 7 集成 + Tailwind 4 + MDX + Pele + React islands）。
+Wisp —— 专注中文长文阅读的技术博客主题（Astro 7 集成 + Tailwind 4 + MDX + Pele + React islands）。
 
 ## 仓库结构
 

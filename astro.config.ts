@@ -9,7 +9,7 @@ export default defineConfig({
     wisp({
       site: {
         title: 'Wisp',
-        description: '安静好读的技术博客',
+        description: '专注长文阅读的技术博客',
         author: 'xingcanlee',
         lang: 'zh-CN',
       },

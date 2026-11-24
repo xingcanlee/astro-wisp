@@ -1,5 +1,5 @@
 /**
- * astro-wisp —— 安静好读的技术博客主题（Astro 集成）。
+ * astro-wisp —— 专注中文长文阅读的技术博客主题（Astro 集成）。
  *
  * ```ts
  * // astro.config.ts
