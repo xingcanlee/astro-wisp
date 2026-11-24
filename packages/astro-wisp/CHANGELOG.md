@@ -2,6 +2,17 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.7.0 (2026-11-25)
+
+### 破坏性变更
+
+- `astro-wisp/explainers` 移除旧播放器导出 `Player`、`PlayerProps`、`usePlayer`、`PlayerApi`、`PlayerIcon`、`PlayerLabels`、`SPEEDS`、`BASE_INTERVAL_MS`、`stepDelay`、`nextSpeed`、`Speed`，统一收口到新版 `Explainer`、`useExplainer`、`ExplainerIcon` 与 `ExplainerLabels`。
+
+### 新增与变更
+
+- **舞台优先交互讲解器（`Explainer`）**：重构交互讲解器外壳为顶栏工具条 + 顶部语义阶段 Tab / 发丝线刻度进度条 + 正文舞台 + 原生 `<dialog>` 全屏视图，新增 `stageMinHeight`（消除跨步骤高度跳变）、`ExplainerStageContext`（暴露 `replayKey` / `expanded` / `reducedMotion` / `total`）、`MAX_TABS`、`Reserve`、`StepCount` 与 `useExplainer` 状态机。
+- **步骤时间线协议扩展**：`Step<S>` 新增 `label?: string` 与 `duration?: number`，`record()` 第二个参数支持 `EmitOptions`（`focus` / `label` / `duration`），同步更新 `DESIGN.md`、讲解器文档与单元/E2E 测试。
+
 ## 0.6.4 (2026-11-24)
 
 ### 新增
