@@ -222,7 +222,7 @@
   "title": "连线 · 梯度/残差"
  },
  {
-  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"\" style=\"endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;\" edge=\"1\" parent=\"1\"><mxGeometry width=\"96\" relative=\"1\" as=\"geometry\"><mxPoint as=\"sourcePoint\"/><mxPoint x=\"96\" as=\"targetPoint\"/></mxGeometry></mxCell></root></mxGraphModel>",
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"\" style=\"endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=10;\" edge=\"1\" parent=\"1\"><mxGeometry width=\"96\" relative=\"1\" as=\"geometry\"><mxPoint as=\"sourcePoint\"/><mxPoint x=\"96\" as=\"targetPoint\"/></mxGeometry></mxCell></root></mxGraphModel>",
   "w": 96,
   "h": 8,
   "title": "连线 · 直角折线"

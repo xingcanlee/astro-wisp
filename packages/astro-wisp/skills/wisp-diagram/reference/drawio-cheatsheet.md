@@ -56,13 +56,13 @@ rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;s
 
 ## 连线（edge）
 
-| 用途                  | 样式                                                                                                                                                                                            |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 实线                  | `endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;`                                                                                                                                 |
-| 带标签                | 在实线样式后加 `fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;`，`value="标签"`                                                                                                                |
-| 虚线/可选             | `endArrow=classic;html=1;strokeColor=#5c6067;strokeWidth=1.25;dashed=1;`                                                                                                                        |
-| 残差/梯度（玫红虚线） | `edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeColor=#984646;strokeWidth=1.25;dashed=1;fontFamily=Inter;fontSize=12;fontColor=#984646;` |
-| 直角折线              | 加 `edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;`                                                                                                                   |
+| 用途                  | 样式                                                                                                                                                                                          |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 实线                  | `endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;`                                                                                                                               |
+| 带标签                | 在实线样式后加 `fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;`，`value="标签"`                                                                                                              |
+| 虚线/可选             | `endArrow=classic;html=1;strokeColor=#5c6067;strokeWidth=1.25;dashed=1;`                                                                                                                      |
+| 残差/梯度（玫红虚线） | `edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=10;endArrow=classic;html=1;strokeColor=#984646;strokeWidth=1.25;dashed=1;fontFamily=Inter;fontSize=12;fontColor=#984646;` |
+| 直角折线              | 加 `edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=10;`（`<= 20px` 紧凑间距用 `jettySize=6`）                                                                             |
 
 - 连线必须带 `source` 和 `target`（节点 id），`<mxGeometry relative="1" as="geometry"/>`。
 - 绕行的残差线：加 `exitX=1;exitY=0.5;entryX=1;entryY=0.5;`，并在 `mxGeometry` 里用 `<Array as="points">` 给出拐点（x 落在节点右侧 40px 处，如 296）。
