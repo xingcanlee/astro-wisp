@@ -28,7 +28,7 @@ const SAFE_TEX_CONFIG_MODULES = [
   'mathjax-full/js/input/tex/cases/CasesConfiguration.js',
   'mathjax-full/js/input/tex/mathtools/MathtoolsConfiguration.js',
   'mathjax-full/js/input/tex/newcommand/NewcommandConfiguration.js',
-  'mathjax-full/js/input/tex/textmacros/TextmacrosConfiguration.js',
+  'mathjax-full/js/input/tex/textmacros/TextMacrosConfiguration.js',
   'mathjax-full/js/input/tex/upgreek/UpgreekConfiguration.js',
 ] as const;
 
