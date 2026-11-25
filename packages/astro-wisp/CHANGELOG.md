@@ -2,6 +2,19 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.7.1 (2026-11-25)
+
+### 新增与变更
+
+- **Pele 图表内联公式渲染**：`remark-pele` 新增 `mathjax-full` 渲染支持（受 `features.math` 控制），Mermaid 节点与边标签内的 `$$...$$` 行内公式在构建期转为与正文一致的矢量排版。
+- **`astro dev` 图表产物热重载**：开发服务器自动监听 `.wisp.svg` 与 `diagrams.manifest.json` 的新增、修改和删除事件并触发模块图失效与全页刷新，运行 `pnpm diagram build` 后无需手动重启 `pnpm dev`。
+- **`wisp-diagram` 论文级图元库与正交路由预设**：素材库与速查表新增降维/升维梯形、算子圆（`⊕` / `⊗` / `·`）、KV/HBM 存储圆柱、路由决策菱形、多头叠卡、微缩矩阵与 MoE 专家激活条带；正交折线模板默认补充 `orthogonalLoop=1;jettySize=auto;` 增益参数。
+
+### 修复
+
+- **内联 `.wisp.svg` CSS 级联优先级与令牌缺失**：`prepareSvg()` 内联 SVG 时剥离独立预览用的无层 `<style data-wisp-vars="1">` 块（磁盘上的独立 `.wisp.svg` 文件仍完整保留以便离线查看），并在 `diagram.css` 补全 `--wd-subtle`、`--wd-surface-2`、`--wd-accent` 与 `--wd-font-mono`，修复无层内联样式压过 `@layer utilities` 导致 Windows 图表汉字回落到微软雅黑及手动切换明暗主题时图表色板不跟随的问题。
+- **draw.io 行内公式视觉放大补偿**：`diagram-figure.css` 与 `wisp-diagram` 导出器统一对 `svg.wisp-d mjx-container` 设 `font-size: 0.85em`，抵消 MathJax SVG `ex` 基准（`0.442em`）与 Inter x-height（`0.545em`）造成的视觉放大。
+
 ## 0.7.0 (2026-11-25)
 
 ### 破坏性变更
