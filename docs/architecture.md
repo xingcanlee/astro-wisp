@@ -11,6 +11,7 @@
 | tailwindcss, @tailwindcss/vite, @tailwindcss/typography  | ^4.3 / ^0.5                                 | 样式                                                                                                            |
 | remark-math, rehype-katex, katex                         | ^6 / ^7 / ^0.19                             | 公式                                                                                                            |
 | pele                                                     | ^1.13（锁定次版本，布局输出可能随版本变化） | Mermaid → SVG                                                                                                   |
+| mathjax-full                                             | ^3.2                                        | 构建期把 Mermaid 标签内 `$$...$$` 同步渲染为自包含 SVG（零客户端 JS）                                           |
 | motion                                                   | ^14                                         | 交互组件动画                                                                                                    |
 | @fontsource-variable/{inter,noto-sans-sc,jetbrains-mono} | ^5                                          | 字体文件来源：Inter / JetBrains Mono 经 Astro Fonts API（npm provider）注册，思源黑体直接引入 CSS（见 ADR D18） |
 | 开发依赖：svgo、subset-font、playwright、vitest、tsx     |                                             | 图表流水线、测试                                                                                                |
@@ -39,7 +40,7 @@ astro-wisp/
 │     ├─ layouts/{Base,Post,Page}.astro        # 可覆盖；Base 与 Header 接收可选的 running prop（书眉）
 │     ├─ components/*.astro          # 可覆盖
 │     ├─ plugins/                    # remark-pele、remark-diagram、remark-reading-time、remark-has-math、rehype-a11y
-│     ├─ lib/                        # render-diagram（图表渲染与 manifest 只读校验）、diagram-assets、icons
+│     ├─ lib/                        # render-diagram（图表渲染与 manifest 只读校验）、pele-math（Mermaid 公式 SVG）、diagram-assets、icons
 │     ├─ utils/                      # getPosts、taxonomy、date（astro-wisp/utils）
 │     ├─ tokens/                     # palette 读取 / 合并、令牌生成、对比度检查
 │     ├─ styles/                     # layers.css、global.css、prose/code/figure/…；tokens/pele/diagram.css 为生成文件
@@ -105,12 +106,12 @@ rehype:  (Shiki 内置高亮 + Wisp transformers) → rehype-katex → rehype-fi
 - **Astro 7 默认的 Markdown 处理器是 Sätteri**，它不运行 remark/rehype 插件。Wisp 在 integration 中显式设置 `markdown.processor = unified({...})`（来自 `@astrojs/markdown-remark`）。插件只能通过这个处理器注册，不能写在旧的 `markdown.remarkPlugins` 里。
 - `remark-pele` 必须在 Shiki 之前处理 `mermaid` 代码块。remark 阶段天然早于高亮，满足这一要求。
 - 插件由集成（`packages/astro-wisp/src/integration.ts`）统一注册。MDX 继承同一套 markdown 配置。
-- **remark-pele**：`render(code)` → `<figure class="wisp-figure wisp-pele" role="img" aria-label="…"><div class="pele">SVG</div></figure>`。出错时，dev 环境退化为代码块并打印警告；`mermaid.strict: true` 时构建失败。aria-label 依次取 `accTitle`、`accDescr`、图类型名。
+- **remark-pele**：`render(code)` → `<figure class="wisp-figure wisp-pele" role="img" aria-label="…"><div class="pele">SVG</div></figure>`。开启 `features.math` 时传入 `peleMath`（基于 `mathjax-full` `fontCache: 'none'`），把标签内的 `$$...$$` 渲染为内联 `<svg class="pele-math">`。出错时，dev 环境退化为代码块并打印警告；`mermaid.strict: true` 时构建失败。aria-label 依次取 `accTitle`、`accDescr`、图类型名。
 - **remark-reading-time**：统计 CJK 字符数 ÷ 350 + 西文词数 ÷ 200，代码块按 0.3 的权重计入，向上取整，最少 1 分钟。结果写入 `remarkPluginFrontmatter.readingTime`。
 - **remark-has-math**：检测到 math 节点时写入 `hasMath: true`，Post 布局据此按需引入 `katex.css`。
 - **TOC**：使用 `render()` 返回的 headings，取 depth 2–3；标题锚点 id 由 Astro 的 Markdown 管线生成（内部使用 github-slugger），支持中文。含行内公式的标题例外：Astro 在 KaTeX 渲染之后取文字会得到乱码，`remark-heading-text` 改用源码生成 id（公式只留 ASCII 字母数字，如 `含公式 $H^{res}$ 的标题` → `含公式-hres-的标题`）；不含公式的标题 id 不变。
 - **remark-cjk-friendly**：`**文字。**后文` 这类紧挨全角标点的强调也能闭合（CommonMark 的分界规则不认 CJK 标点）；`.md` 与 `.mdx` 都生效。
-- **`.md` 与 `.mdx` 一致**：两者用同一个 processor 的插件。区别只在缓存：内容层把 `.md` 渲染好的 HTML 存在 `.astro/data-store.json`，只有文件内容或 astro 配置的 JSON 摘要变化时才重渲染，而插件是函数、进不了摘要。所以 remark 列表第一项是一个只带「管线指纹」选项的空插件（`pipelineDigest()`：主题插件 / Shiki transformer 源码、主题版本、pele / katex 等依赖版本的哈希）——升级主题后摘要变化，内容层整体失效。`integration.test.ts` 用同一段源码比较两条路径的产物。
+- **`.md` 与 `.mdx` 一致**：两者用同一个 processor 的插件。区别只在缓存：内容层把 `.md` 渲染好的 HTML 存在 `.astro/data-store.json`，只有文件内容或 astro 配置的 JSON 摘要变化时才重渲染，而插件是函数、进不了摘要。所以 remark 列表第一项是一个只带「管线指纹」选项的空插件（`pipelineDigest()`：主题插件 / Shiki transformer 源码、主题版本、pele / mathjax-full / katex 等依赖版本的哈希）——升级主题后摘要变化，内容层整体失效。`integration.test.ts` 用同一段源码比较两条路径的产物。
 - **横向溢出与键盘**：rehype-a11y（表格、公式）和 shiki.ts（代码块）写 `tabindex=0 data-wisp-tab`，这是无 JS 时的回落；Base 布局的脚本首帧接管，只给确实溢出的容器保留 tabindex 和「…，可横向滚动」的名称。
 
 ## 5. 路由

@@ -81,7 +81,7 @@ def test_clean_inlines_math_layout():
            '<mjx-container class="MathJax" jax="SVG" display="true"><svg width="2ex"></svg></mjx-container></div></foreignObject></svg>')
     out = clean_drawio_svg(raw)
     assert "MJX-SVG-styles" not in out
-    assert '<mjx-container class="MathJax" jax="SVG" style="display:inline-block;margin:0 0.2em;line-height:0"><svg style="display:inline;overflow:visible;vertical-align:-0.6ex" width="1ex">' in out
+    assert '<mjx-container class="MathJax" jax="SVG" style="display:inline-block;margin:0 0.2em;line-height:0;font-size:0.85em"><svg style="display:inline;overflow:visible;vertical-align:-0.6ex" width="1ex">' in out
     assert 'display="true" style="display:block;' in out
     assert clean_drawio_svg(out) == out  # 幂等
 

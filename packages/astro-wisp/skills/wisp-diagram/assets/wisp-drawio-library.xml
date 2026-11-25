@@ -222,7 +222,7 @@
   "title": "连线 · 梯度/残差"
  },
  {
-  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"\" style=\"endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;edgeStyle=orthogonalEdgeStyle;rounded=1;\" edge=\"1\" parent=\"1\"><mxGeometry width=\"96\" relative=\"1\" as=\"geometry\"><mxPoint as=\"sourcePoint\"/><mxPoint x=\"96\" as=\"targetPoint\"/></mxGeometry></mxCell></root></mxGraphModel>",
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"\" style=\"endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;\" edge=\"1\" parent=\"1\"><mxGeometry width=\"96\" relative=\"1\" as=\"geometry\"><mxPoint as=\"sourcePoint\"/><mxPoint x=\"96\" as=\"targetPoint\"/></mxGeometry></mxCell></root></mxGraphModel>",
   "w": 96,
   "h": 8,
   "title": "连线 · 直角折线"
@@ -244,5 +244,71 @@
   "w": 160,
   "h": 24,
   "title": "注释文字"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"降维投影\" style=\"shape=trapezoid;perimeter=trapezoidPerimeter;whiteSpace=wrap;html=1;fixedSize=1;size=16;flipV=1;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=1.25;rounded=0;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;\" vertex=\"1\" parent=\"1\"><mxGeometry width=\"144\" height=\"48\" as=\"geometry\"/></mxCell></root></mxGraphModel>",
+  "w": 144,
+  "h": 48,
+  "title": "论文 · 降维投影梯形 (blue)"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"升维投影\" style=\"shape=trapezoid;perimeter=trapezoidPerimeter;whiteSpace=wrap;html=1;fixedSize=1;size=16;fillColor=#e9f5e9;strokeColor=#2c522d;strokeWidth=1.25;rounded=0;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;\" vertex=\"1\" parent=\"1\"><mxGeometry width=\"144\" height=\"48\" as=\"geometry\"/></mxCell></root></mxGraphModel>",
+  "w": 144,
+  "h": 48,
+  "title": "论文 · 升维投影梯形 (green)"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"\" style=\"shape=orEllipse;perimeter=ellipsePerimeter;backgroundOutline=1;whiteSpace=wrap;html=1;fillColor=#e9f5e9;strokeColor=#2c522d;strokeWidth=1.25;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontStyle=1;fontColor=#1d1d1f;\" vertex=\"1\" parent=\"1\"><mxGeometry width=\"32\" height=\"32\" as=\"geometry\"/></mxCell></root></mxGraphModel>",
+  "w": 32,
+  "h": 32,
+  "title": "论文 · 残差相加 ⊕"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"\" style=\"shape=sumEllipse;perimeter=ellipsePerimeter;backgroundOutline=1;whiteSpace=wrap;html=1;fillColor=#fbf2df;strokeColor=#7b5518;strokeWidth=1.25;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontStyle=1;fontColor=#1d1d1f;\" vertex=\"1\" parent=\"1\"><mxGeometry width=\"32\" height=\"32\" as=\"geometry\"/></mxCell></root></mxGraphModel>",
+  "w": 32,
+  "h": 32,
+  "title": "论文 · 门控逐元素乘 ⊗"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"·\" style=\"ellipse;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1.25;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontStyle=1;fontColor=#1d1d1f;\" vertex=\"1\" parent=\"1\"><mxGeometry width=\"32\" height=\"32\" as=\"geometry\"/></mxCell></root></mxGraphModel>",
+  "w": 32,
+  "h": 32,
+  "title": "论文 · 点积 / 算子圆 ·"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"KV / HBM 存储\" style=\"shape=datastore;whiteSpace=wrap;html=1;fillColor=#e9f5e9;strokeColor=#2c522d;strokeWidth=1.25;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;\" vertex=\"1\" parent=\"1\"><mxGeometry width=\"128\" height=\"72\" as=\"geometry\"/></mxCell></root></mxGraphModel>",
+  "w": 128,
+  "h": 72,
+  "title": "论文 · KV / HBM 存储圆柱"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"路由门控\" style=\"shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fillColor=#fbf2df;strokeColor=#7b5518;strokeWidth=1.25;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;\" vertex=\"1\" parent=\"1\"><mxGeometry width=\"112\" height=\"56\" as=\"geometry\"/></mxCell></root></mxGraphModel>",
+  "w": 112,
+  "h": 56,
+  "title": "论文 · 路由决策菱形"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"\" style=\"rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=1.25;opacity=50;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"8\" y=\"0\" width=\"144\" height=\"48\" as=\"geometry\"/></mxCell><mxCell id=\"3\" value=\"多头叠卡\" style=\"rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=1.25;opacity=100;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"0\" y=\"8\" width=\"144\" height=\"48\" as=\"geometry\"/></mxCell></root></mxGraphModel>",
+  "w": 152,
+  "h": 56,
+  "title": "论文 · 多头叠卡 (2层)"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=1;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"0\" y=\"0\" width=\"16\" height=\"16\" as=\"geometry\"/></mxCell><mxCell id=\"3\" value=\"\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=1;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"16\" y=\"0\" width=\"16\" height=\"16\" as=\"geometry\"/></mxCell><mxCell id=\"4\" value=\"\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=1;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"32\" y=\"0\" width=\"16\" height=\"16\" as=\"geometry\"/></mxCell><mxCell id=\"5\" value=\"\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#fbf2df;strokeColor=#7b5518;strokeWidth=1.5;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"48\" y=\"0\" width=\"16\" height=\"16\" as=\"geometry\"/></mxCell><mxCell id=\"6\" value=\"\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=1;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"0\" y=\"16\" width=\"16\" height=\"16\" as=\"geometry\"/></mxCell><mxCell id=\"7\" value=\"\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=1;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"16\" y=\"16\" width=\"16\" height=\"16\" as=\"geometry\"/></mxCell><mxCell id=\"8\" value=\"\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=1;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"32\" y=\"16\" width=\"16\" height=\"16\" as=\"geometry\"/></mxCell><mxCell id=\"9\" value=\"\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#fbf2df;strokeColor=#7b5518;strokeWidth=1.5;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"48\" y=\"16\" width=\"16\" height=\"16\" as=\"geometry\"/></mxCell></root></mxGraphModel>",
+  "w": 64,
+  "h": 32,
+  "title": "论文 · 微缩张量矩阵块 (2×4)"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"\" style=\"rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"0\" y=\"0\" width=\"16\" height=\"48\" as=\"geometry\"/></mxCell><mxCell id=\"3\" value=\"\" style=\"rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=2;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"24\" y=\"0\" width=\"16\" height=\"48\" as=\"geometry\"/></mxCell><mxCell id=\"4\" value=\"\" style=\"rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;strokeColor=#5c6067;strokeWidth=1;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"48\" y=\"0\" width=\"16\" height=\"48\" as=\"geometry\"/></mxCell><mxCell id=\"5\" value=\"\" style=\"rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e9f2fb;strokeColor=#2f5783;strokeWidth=2;shadow=0;container=0;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"72\" y=\"0\" width=\"16\" height=\"48\" as=\"geometry\"/></mxCell></root></mxGraphModel>",
+  "w": 88,
+  "h": 48,
+  "title": "论文 · MoE 专家激活条带 (4槽)"
+ },
+ {
+  "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"2\" value=\"标签\" style=\"endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;labelBackgroundColor=#ffffff;\" edge=\"1\" parent=\"1\"><mxGeometry width=\"96\" relative=\"1\" as=\"geometry\"><mxPoint as=\"sourcePoint\"/><mxPoint x=\"96\" as=\"targetPoint\"/></mxGeometry></mxCell></root></mxGraphModel>",
+  "w": 96,
+  "h": 8,
+  "title": "连线 · 白底内联标签"
  }
 ]</mxlibrary>

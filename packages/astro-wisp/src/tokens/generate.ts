@@ -166,10 +166,14 @@ export function genDiagram(p: Palette = defaultPalette): string {
   --wd-bg: var(--wisp-bg);
   --wd-fg: var(--wisp-fg);
   --wd-muted: var(--wisp-muted);
+  --wd-subtle: var(--wisp-subtle);
   --wd-border: var(--wisp-border);
   --wd-surface: var(--wisp-surface);
+  --wd-surface-2: var(--wisp-surface-2);
+  --wd-accent: var(--wisp-accent);
 ${hues}
   --wd-font-sans: var(--wisp-font-sans);
+  --wd-font-mono: var(--wisp-font-mono);
   --wd-font-hand: var(--wisp-font-hand);
 }`;
   return `${HEADER}

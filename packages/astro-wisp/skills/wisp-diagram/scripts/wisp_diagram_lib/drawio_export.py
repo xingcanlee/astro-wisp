@@ -239,7 +239,11 @@ def clean_drawio_svg(svg: str) -> str:
         if re.search(r'\bstyle="[^"]*display:', attrs):
             return m.group(0)
         block = re.search(r'\bdisplay="true"', attrs) is not None
-        box = "display:block;margin:0.5em 0;text-align:center;line-height:0" if block else "display:inline-block;margin:0 0.2em;line-height:0"
+        box = (
+            "display:block;margin:0.5em 0;text-align:center;line-height:0;font-size:0.85em"
+            if block
+            else "display:inline-block;margin:0 0.2em;line-height:0;font-size:0.85em"
+        )
         if re.search(r'\sstyle="', svg_attrs):
             svg_attrs = re.sub(r'\sstyle="([^"]*)"', lambda t: f' style="display:inline;overflow:visible;{t.group(1)}"', svg_attrs, count=1)
         else:

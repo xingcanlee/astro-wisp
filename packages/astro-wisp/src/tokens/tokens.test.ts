@@ -95,7 +95,11 @@ describe('生成', () => {
     const css = genDiagram();
     expect(css).toContain('@layer utilities {');
     expect(css).toContain('.wisp-d {');
+    expect(css).toContain('--wd-subtle: var(--wisp-subtle);');
+    expect(css).toContain('--wd-surface-2: var(--wisp-surface-2);');
+    expect(css).toContain('--wd-accent: var(--wisp-accent);');
     expect(css).toContain('--wd-blue-fill: var(--wisp-hue-blue-fill);');
+    expect(css).toContain('--wd-font-mono: var(--wisp-font-mono);');
     expect(css).toContain('--wd-font-hand: var(--wisp-font-hand);');
   });
   it('skills 副本与源一致', () => {

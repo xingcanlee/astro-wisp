@@ -271,8 +271,9 @@ export function prepareSvg(
   const rootMatch = /<svg\b[^>]*>/i.exec(out);
   if (!rootMatch) throw new DiagramProblem('产物不是 SVG');
 
-  // 1. 清理旧版 drawio-cli 产物遗留的 `.MathJax svg{shape-rendering:crispEdges}`（避免关闭矢量抗锯齿并污染全页）
+  // 1. 清理独立 SVG 自带的变量表与旧版 drawio-cli 遗留的 `.MathJax svg{shape-rendering:crispEdges}`（避免压过 @layer utilities 与关闭矢量抗锯齿）
   out = out
+    .replace(/<style\b[^>]*\bdata-wisp-vars\b[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/\.MathJax[\w-]*\s+svg\s*\{\s*shape-rendering\s*:\s*crispEdges\s*;?\s*\}/gi, '')
     .replace(/<style\b[^>]*>\s*<\/style>/gi, '')
     .replace(/<defs\b[^>]*>\s*<\/defs>/gi, '');

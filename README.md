@@ -134,12 +134,12 @@ frontmatter 字段（`astro-wisp/content` 的 `postsSchema()`，可用 `extend` 
 | 概念图、示意图（手绘风格）       | Excalidraw     | `*.excalidraw`（JSON）   |
 | 精确排版的结构图、多页架构图     | draw.io        | `*.drawio`（未压缩 XML） |
 
-Mermaid：
+Mermaid（节点与边标签内可用 `$$...$$` 写 LaTeX 公式，`features.math` 开启时构建期渲染为内联 SVG）：
 
 ````markdown
 ```mermaid
 flowchart LR
-    A["输入"] --> B["输出"]
+    A["输入 $$X$$"] --> B["输出 $$Y$$"]
 ```
 ````
 

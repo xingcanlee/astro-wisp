@@ -124,7 +124,7 @@ sequenceDiagram
 ```
 ````
 
-Mermaid 代码块在构建期由 Pele 渲染为内联 SVG，没有运行时代码。Mermaid 渲染失败时，开发环境会退化为普通代码块并打印警告；`mermaid.strict: true` 时构建会失败。布局与 Mermaid.js 略有不同。
+Mermaid 代码块在构建期由 Pele 渲染为内联 SVG，没有运行时代码。节点与边标签内支持用 `$$...$$` 写 LaTeX 公式（如 `A["索引分数 $$I_{t,s}$$"]`），开启 `features.math` 时会在构建期渲染为自包含内联矢量 SVG。Mermaid 渲染失败时，开发环境会退化为普通代码块并打印警告；`mermaid.strict: true` 时构建会失败。布局与 Mermaid.js 略有不同。
 
 ### 图片与图表
 

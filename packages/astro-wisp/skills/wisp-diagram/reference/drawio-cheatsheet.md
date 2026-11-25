@@ -56,13 +56,13 @@ rounded=1;absoluteArcSize=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f4f2;s
 
 ## 连线（edge）
 
-| 用途                  | 样式                                                                                                                                                            |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 实线                  | `endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;`                                                                                                 |
-| 带标签                | 在实线样式后加 `fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;`，`value="标签"`                                                                                |
-| 虚线/可选             | `endArrow=classic;html=1;strokeColor=#5c6067;strokeWidth=1.25;dashed=1;`                                                                                        |
-| 残差/梯度（玫红虚线） | `edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=classic;html=1;strokeColor=#984646;strokeWidth=1.25;dashed=1;fontFamily=Inter;fontSize=12;fontColor=#984646;` |
-| 直角折线              | 加 `edgeStyle=orthogonalEdgeStyle;rounded=1;`                                                                                                                   |
+| 用途                  | 样式                                                                                                                                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 实线                  | `endArrow=classic;html=1;strokeColor=#1d1d1f;strokeWidth=1.25;`                                                                                                                                 |
+| 带标签                | 在实线样式后加 `fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;`，`value="标签"`                                                                                                                |
+| 虚线/可选             | `endArrow=classic;html=1;strokeColor=#5c6067;strokeWidth=1.25;dashed=1;`                                                                                                                        |
+| 残差/梯度（玫红虚线） | `edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeColor=#984646;strokeWidth=1.25;dashed=1;fontFamily=Inter;fontSize=12;fontColor=#984646;` |
+| 直角折线              | 加 `edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;`                                                                                                                   |
 
 - 连线必须带 `source` 和 `target`（节点 id），`<mxGeometry relative="1" as="geometry"/>`。
 - 绕行的残差线：加 `exitX=1;exitY=0.5;entryX=1;entryY=0.5;`，并在 `mxGeometry` 里用 `<Array as="points">` 给出拐点（x 落在节点右侧 40px 处，如 296）。
@@ -147,9 +147,26 @@ value="内容 query \(\mathbf q_t^{C,h}\)&lt;br&gt;\(d_r=64\)"
 </mxfile>
 ```
 
+## LLM 论文级图元预设
+
+需要用几何形状直接编码张量投影、算子、存储与专家激活时，优先选用以下与 `wisp-drawio-library.xml` 一致的样式（颜色按上表 hue 替换）：
+
+| 图元类型              | 样式字符串                                                                                                                                                                                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 降维梯形投影          | `shape=trapezoid;perimeter=trapezoidPerimeter;whiteSpace=wrap;html=1;fixedSize=1;size=16;flipV=1;fillColor=F;strokeColor=S;strokeWidth=1.25;rounded=0;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;` |
+| 升维梯形投影          | 同上，去掉 `flipV=1;`                                                                                                                                                                                                                                         |
+| 算子圆（⊕ / ⊗ / ·）   | 分别用 `shape=orEllipse;perimeter=ellipsePerimeter;backgroundOutline=1;`（`value=""`）、`shape=sumEllipse;perimeter=ellipsePerimeter;backgroundOutline=1;`（`value=""`）或 `ellipse;`（`value="·"`），尺寸 `24×24` 或 `32×32`                                 |
+| KV / HBM 存储圆柱     | `shape=datastore;whiteSpace=wrap;html=1;fillColor=F;strokeColor=S;strokeWidth=1.25;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;`                                                                    |
+| 路由决策菱形          | `shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fillColor=F;strokeColor=S;strokeWidth=1.25;shadow=0;container=0;align=center;verticalAlign=middle;fontFamily=Inter;fontSize=12;fontColor=#1d1d1f;`                                           |
+| 多头叠卡（2 层）      | 背景卡设 `opacity=50` 并向右上偏移 `(+8, -8)`，前景卡 `opacity=100`                                                                                                                                                                                           |
+| 微缩张量矩阵 / 专家条 | 网格子格用 `rounded=0;whiteSpace=wrap;html=1;fillColor=F;strokeColor=S;strokeWidth=1;shadow=0;container=0;`（宽/高 `16×16`）；专家竖条用 `16×48` 圆角矩形，选中专家 `strokeWidth=2`                                                                           |
+| 白底内联连线标签      | 在连线样式末尾加 `labelBackgroundColor=#ffffff;`（短边与走廊绕行边必加，防止文字压住线或邻近框）                                                                                                                                                              |
+
+> 注意：`shape=curlyBracket` 仅用于左右竖向并拢标注，不要横向拉宽作为水平括弧使用。
+
 ## 在 draw.io 里作画
 
-1. 导入素材库：File → Open Library from → Device → `assets/wisp-drawio-library.xml`（节点、强调节点、ML 模块、分组、连线、文字都带好了预设样式）。
+1. 导入素材库：File → Open Library from → Device → `assets/wisp-drawio-library.xml`（节点、强调节点、ML 模块、论文图元、分组、连线、文字都带好了预设样式）。
 2. 可选：Extras → Configuration 粘贴 `assets/drawio-config.json`，把颜色选择器限制为调色板（详见 `assets/drawio-colors.txt`）。
 3. 保存前确认 File → Properties → Compressed 已取消。
 4. 保存后运行 lint；非调色板颜色用 `--fix` 吸附。

@@ -98,6 +98,7 @@
     "culori": "^4.0.2",
     "github-slugger": "^2.0.0",
     "katex": "^0.19.1",
+    "mathjax-full": "^3.2.2",
     "pele": "^1.13.0",
     "rehype-katex": "^7.0.1",
     "remark-cjk-friendly": "2.3.2",

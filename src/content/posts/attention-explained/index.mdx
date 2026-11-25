@@ -38,15 +38,15 @@ $$
 
 ```mermaid
 flowchart LR
-    X["输入序列 X"] --> Q["Q = XW_Q"]
-    X --> K["K = XW_K"]
-    X --> V["V = XW_V"]
-    Q --> S["打分 QKᵀ / √d_k"]
+    X["输入序列 $$X$$"] --> Q["$$Q = XW_Q$$"]
+    X --> K["$$K = XW_K$$"]
+    X --> V["$$V = XW_V$$"]
+    Q --> S["打分 $$QK^\top / \sqrt{d_k}$$"]
     K --> S
     S --> W["逐行 softmax"]
-    W --> O["加权求和 · V"]
+    W --> O["加权求和 $$\cdot V$$"]
     V --> O
-    O --> Y["输出 Y"]
+    O --> Y["输出 $$Y$$"]
 ```
 
 ## 为什么要除以 √d

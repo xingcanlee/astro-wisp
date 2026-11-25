@@ -94,7 +94,14 @@ export function pipelineDigest(): string {
     '../package.json',
   ];
   for (const f of files) h.update(f).update(readFileSync(here(f)));
-  for (const dep of ['pele', 'katex', 'rehype-katex', 'remark-math', 'remark-cjk-friendly'])
+  for (const dep of [
+    'pele',
+    'mathjax-full',
+    'katex',
+    'rehype-katex',
+    'remark-math',
+    'remark-cjk-friendly',
+  ])
     h.update(`${dep}@${installedVersion(dep)}`);
   return h.digest('hex').slice(0, 16);
 }
@@ -300,7 +307,12 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
         if (config.features.mermaid)
           remarkPlugins.push([
             remarkPele,
-            { strict: config.mermaid.strict, dev, lang: config.site.lang },
+            {
+              strict: config.mermaid.strict,
+              dev,
+              lang: config.site.lang,
+              math: config.features.math,
+            },
           ]);
         remarkPlugins.push([
           remarkDiagram,
@@ -387,6 +399,20 @@ export default function wisp(input: WispConfigInput = {}): AstroIntegration {
         if (config.features.diagramDownload) {
           server.middlewares.use(diagramDevMiddleware({ base: server.config.base, root }));
         }
+        const reloadIfDiagramArtifact = (filePath: string) => {
+          const normalized = filePath.replaceAll('\\', '/');
+          if (
+            normalized.endsWith('.wisp.svg') ||
+            normalized.endsWith('/diagrams.manifest.json') ||
+            normalized === 'diagrams.manifest.json'
+          ) {
+            server.moduleGraph.invalidateAll();
+            server.ws.send({ type: 'full-reload' });
+          }
+        };
+        server.watcher.on('change', reloadIfDiagramArtifact);
+        server.watcher.on('add', reloadIfDiagramArtifact);
+        server.watcher.on('unlink', reloadIfDiagramArtifact);
       },
       'astro:build:done': ({ dir, logger }) => {
         if (!config.features.diagramDownload) return;

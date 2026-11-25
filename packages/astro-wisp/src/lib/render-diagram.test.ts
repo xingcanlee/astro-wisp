@@ -118,6 +118,13 @@ describe('prepareSvg', () => {
     expect(r.svg).not.toContain('crispEdges');
     expect(r.svg).not.toContain('<defs>');
   });
+  it('strips standalone data-wisp-vars style block on inline', () => {
+    const standalone =
+      '<svg class="wisp-d" viewBox="0 0 10 10"><style data-wisp-vars="1">.wisp-d{--wd-font-sans:Inter,"Noto Sans SC"}</style><rect/></svg>';
+    const r = prepareSvg(standalone, { suffix: '1', fallbackTitleId: 't' });
+    expect(r.svg).not.toContain('data-wisp-vars');
+    expect(r.svg).not.toContain('<style');
+  });
 });
 
 describe('renderDiagram', () => {

@@ -1,8 +1,9 @@
-import { render, PeleError } from 'pele';
+import { render, PeleError, type MathResolver } from 'pele';
 import { visit } from 'unist-util-visit';
 import type { Code, Html, Root, Parent } from 'mdast';
 import type { Plugin } from 'unified';
 import type { VFile } from 'vfile';
+import { peleMath } from '../lib/pele-math';
 import { figureCaptionHtml } from './figure-caption';
 
 export interface RemarkPeleOptions {
@@ -12,6 +13,8 @@ export interface RemarkPeleOptions {
   dev?: boolean;
   /** 站点语言（默认 'zh-CN'）；文章 frontmatter 的 lang 优先 */
   lang?: string;
+  /** 图表标签内 $$...$$ 公式渲染（默认 true；可传入自定义 MathResolver）。 */
+  math?: boolean | MathResolver;
 }
 
 const TYPE_NAMES: Record<string, string> = {
@@ -95,7 +98,9 @@ export function captionOf(meta: string | null | undefined): string {
 }
 
 export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[], Root>> {
-  const { strict = false, dev = false, lang: defaultLang = 'zh-CN' } = options;
+  const { strict = false, dev = false, lang: defaultLang = 'zh-CN', math = true } = options;
+  const mathResolver: MathResolver | undefined =
+    typeof math === 'function' ? math : math ? peleMath : undefined;
   return (tree: Root, file: VFile) => {
     const fm = (file.data as { astro?: { frontmatter?: { lang?: unknown } } }).astro?.frontmatter;
     const lang = typeof fm?.lang === 'string' && fm.lang ? fm.lang : defaultLang;
@@ -110,7 +115,10 @@ export function remarkPele(options: RemarkPeleOptions = {}): ReturnType<Plugin<[
       try {
         // idPrefix 保证同页多图的 <title id> 不冲突；用文档内序号，输出是确定的
         const seq = i;
-        const r = render(node.value, { idPrefix: `pele${seq}-` });
+        const r = render(node.value, {
+          idPrefix: `pele${seq}-`,
+          ...(mathResolver ? { math: mathResolver } : {}),
+        });
         const label =
           textOf(r.svg, 'title') ||
           textOf(r.svg, 'desc') ||

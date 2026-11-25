@@ -116,3 +116,33 @@ describe('errors', () => {
     expect(t.children[0].type).toBe('code');
   });
 });
+
+describe('math', () => {
+  it('renders $$...$$ in node and edge labels as inline SVG by default', () => {
+    const md = fence(
+      'flowchart TD\n  M["稠密主注意力概率 $$p_t$$"] -->|"开启 Top-2048 稀疏筛选 $$S_t$$"| IDX["闪电索引器 $$I_{t,s}$$"]',
+    );
+    const html = valueOf(child(run(md), 1));
+    expect(html).toContain('class="pele-math"');
+    expect(html).toContain('<path');
+    expect(html).not.toContain('$$p_t$$');
+    expect(html).not.toContain('$$S_t$$');
+    expect(html).not.toContain('$$I_{t,s}$$');
+    expect(html).not.toContain('<foreignObject');
+  });
+
+  it('keeps raw $$...$$ text when math is disabled', () => {
+    const md = fence('flowchart TD\n  A["$$p_t$$"] --> B["普通"]');
+    const html = valueOf(child(run(md, { math: false }), 1));
+    expect(html).not.toContain('pele-math');
+    expect(html).toContain('$$p_t$$');
+  });
+
+  it('falls back cleanly on invalid TeX inside $$...$$', () => {
+    const md = fence('flowchart TD\n  A["$$\\\\undefinedmacro{$$"] --> B["ok"]');
+    const html = valueOf(child(run(md), 1));
+    expect(html).toContain('<svg');
+    expect(html).not.toContain('pele-math');
+    expect(html).toContain('\\undefinedmacro{');
+  });
+});

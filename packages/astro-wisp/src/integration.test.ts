@@ -278,7 +278,7 @@ const PARITY_SOURCE = [
   '',
   '```mermaid',
   'flowchart TD',
-  '  A[开始] --> B[结束]',
+  '  A["开始 $$p_t$$"] --> B[结束]',
   '```',
   '',
   "![相位图](https://example.com/phase.png '图 1：相位图')",
@@ -325,6 +325,7 @@ describe('Markdown 管线：.md 与 .mdx 一致', () => {
     expect(md).toContain('class="wisp-table"');
     expect(md).toContain('data-wisp-tab');
     expect(md).toContain('--pele-w:');
+    expect(md).toContain('class="pele-math"');
     expect(md).toContain('wisp-figure');
     expect(md).toContain('wisp-notes');
     expect(md).toContain('<span class="wisp-tok">b-c</span>');
@@ -348,5 +349,29 @@ describe('Markdown 管线：.md 与 .mdx 一致', () => {
     const jsonB = JSON.stringify(b.updates[0]!.markdown);
     expect(jsonA).toContain(digest);
     expect(jsonB).not.toBe(jsonA);
+  });
+
+  it('features.math 为 false 时禁用 Mermaid 公式渲染', async () => {
+    const { updates } = setup({ features: { math: false }, mermaid: { strict: true } });
+    const { processor, shikiConfig } = updates[0]!.markdown;
+    let html = '';
+    const proc = astroUnified({
+      remarkPlugins: processor.options.remarkPlugins,
+      rehypePlugins: [
+        ...processor.options.rehypePlugins,
+        () => (tree: HastRoot) => {
+          html = toHtml(raw(structuredClone(tree)) as HastRoot);
+        },
+      ],
+    });
+    const md = await proc.createRenderer({
+      syntaxHighlight: 'shiki' as const,
+      shikiConfig,
+    } as never);
+    await md.render('```mermaid\nflowchart LR\n  A["$$p_t$$"] --> B[ok]\n```\n', {
+      fileURL: pathToFileURL(resolve('/site/src/content/posts/no-math.md')),
+    } as never);
+    expect(html).not.toContain('class="pele-math"');
+    expect(html).toContain('$$p_t$$');
   });
 });
