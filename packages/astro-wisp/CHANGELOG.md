@@ -2,6 +2,15 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.7.2 (2026-11-26)
+
+### 修复
+
+- **表格 `scroll-state` 布局死循环与 KaTeX 单元格 `data-wisp-prose` 误判**：移除 `@container scroll-state(scrollable: ...)` 内对第 2 列 `padding-inline-start` 的几何修改，消除临界宽度下滚动溢出与折行的 60fps 振荡；`rehype-a11y` 在计算单元格视觉宽度时跳过 `<math>`、`<annotation>`、`.katex-mathml` 子树及零宽空格 `\u200B`，避免短公式列被误标 `data-wisp-prose` 强撑 `min-width: 11.5em`。
+- **跨浏览器样式与交互降级**：将 `Toc` 的 `a[aria-current="location"]` 与 `:target-current` 拆分为独立规则（`:target-current` 包入 `@supports selector(:target-current)`）并保护 `querySelector`；为 `global.css` 滚动驱动渐隐遮罩与 `ReadingProgress` 增加 `@supports (animation-timeline: scroll())` 保护；为 `BackToTop` 增加 `@supports not (container-type: scroll-state)` 的被动 `rAF` 控显回落；为 `Citations` 增加非原生 `interestfor` 的悬停/键盘聚焦预览降级。
+- **交互讲解器标签栏与窄屏图形排版**：`6–8` 步带标签的 `Explainer` 在正文 `42rem` 栏宽内自动切为 `3` / `4` 列双行网格（全屏对话框 `>= 60rem` 恢复单行），窄屏（`<= 40rem`）改为 `2` 列网格，避免标签文字截断；补齐 `.wisp-pele-body` 窄屏 `0.5rem` 外扩，与 `.wisp-diagram-body` 保持一致。
+- **`wisp-diagram` 正交折线预设**：正交边默认 `jettySize` 改为 `10` 以收紧节点间距（`8b803b1`）。
+
 ## 0.7.1 (2026-11-25)
 
 ### 新增与变更
