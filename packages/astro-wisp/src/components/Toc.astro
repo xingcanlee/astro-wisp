@@ -331,11 +331,17 @@ const subToggleLabel = (text: string) => {
         color 150ms,
         border-color 150ms;
     }
-    .wisp-toc-aside a:target-current,
     .wisp-toc-aside a[aria-current='location'] {
       border-inline-start-color: var(--wisp-accent);
       color: var(--wisp-fg);
       font-weight: 500;
+    }
+    @supports selector(:target-current) {
+      .wisp-toc-aside a:target-current {
+        border-inline-start-color: var(--wisp-accent);
+        color: var(--wisp-fg);
+        font-weight: 500;
+      }
     }
     /*
      * 有小节的 h2：标题列 + 固定在栏右端的 1.5rem chevron 列。chevron 对齐标题第一行的中线
@@ -549,7 +555,10 @@ const subToggleLabel = (text: string) => {
       if (atBottom()) return heads[heads.length - 1]!.id;
       const limit = threshold();
       if (heads[0]!.getBoundingClientRect().top > limit) return '';
-      const nativeMatch = box?.querySelector<HTMLAnchorElement>('a:target-current');
+      let nativeMatch: HTMLAnchorElement | null = null;
+      try {
+        nativeMatch = box?.querySelector<HTMLAnchorElement>('a:target-current') ?? null;
+      } catch {}
       if (nativeMatch?.dataset.tocLink) {
         const targetEl = document.getElementById(nativeMatch.dataset.tocLink);
         if (targetEl && targetEl.getBoundingClientRect().top <= limit) {

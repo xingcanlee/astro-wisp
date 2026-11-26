@@ -80,6 +80,91 @@
     const initial =
       location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
     if (initial && initial.closest('section[data-footnotes]')) flash(initial);
+
+    // ---- 悬停/聚焦预览降级：不支持原生 interestfor 时由 JS 接管 ----
+    if (!('interestForElement' in HTMLAnchorElement.prototype)) {
+      const canAnchor =
+        CSS.supports('position-area: block-end') &&
+        CSS.supports('position-try-fallbacks: flip-block');
+      let openPop: HTMLElement | null = null;
+      let openTimer = 0;
+      let closeTimer = 0;
+
+      const place = (a: HTMLAnchorElement, pop: HTMLElement) => {
+        if (canAnchor && pop.matches(':popover-open')) return;
+        pop.dataset.wispFallback = '';
+        const ar = a.getBoundingClientRect();
+        const pw = pop.offsetWidth || Math.min(352, innerWidth - 16);
+        const ph = pop.offsetHeight || 120;
+        const left = Math.max(8, Math.min(innerWidth - pw - 8, ar.left));
+        const below = ar.bottom + 6 + ph <= innerHeight - 8;
+        const top = below ? ar.bottom + 6 : Math.max(8, ar.top - ph - 6);
+        pop.style.left = `${left}px`;
+        pop.style.top = `${top}px`;
+      };
+
+      const hide = () => {
+        clearTimeout(openTimer);
+        clearTimeout(closeTimer);
+        if (!openPop) return;
+        const pop = openPop;
+        openPop = null;
+        pop.removeAttribute('data-wisp-open');
+        try {
+          pop.hidePopover?.();
+        } catch {}
+      };
+
+      const show = (a: HTMLAnchorElement) => {
+        const id = a.getAttribute('interestfor');
+        const pop = id ? document.getElementById(id) : null;
+        if (!pop) return;
+        if (openPop && openPop !== pop) hide();
+        clearTimeout(closeTimer);
+        openPop = pop;
+        if (!canAnchor) pop.dataset.wispFallback = '';
+        try {
+          pop.showPopover?.();
+        } catch {
+          pop.setAttribute('data-wisp-open', '');
+        }
+        if (!pop.matches(':popover-open')) pop.setAttribute('data-wisp-open', '');
+        place(a, pop);
+      };
+
+      const scheduleClose = () => {
+        clearTimeout(openTimer);
+        clearTimeout(closeTimer);
+        closeTimer = window.setTimeout(hide, 100);
+      };
+
+      for (const a of refs) {
+        const id = a.getAttribute('interestfor');
+        const pop = id ? document.getElementById(id) : null;
+        if (!pop) continue;
+        a.addEventListener('pointerenter', (e) => {
+          if (e.pointerType !== 'mouse') return;
+          clearTimeout(closeTimer);
+          clearTimeout(openTimer);
+          openTimer = window.setTimeout(() => show(a), 150);
+        });
+        a.addEventListener('pointerleave', (e) => {
+          if (e.pointerType !== 'mouse') return;
+          scheduleClose();
+        });
+        a.addEventListener('focusin', () => {
+          if (a.matches(':focus-visible')) show(a);
+        });
+        a.addEventListener('focusout', scheduleClose);
+        pop.addEventListener('pointerenter', () => clearTimeout(closeTimer));
+        pop.addEventListener('pointerleave', scheduleClose);
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') hide();
+      });
+      addEventListener('scroll', hide, { passive: true });
+    }
   }
 </script>
 
@@ -122,8 +207,14 @@
         display 140ms allow-discrete,
         overlay 140ms allow-discrete;
     }
-    .wisp-cite-pop[popover]:popover-open {
+    .wisp-cite-pop[popover]:popover-open,
+    .wisp-cite-pop[data-wisp-open] {
+      display: block;
       opacity: 1;
+    }
+    .wisp-cite-pop[data-wisp-fallback] {
+      position-area: normal;
+      margin: 0;
     }
     @starting-style {
       .wisp-cite-pop[popover]:popover-open {

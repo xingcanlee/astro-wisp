@@ -531,7 +531,7 @@
 .prose :is(th, td):last-child {
   padding-inline-end: 0;
 }
-/* 超宽溢出表格：首列吸左固定，向右滚看指标时行名不丢失（纯 CSS scroll-state） */
+/* 超宽溢出表格：首列吸左固定，向右滚看指标时行名不丢失（纯 CSS scroll-state；禁止在 scroll-state 查询内改 padding 等几何属性，以免触发滚动宽度与折行振荡） */
 @container scroll-state(scrollable: inline-start) {
   .prose .wisp-table :is(th, td):first-child:not([colspan]) {
     position: sticky;
@@ -556,16 +556,6 @@
     inset-inline-start: 0;
     z-index: 1;
     background-color: var(--wisp-bg);
-  }
-}
-@container scroll-state(scrollable: inline-start) {
-  .prose .wisp-table :is(th, td):nth-child(2) {
-    padding-inline-start: 0.75em;
-  }
-}
-@container scroll-state(scrollable: inline-end) {
-  .prose .wisp-table :is(th, td):nth-child(2) {
-    padding-inline-start: 0.75em;
   }
 }
 @container (max-width: 36rem) {

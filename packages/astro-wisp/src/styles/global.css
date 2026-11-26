@@ -608,93 +608,96 @@
 
   /*
    * 纯 CSS 滚动 driven 渐隐遮罩：scroll(self inline/block) + no-clip subtract（焦距轮廓不裁切，无 scroll listener / ResizeObserver）。
+   * 包裹在 @supports (animation-timeline: scroll()) 内，避免不支持的浏览器按 0s 定格到终态而永久淡出边缘。
    */
-  :where(
-    .wisp-pre,
-    .prose pre,
-    .katex-display,
-    .wisp-pele-body,
-    .wisp-diagram-body,
-    .wisp-explainer__scroll,
-    .wisp-nav ul,
-    [data-wisp-scroll]
-  ) {
-    --wisp-fade-size: 1.5rem;
-    --wisp-fade-dir: right;
-    --wisp-fade-start-pos: 0;
-    --wisp-fade-end-pos: 100%;
-    mask:
-      linear-gradient(black, black) no-clip subtract,
-      linear-gradient(to var(--wisp-fade-dir), black, transparent) var(--wisp-fade-start-pos) 0 /
-        var(--wisp-fade-start) 100% no-repeat no-clip,
-      linear-gradient(to var(--wisp-fade-dir), transparent, black) var(--wisp-fade-end-pos) 0 /
-        var(--wisp-fade-end) 100% no-repeat no-clip;
-    animation:
-      wisp-reveal-fade-start linear both,
-      wisp-hide-fade-end linear both;
-    animation-timeline: scroll(self inline);
-    animation-range:
-      0 var(--wisp-fade-size),
-      calc(100% - var(--wisp-fade-size)) 100%;
-  }
-  :where(
-    .wisp-pre,
-    .prose pre,
-    .katex-display,
-    .wisp-pele-body,
-    .wisp-diagram-body,
-    .wisp-explainer__scroll,
-    .wisp-nav ul,
-    [data-wisp-scroll]
-  ):dir(rtl) {
-    --wisp-fade-dir: left;
-    --wisp-fade-start-pos: 100%;
-    --wisp-fade-end-pos: 0;
-  }
-  /* 表格首列吸左：仅右侧渐隐 */
-  :where(.wisp-table, .prose > table) {
-    --wisp-fade-size: 1.5rem;
-    --wisp-fade-dir: right;
-    --wisp-fade-end-pos: 100%;
-    mask:
-      linear-gradient(black, black) no-clip subtract,
-      linear-gradient(to var(--wisp-fade-dir), transparent, black) var(--wisp-fade-end-pos) 0 /
-        var(--wisp-fade-end) 100% no-repeat no-clip;
-    animation: wisp-hide-fade-end linear both;
-    animation-timeline: scroll(self inline);
-    animation-range: calc(100% - var(--wisp-fade-size)) 100%;
-  }
-  :where(.wisp-table, .prose > table):dir(rtl) {
-    --wisp-fade-dir: left;
-    --wisp-fade-end-pos: 0;
-  }
-  :where(
-    [data-wisp-overflow],
-    .wisp-table,
-    .prose > table,
-    .katex-display,
-    .wisp-pele-body,
-    .wisp-diagram-body,
-    .wisp-nav ul
-  ):is(:focus-visible, :has(:focus-visible)) {
-    mask: none;
-  }
-  :where([data-rail-scroll], .wisp-series-inline ol, .wisp-toc-inline > ol, [data-wisp-vscroll]) {
-    --wisp-vfade-top-size: 1.5rem;
-    --wisp-vfade-bottom-size: 1.75rem;
-    mask:
-      linear-gradient(black, black) no-clip subtract,
-      linear-gradient(to bottom, black, transparent) 0 0 / 100% var(--wisp-vfade-top) no-repeat
-        no-clip,
-      linear-gradient(to bottom, transparent, black) 0 100% / 100% var(--wisp-vfade-bottom)
-        no-repeat no-clip;
-    animation:
-      wisp-reveal-vfade-top linear both,
-      wisp-hide-vfade-bottom linear both;
-    animation-timeline: scroll(self block);
-    animation-range:
-      0 var(--wisp-vfade-top-size),
-      calc(100% - var(--wisp-vfade-bottom-size)) 100%;
+  @supports (animation-timeline: scroll()) {
+    :where(
+      .wisp-pre,
+      .prose pre,
+      .katex-display,
+      .wisp-pele-body,
+      .wisp-diagram-body,
+      .wisp-explainer__scroll,
+      .wisp-nav ul,
+      [data-wisp-scroll]
+    ) {
+      --wisp-fade-size: 1.5rem;
+      --wisp-fade-dir: right;
+      --wisp-fade-start-pos: 0;
+      --wisp-fade-end-pos: 100%;
+      mask:
+        linear-gradient(black, black) no-clip subtract,
+        linear-gradient(to var(--wisp-fade-dir), black, transparent) var(--wisp-fade-start-pos) 0 /
+          var(--wisp-fade-start) 100% no-repeat no-clip,
+        linear-gradient(to var(--wisp-fade-dir), transparent, black) var(--wisp-fade-end-pos) 0 /
+          var(--wisp-fade-end) 100% no-repeat no-clip;
+      animation:
+        wisp-reveal-fade-start linear both,
+        wisp-hide-fade-end linear both;
+      animation-timeline: scroll(self inline);
+      animation-range:
+        0 var(--wisp-fade-size),
+        calc(100% - var(--wisp-fade-size)) 100%;
+    }
+    :where(
+      .wisp-pre,
+      .prose pre,
+      .katex-display,
+      .wisp-pele-body,
+      .wisp-diagram-body,
+      .wisp-explainer__scroll,
+      .wisp-nav ul,
+      [data-wisp-scroll]
+    ):dir(rtl) {
+      --wisp-fade-dir: left;
+      --wisp-fade-start-pos: 100%;
+      --wisp-fade-end-pos: 0;
+    }
+    /* 表格首列吸左：仅右侧渐隐 */
+    :where(.wisp-table, .prose > table) {
+      --wisp-fade-size: 1.5rem;
+      --wisp-fade-dir: right;
+      --wisp-fade-end-pos: 100%;
+      mask:
+        linear-gradient(black, black) no-clip subtract,
+        linear-gradient(to var(--wisp-fade-dir), transparent, black) var(--wisp-fade-end-pos) 0 /
+          var(--wisp-fade-end) 100% no-repeat no-clip;
+      animation: wisp-hide-fade-end linear both;
+      animation-timeline: scroll(self inline);
+      animation-range: calc(100% - var(--wisp-fade-size)) 100%;
+    }
+    :where(.wisp-table, .prose > table):dir(rtl) {
+      --wisp-fade-dir: left;
+      --wisp-fade-end-pos: 0;
+    }
+    :where(
+      [data-wisp-overflow],
+      .wisp-table,
+      .prose > table,
+      .katex-display,
+      .wisp-pele-body,
+      .wisp-diagram-body,
+      .wisp-nav ul
+    ):is(:focus-visible, :has(:focus-visible)) {
+      mask: none;
+    }
+    :where([data-rail-scroll], .wisp-series-inline ol, .wisp-toc-inline > ol, [data-wisp-vscroll]) {
+      --wisp-vfade-top-size: 1.5rem;
+      --wisp-vfade-bottom-size: 1.75rem;
+      mask:
+        linear-gradient(black, black) no-clip subtract,
+        linear-gradient(to bottom, black, transparent) 0 0 / 100% var(--wisp-vfade-top) no-repeat
+          no-clip,
+        linear-gradient(to bottom, transparent, black) 0 100% / 100% var(--wisp-vfade-bottom)
+          no-repeat no-clip;
+      animation:
+        wisp-reveal-vfade-top linear both,
+        wisp-hide-vfade-bottom linear both;
+      animation-timeline: scroll(self block);
+      animation-range:
+        0 var(--wisp-vfade-top-size),
+        calc(100% - var(--wisp-vfade-bottom-size)) 100%;
+    }
   }
   [data-wisp-dragging],
   [data-wisp-dragging] * {

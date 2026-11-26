@@ -64,6 +64,26 @@ describe('rehype-a11y', () => {
     expect(html).toContain('<td data-wisp-prose="">55 路由');
   });
 
+  it('短 KaTeX 公式单元格不误标 data-wisp-prose，长描述与长公式单元格正确标记', async () => {
+    const html = await render(
+      [
+        '| 符号 | 含义 | 张量形状 / 取值域 |',
+        '| - | - | - |',
+        '| $B,\\; T,\\; d$ | 批大小 | 正整数 |',
+        '| $p_{n,j},\\; o_{n,j},\\; \\mathbf{S}$ | 素数桶长 | 标量 |',
+        '| $E$ | 扁平大表、单位置及整批拼接向量 | $E \\in \\mathbb{R}^{N_{\\text{rows}}\\times d_h}$；$\\mathbf{E} \\in \\mathbb{R}^{B\\times T\\times d_{\\text{eng}}}$ |',
+      ].join('\n'),
+    );
+    const cells = [...html.matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/g)];
+    expect(cells).toHaveLength(9);
+    // 短公式列（第 1 列的第 1、2 行）不应被误标 data-wisp-prose
+    expect(cells[0]![1]).not.toContain('data-wisp-prose');
+    expect(cells[3]![1]).not.toContain('data-wisp-prose');
+    // 真正长的中文描述与长公式列应标记 data-wisp-prose
+    expect(cells[7]![1]).toContain('data-wisp-prose');
+    expect(cells[8]![1]).toContain('data-wisp-prose');
+  });
+
   it('标题及标题内行内代码注入 <wbr> 子词断点与 tabindex="-1"，且不破坏正文代码与 KaTeX 公式', async () => {
     const html = await render(
       '## `BatchExecutionDescriptor` 与 NVLink/NCCL\n\n### 用 `moe_align_block_size` 优化 $O(N_{\\text{tok}})$ 路径\n\n正文 `BatchExecutionDescriptor` 不拆。',

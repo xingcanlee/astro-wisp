@@ -213,3 +213,10 @@
   width: min(100%, var(--pele-w));
   min-width: min(var(--pele-w), calc(var(--pele-w) * 0.75));
 }
+@media (max-width: 40rem) {
+  .prose > .wisp-pele:not(.wisp-wide) > .wisp-pele-body {
+    max-width: none;
+    max-inline-size: none;
+    margin-inline: -0.5rem;
+  }
+}

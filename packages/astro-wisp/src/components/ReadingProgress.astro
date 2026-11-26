@@ -34,14 +34,16 @@
     :global([dir='rtl']) .wisp-progress {
       transform-origin: right;
     }
-    @media (prefers-reduced-motion: no-preference) {
-      .wisp-progress {
-        opacity: 1;
-        animation-name: wisp-reading-progress;
-        animation-timing-function: linear;
-        animation-fill-mode: both;
-        animation-timeline: scroll(root block);
-        animation-range: 0% 100%;
+    @supports (animation-timeline: scroll()) {
+      @media (prefers-reduced-motion: no-preference) {
+        .wisp-progress {
+          opacity: 1;
+          animation-name: wisp-reading-progress;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
+          animation-timeline: scroll(root block);
+          animation-range: 0% 100%;
+        }
       }
     }
     @media (forced-colors: active) {

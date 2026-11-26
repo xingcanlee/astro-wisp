@@ -73,6 +73,23 @@ const { label = /^zh\b/i.test(config.site.lang) ? '返回顶部' : 'Back to top'
         }
       }
     }
+    @supports not (container-type: scroll-state) {
+      .wisp-top[data-visible] {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        translate: 0 0;
+      }
+      @media (max-width: 59.99rem) {
+        .wisp-top[data-visible] {
+          opacity: 0.85;
+        }
+        .wisp-top[data-visible]:hover,
+        .wisp-top[data-visible]:focus-visible {
+          opacity: 1;
+        }
+      }
+    }
     @media (prefers-reduced-motion: reduce) {
       .wisp-top {
         transition:
@@ -119,5 +136,22 @@ const { label = /^zh\b/i.test(config.site.lang) ? '返回顶部' : 'Back to top'
     btn.addEventListener('focusout', (e) => {
       if (!e.relatedTarget && scrollY <= 1) focusTop();
     });
+    if (!CSS.supports('container-type: scroll-state')) {
+      let queued = false;
+      const sync = () => {
+        queued = false;
+        btn.toggleAttribute('data-visible', scrollY > 1);
+      };
+      sync();
+      addEventListener(
+        'scroll',
+        () => {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(sync);
+        },
+        { passive: true },
+      );
+    }
   }
 </script>

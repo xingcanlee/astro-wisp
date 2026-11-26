@@ -134,7 +134,10 @@ export default function rehypeA11y(options: RehypeA11yOptions = {}) {
 function splitCellCode(table: Element) {
   visit(table, 'element', (cell: Element) => {
     if (cell.tagName !== 'td') return;
-    if (cell.properties?.colSpan === undefined && cellVisualWidth(textOf(cell).trim()) >= 22) {
+    if (
+      cell.properties?.colSpan === undefined &&
+      cellVisualWidth(visibleTextOf(cell).trim()) >= 22
+    ) {
       cell.properties.dataWispProse = '';
     }
     visit(cell, 'element', (code: Element) => {
@@ -269,4 +272,24 @@ function textOf(node: Root | Element): string {
     out += t.value;
   });
   return out.replace(/\s+/g, ' ');
+}
+
+/** 收集单元格可见文本（跳过 KaTeX 隐藏 MathML/annotation 子树及零宽空格），避免公式单元格宽度被重复计入。 */
+function visibleTextOf(node: Root | Element): string {
+  let out = '';
+  for (const child of node.children) {
+    if (child.type === 'text') {
+      out += child.value;
+    } else if (child.type === 'element') {
+      if (
+        child.tagName === 'math' ||
+        child.tagName === 'annotation' ||
+        getClassList(child).includes('katex-mathml')
+      ) {
+        continue;
+      }
+      out += visibleTextOf(child);
+    }
+  }
+  return out.replace(/\u200B/g, '').replace(/\s+/g, ' ');
 }
