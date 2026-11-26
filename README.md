@@ -300,12 +300,12 @@ export default defineConfig({
 
 本仓库为 AI 编码 Agent 准备了这些材料：
 
-- **[CLAUDE.md](CLAUDE.md)**：Claude Code 读取的项目规则，包括颜色规则、生成文件、中文排版规则和常用命令。
+- **[AGENTS.md](AGENTS.md)**（`CLAUDE.md` 通过 `@AGENTS.md` 引用）：AI Agent 读取的项目规则，包括颜色规则、生成文件、中文排版规则和常用命令。
 - **[docs/](docs/)**：设计文档，覆盖架构、图表体系、交互组件和任务拆分。`docs/README.md` 是入口。
 - **[wisp-diagram](packages/astro-wisp/skills/wisp-diagram/)**：一个独立的 Agent skill，用于产出符合 Wisp 风格的 Excalidraw / draw.io 图表。脚本是 Python + uv（PEP 723 内联依赖），`uv run` 即可运行；不依赖 Wisp 站点，可以复制到其他项目使用。
 - **[wisp-writer](packages/astro-wisp/skills/wisp-writer/)**：写作 skill。提供写作规范、5 种文章模板、`new_post.py`（新建文章）和 `check_post.py`（检查 frontmatter、标题层级、alt、图表引用、半角标点等），让 Agent 写出风格一致的文章。
 
-两个 skill 随主题包分发，站点里运行 `pnpm exec wisp skills` 可以看到它们在 `node_modules/astro-wisp/skills/` 下的路径，starter 的 `CLAUDE.md` 已经指向它们，随主题一起升级。也可以复制到用户级 skills 目录：
+两个 skill 随主题包分发，站点里运行 `pnpm exec wisp skills` 可以看到它们在 `node_modules/astro-wisp/skills/` 下的路径，starter 的 `AGENTS.md`（及 `CLAUDE.md`）已经指向它们，随主题一起升级。也可以复制到用户级 skills 目录：
 
 ```bash
 mkdir -p ~/.claude/skills
