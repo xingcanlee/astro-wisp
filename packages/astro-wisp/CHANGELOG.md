@@ -2,6 +2,13 @@
 
 版本遵循 [semver](https://semver.org/lang/zh-CN/)。配置项、可覆盖组件的名称与 props、`astro-wisp/*` 导出的不兼容改动只出现在主版本（0.x 期间为次版本）。
 
+## 0.7.3 (2026-11-26)
+
+### 变更与修复
+
+- **依赖升级**：升级 `astro` 至 `^7.4.13`（含可变字体 `<Font preload>` 修复、水合岛屿重复 CSS 修复与构建期内存优化）、`@astrojs/react` 至 `^7.1.9`、`@astrojs/markdown-remark` 至 `^7.3.10`（修复 `unified()` 标题 `{` 转义与 MDX 静态 SVG/样式优化）、`@astrojs/mdx` 至 `^8.1.6`、`@astrojs/sitemap` 至 `^3.7.6`。
+- **文档与规范**：完善 `packages/astro-wisp/DESIGN.md` 硬不变量总表与验证核对清单，补充 `AGENTS.md` 协作规范入口。
+
 ## 0.7.2 (2026-11-26)
 
 ### 修复
